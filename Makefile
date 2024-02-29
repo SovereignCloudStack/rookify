@@ -10,6 +10,13 @@ RADOSLIB_VERSION := 2.0.0
 GENERAL_LIB_LOCATION := $(shell pip show rados | grep -oP "(?<=Location: ).*")
 RADOSLIB_INSTALLED_VERSION := $(shell pip show rados | grep Version | awk '{print $$2}')
 
+## checking if docker, or podman should be used. Podman is preferred.
+ifeq ($(shell command -v podman 2> /dev/null),)
+	CONTAINERCMD=docker
+else
+	CONTAINERCMD=podman
+endif
+
 .PHONY: help
 help: ## Display this help message
 	@echo -e '${COLOUR_RED}Usage: make <command>${COLOUR_END}'
@@ -50,3 +57,11 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
 	source ./.venv/bin/activate && \
 	cd src && python3 -m rookify
+
+.PHONY: build-container
+build-container: ## Build container from Dockerfile
+    ${CONTAINERCMD} build -t rookify:latest -f Dockerfile .
+
+.PHONY: run-interactive-container
+up: ## Run an insteractive container (make sure that Dockerfile has the DEBBUGING sleep command set at the end)
+	${CONTAINERCMD} run -it rookify:latest bash
