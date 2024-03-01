@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
+import functools
 import importlib
+
 from typing import Optional
 from collections import OrderedDict
-from modules.module import ModuleHandler
-import functools
+from .module import ModuleHandler
 
 class ModuleLoadException(Exception):
     """
@@ -32,7 +35,7 @@ def load_modules(module_names: list) -> list:
             if module_name in modules:
                 continue
 
-            module = importlib.import_module(f"modules.{module_name}")
+            module = importlib.import_module(f"rookify.modules.{module_name}")
 
             for attr_type, attr_name in (
                 (ModuleHandler, 'HANDLER_CLASS'),
@@ -42,7 +45,7 @@ def load_modules(module_names: list) -> list:
             ):
                 if not hasattr(module, attr_name):
                     raise ModuleLoadException(module_name, f'Module has no attribute {attr_name}')
-                
+
                 attr = getattr(module, attr_name)
                 if not isinstance(attr, attr_type) and not issubclass(attr, attr_type):
                     raise ModuleLoadException(module_name, f'Attribute {attr_name} is not type {attr_type}')
@@ -65,8 +68,8 @@ def load_modules(module_names: list) -> list:
 
             after_modules_name = modules_in[module_name].AFTER
             sort_modules(modules_in, modules_out, after_modules_name)
-            
+
             modules_out[module_name] = modules_in[module_name]
     sort_modules(required_modules, modules, list(required_modules.keys()))
-    
+
     return list(modules.values())

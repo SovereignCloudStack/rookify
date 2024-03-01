@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .main import ExampleHandler
 
 HANDLER_CLASS = ExampleHandler # Define the handler class for this module

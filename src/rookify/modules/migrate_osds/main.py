@@ -1,11 +1,13 @@
-from modules.module import ModuleHandler, ModuleException
+# -*- coding: utf-8 -*-
+
+from ..module import ModuleHandler, ModuleException
 
 class MigrateOSDsHandler(ModuleHandler):
 
     def preflight_check(self):
         result = self.ceph.mon_command('osd dump')
         #raise ModuleException('test error')
-    
+
     def run(self) -> dict:
         osd_config = dict()
         for node, osds in self._data['modules.analyze_ceph']['node']['ls']['osd'].items():
@@ -13,7 +15,7 @@ class MigrateOSDsHandler(ModuleHandler):
             for osd in osds:
                 osd_config[node]['osds'][osd] = dict()
 
-        
+
         for osd in self._data['modules.analyze_ceph']['osd']['dump']['osds']:
             number = osd['osd']
             uuid = osd['uuid']

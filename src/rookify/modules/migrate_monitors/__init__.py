@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .main import MigrateMonitorsHandler
 
 HANDLER_CLASS = MigrateMonitorsHandler
