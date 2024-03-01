@@ -1,24 +1,16 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-import modules
-import yaml
+import rookify.modules
+
 from types import MappingProxyType
-
-def load_yaml(path: str) -> dict:
-    with open(path, 'r') as file:
-        return yaml.safe_load(file)
-
-def save_yaml(path: str, data: dict) -> None:
-    with open(path, 'w') as file:
-        yaml.safe_dump(data, file)
+from .yaml import load_yaml, save_yaml
 
 def main():
-
     try:
         config = load_yaml("config.yaml")
     except FileNotFoundError as err:
         raise SystemExit(f'Could not load config: {err}')
-    migration_modules = modules.load_modules(config['migration_modules'])
+    migration_modules = rookify.modules.load_modules(config['migration_modules'])
 
     module_data = dict()
     try:
@@ -36,7 +28,7 @@ def main():
             module_data[module.__name__] = result
         else:
             handlers.append((module, handler))
-    
+
     # Do preflight check of all other handlers
     for module, handler in handlers:
         handler.preflight_check()
@@ -45,8 +37,8 @@ def main():
     for module, handler in handlers:
         result = handler.run()
         module_data[module.__name__] = result
-        
+
     save_yaml(config['general']['module_data_file'], module_data)
-    
+
 if __name__ == "__main__":
     main()

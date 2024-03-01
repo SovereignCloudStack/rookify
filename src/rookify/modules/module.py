@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import abc
 import rados
@@ -19,7 +21,7 @@ class ModuleHandler:
                 self.__ceph.connect()
             except rados.ObjectNotFound as err:
                 raise ModuleException(f'Could not connect to ceph: {err}')
-        
+
         def mon_command(self, command: str, **kwargs) -> dict:
             cmd = {
                 'prefix': command,
@@ -37,11 +39,11 @@ class ModuleHandler:
             k8s_config.api_key = config['api_key']
             k8s_config.host = config['host']
             self.__client = kubernetes.client.ApiClient(k8s_config)
-        
+
         @property
         def CoreV1Api(self) -> kubernetes.client.CoreV1Api:
             return kubernetes.client.CoreV1Api(self.__client)
-        
+
         @property
         def AppsV1Api(self) -> kubernetes.client.AppsV1Api:
             return kubernetes.client.AppsV1Api(self.__client)
@@ -53,7 +55,7 @@ class ModuleHandler:
     class __SSH:
         def __init__(self, config: dict):
             self.__config = config
-    
+
         def command(self, host: str, command: str) -> fabric.runners.Result:
             try:
                 address = self.__config['hosts'][host]['address']
@@ -65,7 +67,7 @@ class ModuleHandler:
             connect_kwargs = {'key_filename': private_key}
             result = fabric.Connection(address, user=user, port=port, connect_kwargs=connect_kwargs).run(command, hide=True)
             return result
-    
+
     def __init__(self, config: dict, data: dict):
         """
         Construct a new 'ModuleHandler' object.
@@ -100,7 +102,7 @@ class ModuleHandler:
         if self.__ceph == None:
             self.__ceph = self.__Ceph(self._config['ceph'])
         return self.__ceph
-    
+
     @property
     def k8s(self) -> __K8s:
         if self.__k8s == None:

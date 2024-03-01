@@ -1,7 +1,11 @@
-from modules.module import ModuleHandler
+# -*- coding: utf-8 -*-
+
 import json
+
+from ..module import ModuleHandler
+
 class AnalyzeCephHandler(ModuleHandler):
-    
+
     def run(self) -> dict:
 
         commands = [
@@ -30,6 +34,5 @@ class AnalyzeCephHandler(ModuleHandler):
             results['ssh']['osd'][node] = {
                 'devices': devices
             }
-            
+
         return results
-        
