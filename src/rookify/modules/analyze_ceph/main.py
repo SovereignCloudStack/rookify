@@ -4,10 +4,12 @@ from ..module import ModuleHandler
 
 from typing import Any, Dict
 
+from rookify.logger import getLogger
 
 class AnalyzeCephHandler(ModuleHandler):
     def run(self) -> Any:
         commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
+        log = getLogger()
 
         results: Dict[str, Any] = dict()
         for command in commands:
@@ -25,5 +27,5 @@ class AnalyzeCephHandler(ModuleHandler):
         for node, values in results["node"]["ls"]["osd"].items():
             devices = self.ssh.command(node, "find /dev/ceph-*/*").stdout.splitlines()
             results["ssh"]["osd"][node] = {"devices": devices}
-
+        log.info("AnalyzeCephHandler ran successfully.")
         return results

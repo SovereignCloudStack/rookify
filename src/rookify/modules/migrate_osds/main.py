@@ -4,6 +4,7 @@ from ..module import ModuleHandler
 
 from typing import Any, Dict
 
+from rookify.logger import getLogger
 
 class MigrateOSDsHandler(ModuleHandler):
     def preflight(self) -> None:

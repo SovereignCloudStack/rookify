@@ -5,9 +5,11 @@ import rookify.modules
 
 from types import MappingProxyType
 from .yaml import load_yaml, save_yaml
+from rookify.logger import configure_logging, getLogger
 
 
 def main() -> None:
+    # Load configuration file
     try:
         config = load_yaml("config.yaml")
     except FileNotFoundError as err:
@@ -15,6 +17,14 @@ def main() -> None:
     preflight_modules, migration_modules = rookify.modules.load_modules(
         config["migration_modules"]
     )
+
+    # Configure structlog logging
+    try:
+        configure_logging(config)
+        log = getLogger()
+        log.info("Structlog configured successfully.")
+    except Exception as e:
+        raise SystemExit(f'Error configuring logging: {e}')
 
     module_data = dict()
     try:
@@ -59,6 +69,7 @@ def main() -> None:
 
     save_yaml(config["general"]["module_data_file"], module_data)
 
+    log.info("Data was updated to module_data_file.")
 
 if __name__ == "__main__":
     main()
