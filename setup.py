@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from os import makedirs, path
+import os
 
 try:
     from setuptools import find_packages, setup
@@ -32,16 +32,16 @@ Returns the version currently in development.
 :since:  v0.0.1
     """
 
-    return "v0.0.1"
+    return os.environ.get("ROOKIFY_VERSION", "0.0.0-dev")
 #
 
-_setup = { "version": get_version()[1:],
-           "data_files": [ ( "docs", [ "LICENSE", "README.md" ]) ],
+_setup = { "version": get_version(),
+           "data_files": [ ( "docs", [ "LICENSE", "README.md" ] ) ],
+           "entry_points": { "console_scripts": [ "rookify = rookify.__main__:main" ] },
            "test_suite": "tests"
          }
 
 _setup['package_dir'] = { "": "src" }
 _setup['packages'] = find_packages("src")
 
-print(_setup)
 setup(**_setup)
