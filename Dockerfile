@@ -1,6 +1,8 @@
-# builder
+# Builder
 FROM python:3.11 as builder
-ARG ROOKIFY_VERSION=0.0.0-dev
+
+# Note: this value currenlty needs to be the same as the value returned from get_version() from setup.py
+ARG ROOKIFY_VERSION=0.0.1
 
 WORKDIR /app/rookify
 
@@ -8,7 +10,8 @@ RUN pip install build
 COPY . /app/rookify/
 RUN python -m build /app/rookify/
 
-# base
+
+# Base
 FROM debian:stable-slim as base
 
 COPY requirements.txt /app/rookify/src/
@@ -29,19 +32,22 @@ RUN apt-get update && apt-get install -y python3-pip python3-rados python3-venv 
         exit 1; \
     fi
 
-# Currently pip simply installed all the requirements
-RUN python3 -m venv --system-site-packages --symlinks /app/rookify/
-RUN /app/rookify/bin/pip install -r /app/rookify/src/requirements.txt
+# Install  package with requirements including systempackages and simlinks (rados) into a venv 
+RUN python3 -m venv --system-site-packages --symlinks /app/rookify/ && \
+    /app/rookify/bin/pip install -r /app/rookify/src/requirements.txt
 
-# rookify
+# Rookify
 FROM base AS rookify
 LABEL org.opencontainers.image.source="https://github.com/SovereignCloudStack/rookify"
-ARG ROOKIFY_VERSION=0.0.0
+ARG ROOKIFY_VERSION=0.0.1
 
 WORKDIR /app/rookify
 
 COPY --from=builder /app/rookify/dist/Rookify-${ROOKIFY_VERSION}-py3-none-any.whl ./src/
 RUN ./bin/pip install ./src/Rookify-${ROOKIFY_VERSION}-py3-none-any.whl
 
+# This is for debugging and will not be used when ENTRYPOINT is set
 CMD ["sleep", "infinity"]
-#ENTRYPOINT ["./bin/rookify", "run"]
+
+# Set the ENTRYPOINT to activate the venv and then run the 'rookify' command
+ENTRYPOINT ["/bin/bash", "-c", "source ./bin/activate && exec python -m rookify"]

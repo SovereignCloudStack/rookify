@@ -59,9 +59,14 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	cd src && python3 -m rookify
 
 .PHONY: build-container
-build-container: ## Build container from Dockerfile
-    ${CONTAINERCMD} build -t rookify:latest -f Dockerfile .
+TAG ?= 0.0.1
+build-container: ## Build container from Dockerfile, add e.g. TAG=0.0.0.1 to specify the version. Default value is 0.0.0-dev
+	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(TAG) -t rookify:latest -f Dockerfile .
+
+.PHONY: run-rookify-from-container
+run-rookify-from-container: ## Run rookify from the container (Note: the ceph volume needs to be set correctly)
+	${CONTAINERCMD} run -v ./src/config.yaml:/app/rookify/config.yaml:Z -v ./.ceph:/.ceph:Z rookify:latest
 
 .PHONY: run-interactive-container
-up: ## Run an insteractive container (make sure that Dockerfile has the DEBBUGING sleep command set at the end)
+run-interactive-container: ## Run an insteractive container (make sure that Dockerfile has the DEBBUGING sleep command set at the end)
 	${CONTAINERCMD} run -it rookify:latest bash
