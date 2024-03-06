@@ -39,6 +39,7 @@ def load_modules(module_names: list) -> list:
 
             for attr_type, attr_name in (
                 (ModuleHandler, 'HANDLER_CLASS'),
+                (str, 'MODULE_NAME'),
                 (list, 'REQUIRES'),
                 (list, 'AFTER'),
                 (bool, 'RUN_IN_PREFLIGHT')

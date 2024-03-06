@@ -10,13 +10,13 @@ class MigrateOSDsHandler(ModuleHandler):
 
     def run(self) -> dict:
         osd_config = dict()
-        for node, osds in self._data['modules.analyze_ceph']['node']['ls']['osd'].items():
+        for node, osds in self._data['analyze_ceph']['node']['ls']['osd'].items():
             osd_config[node] = {'osds': {}}
             for osd in osds:
                 osd_config[node]['osds'][osd] = dict()
 
 
-        for osd in self._data['modules.analyze_ceph']['osd']['dump']['osds']:
+        for osd in self._data['analyze_ceph']['osd']['dump']['osds']:
             number = osd['osd']
             uuid = osd['uuid']
             for host in osd_config.values():
@@ -25,7 +25,7 @@ class MigrateOSDsHandler(ModuleHandler):
                     break
 
         for node, values in osd_config.items():
-            devices = self._data['modules.analyze_ceph']['ssh']['osd'][node]['devices']
+            devices = self._data['analyze_ceph']['ssh']['osd'][node]['devices']
             for osd in values['osds'].values():
                 for device in devices:
                     if osd['uuid'] in device:
