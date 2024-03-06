@@ -10,7 +10,7 @@ def main():
         config = load_yaml("config.yaml")
     except FileNotFoundError as err:
         raise SystemExit(f'Could not load config: {err}')
-    migration_modules = rookify.modules.load_modules(config['migration_modules'])
+    preflight_modules, migration_modules = rookify.modules.load_modules(config['migration_modules'])
 
     module_data = dict()
     try:
@@ -18,25 +18,23 @@ def main():
     except FileNotFoundError:
         pass
 
-    # Get a list of handlers and run handlers if they should be run in preflight
-    handlers = list()
-    for module in migration_modules:
-        handler = module.HANDLER_CLASS(config=MappingProxyType(config), data=MappingProxyType(module_data))
-        if module.RUN_IN_PREFLIGHT:
-            handler.preflight_check()
-            result = handler.run()
-            module_data[module.MODULE_NAME] = result
-        else:
-            handlers.append((module, handler))
-
-    # Do preflight check of all other handlers
-    for module, handler in handlers:
-        handler.preflight_check()
-
-    # Run handlers
-    for module, handler in handlers:
+    # Run preflight requirement modules
+    for preflight_module in preflight_modules:
+        handler = preflight_module.HANDLER_CLASS(config=MappingProxyType(config), data=MappingProxyType(module_data))
         result = handler.run()
-        module_data[module.MODULE_NAME] = result
+        module_data[preflight_module.MODULE_NAME] = result
+
+    # Run preflight checks and append handlers to list
+    handlers = list()
+    for migration_module in migration_modules:
+        handler = migration_module.HANDLER_CLASS(config=MappingProxyType(config), data=MappingProxyType(module_data))
+        handler.preflight_check()
+        handlers.append((migration_module, handler))
+    
+    # Run migration modules
+    for migration_module, handler in handlers:
+        result = handler.run()
+        module_data[migration_module.MODULE_NAME] = result
 
     save_yaml(config['general']['module_data_file'], module_data)
 
