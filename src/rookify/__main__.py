@@ -25,7 +25,7 @@ def main():
         if module.RUN_IN_PREFLIGHT:
             handler.preflight_check()
             result = handler.run()
-            module_data[module.__name__] = result
+            module_data[module.MODULE_NAME] = result
         else:
             handlers.append((module, handler))
 
@@ -36,7 +36,7 @@ def main():
     # Run handlers
     for module, handler in handlers:
         result = handler.run()
-        module_data[module.__name__] = result
+        module_data[module.MODULE_NAME] = result
 
     save_yaml(config['general']['module_data_file'], module_data)
 
