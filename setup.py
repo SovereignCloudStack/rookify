@@ -16,31 +16,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from os import makedirs, path
-
 try:
     from setuptools import find_packages, setup
 except ImportError:
     from distutils import find_packages, setup
 #
 
+
 def get_version():
     """
-Returns the version currently in development.
+    Returns the version currently in development.
 
-:return: (str) Version string
-:since:  v0.0.1
+    :return: (str) Version string
+    :since:  v0.0.1
     """
 
     return "v0.0.1"
+
+
 #
 
-_setup = { "version": get_version()[1:],
-           "data_files": [ ( "docs", [ "LICENSE", "README.md" ]) ],
-           "test_suite": "tests"
-         }
+_setup = {
+    "version": get_version()[1:],
+    "data_files": [("docs", ["LICENSE", "README.md"])],
+    "test_suite": "tests",
+}
 
-_setup['package_dir'] = { "": "src" }
-_setup['packages'] = find_packages("src")
+_setup["package_dir"] = {"": "src"}
+_setup["packages"] = find_packages("src")
 
 setup(**_setup)
