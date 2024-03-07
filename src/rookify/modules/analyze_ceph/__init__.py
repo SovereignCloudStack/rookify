@@ -2,7 +2,7 @@
 
 from .main import AnalyzeCephHandler
 
-MODULE_NAME = 'analyze_ceph'
+MODULE_NAME = "analyze_ceph"
 HANDLER_CLASS = AnalyzeCephHandler
 REQUIRES = []
 AFTER = []

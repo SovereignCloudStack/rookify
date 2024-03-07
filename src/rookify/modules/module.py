@@ -6,8 +6,10 @@ import rados
 import kubernetes
 import fabric
 
+
 class ModuleException(Exception):
     pass
+
 
 class ModuleHandler:
     """
@@ -17,27 +19,26 @@ class ModuleHandler:
     class __Ceph:
         def __init__(self, config: dict):
             try:
-                self.__ceph = rados.Rados(conffile=config['conf_file'], conf={'keyring': config['keyring']})
+                self.__ceph = rados.Rados(
+                    conffile=config["conf_file"], conf={"keyring": config["keyring"]}
+                )
                 self.__ceph.connect()
             except rados.ObjectNotFound as err:
-                raise ModuleException(f'Could not connect to ceph: {err}')
+                raise ModuleException(f"Could not connect to ceph: {err}")
 
         def mon_command(self, command: str, **kwargs) -> dict:
-            cmd = {
-                'prefix': command,
-                'format': 'json'
-            }
+            cmd = {"prefix": command, "format": "json"}
             cmd.update(kwargs)
-            result = self.__ceph.mon_command(json.dumps(cmd), b'')
+            result = self.__ceph.mon_command(json.dumps(cmd), b"")
             if result[0] != 0:
-                raise ModuleException(f'Ceph did return an error: {result}')
+                raise ModuleException(f"Ceph did return an error: {result}")
             return json.loads(result[1])
 
     class __K8s:
         def __init__(self, config: dict):
             k8s_config = kubernetes.client.Configuration()
-            k8s_config.api_key = config['api_key']
-            k8s_config.host = config['host']
+            k8s_config.api_key = config["api_key"]
+            k8s_config.host = config["host"]
             self.__client = kubernetes.client.ApiClient(k8s_config)
 
         @property
@@ -58,14 +59,22 @@ class ModuleHandler:
 
         def command(self, host: str, command: str) -> fabric.runners.Result:
             try:
-                address = self.__config['hosts'][host]['address']
-                user = self.__config['hosts'][host]['user']
-                port = self.__config['hosts'][host]['port'] if 'port' in self.__config['hosts'][host] else 22
-                private_key = self.__config['private_key']
+                address = self.__config["hosts"][host]["address"]
+                user = self.__config["hosts"][host]["user"]
+                port = (
+                    self.__config["hosts"][host]["port"]
+                    if "port" in self.__config["hosts"][host]
+                    else 22
+                )
+                private_key = self.__config["private_key"]
             except KeyError as err:
-                raise ModuleException(f'Could not find settings for {host} in config: {err}')
-            connect_kwargs = {'key_filename': private_key}
-            result = fabric.Connection(address, user=user, port=port, connect_kwargs=connect_kwargs).run(command, hide=True)
+                raise ModuleException(
+                    f"Could not find settings for {host} in config: {err}"
+                )
+            connect_kwargs = {"key_filename": private_key}
+            result = fabric.Connection(
+                address, user=user, port=port, connect_kwargs=connect_kwargs
+            ).run(command, hide=True)
             return result
 
     def __init__(self, config: dict, data: dict):
@@ -99,18 +108,18 @@ class ModuleHandler:
 
     @property
     def ceph(self) -> __Ceph:
-        if self.__ceph == None:
-            self.__ceph = self.__Ceph(self._config['ceph'])
+        if self.__ceph is None:
+            self.__ceph = self.__Ceph(self._config["ceph"])
         return self.__ceph
 
     @property
     def k8s(self) -> __K8s:
-        if self.__k8s == None:
-            self.__k8s = self.__K8s(self._config['kubernetes'])
+        if self.__k8s is None:
+            self.__k8s = self.__K8s(self._config["kubernetes"])
         return self.__k8s
 
     @property
     def ssh(self) -> __SSH:
-        if self.__ssh == None:
-            self.__ssh = self.__SSH(self._config['ssh'])
+        if self.__ssh is None:
+            self.__ssh = self.__SSH(self._config["ssh"])
         return self.__ssh
