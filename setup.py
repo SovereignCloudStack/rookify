@@ -22,26 +22,27 @@ try:
     from setuptools import find_packages, setup
 except ImportError:
     from distutils import find_packages, setup
-#
+
 
 def get_version():
     """
-Returns the version currently in development.
+    Returns the version currently in development.
 
-:return: (str) Version string
-:since:  v0.0.1
+    :return: (str) Version string
+    :since:  v0.0.1
     """
 
     return os.environ.get("ROOKIFY_VERSION", "0.0.0-dev")
-#
 
-_setup = { "version": get_version(),
-           "data_files": [ ( "docs", [ "LICENSE", "README.md" ] ) ],
-           "entry_points": { "console_scripts": [ "rookify = rookify.__main__:main" ] },
-           "test_suite": "tests"
-         }
 
-_setup['package_dir'] = { "": "src" }
-_setup['packages'] = find_packages("src")
+_setup = {
+    "version": get_version(),
+    "data_files": [("docs", ["LICENSE", "README.md"])],
+    "entry_points": {"console_scripts": ["rookify = rookify.__main__:main"]},
+    "test_suite": "tests",
+}
+
+_setup["package_dir"] = {"": "src"}
+_setup["packages"] = find_packages("src")
 
 setup(**_setup)

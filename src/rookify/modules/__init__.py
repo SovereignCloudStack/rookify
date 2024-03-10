@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import functools
 import importlib
+import types
 
-from typing import Optional
 from collections import OrderedDict
 from .module import ModuleHandler
+
 
 class ModuleLoadException(Exception):
     """
     ModuleLoadException is an exception class that can be raised during the dynamic load process for modules.
     """
+
     def __init__(self, module_name: str, message: str):
         """
         Construct a new 'ModuleLoadException' object.
@@ -21,44 +22,86 @@ class ModuleLoadException(Exception):
         self.module_name = module_name
         self.message = message
 
-def load_modules(module_names: list) -> list:
+
+def load_modules(module_names: list) -> tuple[list, list]:
     """
     Dynamically loads modules from the 'modules' package.
 
     :param module_names: The module names to load
+    :return: returns tuple of preflight_modules, modules
     """
+
+    # Sanity checks for modules
+    def check_module_sanity(module_name: str, module: types.ModuleType):
+        for attr_type, attr_name in (
+            (ModuleHandler, "HANDLER_CLASS"),
+            (str, "MODULE_NAME"),
+            (list, "REQUIRES"),
+            (list, "AFTER"),
+            (list, "PREFLIGHT_REQUIRES"),
+        ):
+            if not hasattr(module, attr_name):
+                raise ModuleLoadException(
+                    module_name, f"Module has no attribute {attr_name}"
+                )
+
+            attr = getattr(module, attr_name)
+            if not isinstance(attr, attr_type) and not issubclass(attr, attr_type):
+                raise ModuleLoadException(
+                    module_name, f"Attribute {attr_name} is not type {attr_type}"
+                )
 
     # Load the modules in the given list and recursivley load required modules
     required_modules = OrderedDict()
-    def load_required_modules(module_names: list, modules: OrderedDict) -> None:
+
+    def load_required_modules(modules_out: OrderedDict, module_names: list) -> None:
         for module_name in module_names:
-            if module_name in modules:
+            if module_name in modules_out:
                 continue
 
-            module = importlib.import_module(f"rookify.modules.{module_name}")
+            module = importlib.import_module(f".{module_name}", "rookify.modules")
+            check_module_sanity(module_name, module)
 
-            for attr_type, attr_name in (
-                (ModuleHandler, 'HANDLER_CLASS'),
-                (list, 'REQUIRES'),
-                (list, 'AFTER'),
-                (bool, 'RUN_IN_PREFLIGHT')
-            ):
-                if not hasattr(module, attr_name):
-                    raise ModuleLoadException(module_name, f'Module has no attribute {attr_name}')
-
-                attr = getattr(module, attr_name)
-                if not isinstance(attr, attr_type) and not issubclass(attr, attr_type):
-                    raise ModuleLoadException(module_name, f'Attribute {attr_name} is not type {attr_type}')
-
-            load_required_modules(module.REQUIRES, modules)
+            load_required_modules(modules_out, module.REQUIRES)
             module.AFTER.extend(module.REQUIRES)
 
-            modules[module_name] = module
-    load_required_modules(module_names, required_modules)
+            modules_out[module_name] = module
+
+    load_required_modules(required_modules, module_names)
+
+    # Recursively load the modules in the PREFLIGHT_REQUIRES attribute of the given modules
+    preflight_modules = OrderedDict()
+
+    def load_preflight_modules(
+        modules_in: OrderedDict, modules_out: OrderedDict, module_names: list
+    ) -> None:
+        for module_name in module_names:
+            if module_name in modules_out:
+                continue
+
+            module = importlib.import_module(f".{module_name}", "rookify.modules")
+            check_module_sanity(module_name, module)
+
+            # We have to check, if the preflight_requires list is already loaded as migration requirement
+            for preflight_requirement in module.PREFLIGHT_REQUIRES:
+                if preflight_requirement in modules_in:
+                    raise ModuleLoadException(
+                        module_name,
+                        f"Module {preflight_requirement} is already loaded as migration requirement",
+                    )
+
+            load_preflight_modules(modules_in, modules_out, module.PREFLIGHT_REQUIRES)
+            if module_name not in modules_in:
+                modules_out[module_name] = module
+
+    load_preflight_modules(required_modules, preflight_modules, required_modules.keys())
 
     # Sort the modules by the AFTER keyword
     modules = OrderedDict()
-    def sort_modules(modules_in: OrderedDict, modules_out: OrderedDict, module_names: list) -> None:
+
+    def sort_modules(
+        modules_in: OrderedDict, modules_out: OrderedDict, module_names: list
+    ) -> None:
         for module_name in module_names:
             if module_name not in modules_in:
                 continue
@@ -70,6 +113,7 @@ def load_modules(module_names: list) -> list:
             sort_modules(modules_in, modules_out, after_modules_name)
 
             modules_out[module_name] = modules_in[module_name]
+
     sort_modules(required_modules, modules, list(required_modules.keys()))
 
-    return list(modules.values())
+    return list(preflight_modules.values()), list(modules.values())
