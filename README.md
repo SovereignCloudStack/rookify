@@ -16,6 +16,7 @@ Rookify is designed to facilitate a smooth and efficient transition for existing
 - Access to a Kubernetes cluster with sufficient resources to host the migrated Ceph cluster.
   - Kubernetes nodes should be rolled out at least on the OSD nodes
 - Rook operator version 1.13 or higher installed in the Kubernetes cluster.
+- _local development enivornment_ requires radoslib version 2.0.0 installed
 
 ## Installation
 1. Clone the repository:
