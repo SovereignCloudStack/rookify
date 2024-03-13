@@ -19,9 +19,11 @@ help: ## Display this help message
 .PHONY: setup
 setup: setup-pre-commit check-radoslib setup-venv ## Setup the pre-commit environment and then the venv environment
 
+.PHONY: setup-pre-commit
 setup-pre-commit:
 	pip install --user pre-commit && pre-commit install
 
+.PHONY: setup-venv
 setup-venv:
 	python -m venv --system-site-packages ./.venv && \
 	source ./.venv/bin/activate && \
@@ -32,6 +34,7 @@ update-requirements: ## Update the requirements.txt with newer versions of pip p
 	source ./.venv/bin/activate && \
 	pip freeze -l > requirements.txt
 
+.PHONY: check-radoslib
 check-radoslib: ## Checks if radoslib is installed and if it contains the right version
 	@if [ -z "$(GENERAL_LIB_LOCATION)" ]; then \
 		echo -e "${COLOUR_RED}ERROR: 'rados' library not found. Please make sure it's installed.${COLOUR_END}"; \
