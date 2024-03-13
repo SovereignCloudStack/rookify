@@ -10,4 +10,4 @@ class ExampleHandler(ModuleHandler):
 
     def run(self) -> dict:
         # Run the migration tasks
-        pass
+        return {}

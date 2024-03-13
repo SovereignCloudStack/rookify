@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Dict
+
 from ..module import ModuleHandler
 
 
@@ -10,7 +12,7 @@ class MigrateOSDsHandler(ModuleHandler):
         # raise ModuleException('test error')
 
     def run(self) -> dict:
-        osd_config = dict()
+        osd_config: Dict[str, dict] = dict()
         for node, osds in self._data["analyze_ceph"]["node"]["ls"]["osd"].items():
             osd_config[node] = {"osds": {}}
             for osd in osds:
@@ -33,3 +35,4 @@ class MigrateOSDsHandler(ModuleHandler):
                         break
 
         print(osd_config)
+        return {}

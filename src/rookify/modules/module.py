@@ -5,6 +5,7 @@ import abc
 import rados
 import kubernetes
 import fabric
+from typing import Any
 
 
 class ModuleException(Exception):
@@ -17,7 +18,7 @@ class ModuleHandler:
     """
 
     class __Ceph:
-        def __init__(self, config: dict):
+        def __init__(self, config: dict[str, Any]):
             try:
                 self.__ceph = rados.Rados(
                     conffile=config["conf_file"], conf={"keyring": config["keyring"]}
@@ -26,9 +27,9 @@ class ModuleHandler:
             except rados.ObjectNotFound as err:
                 raise ModuleException(f"Could not connect to ceph: {err}")
 
-        def mon_command(self, command: str, **kwargs) -> dict:
+        def mon_command(self, command: str, **kwargs: dict[str, str]) -> dict[str, Any]:
             cmd = {"prefix": command, "format": "json"}
-            cmd.update(kwargs)
+            cmd.update(**kwargs)
             result = self.__ceph.mon_command(json.dumps(cmd), b"")
             if result[0] != 0:
                 raise ModuleException(f"Ceph did return an error: {result}")
@@ -86,9 +87,9 @@ class ModuleHandler:
         """
         self._config = config
         self._data = data
-        self.__ceph = None
-        self.__k8s = None
-        self.__ssh = None
+        self.__ceph: self.__Ceph = None  # type: ignore
+        self.__k8s: self.__K8s = None  # type: ignore
+        self.__ssh: self.__SSH = None  # type: ignore
 
     @abc.abstractmethod
     def preflight_check(self) -> None:

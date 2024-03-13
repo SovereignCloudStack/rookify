@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+from typing import Dict
 from ..module import ModuleHandler
 
 
@@ -8,7 +8,7 @@ class AnalyzeCephHandler(ModuleHandler):
     def run(self) -> dict:
         commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
 
-        results = dict()
+        results: Dict[str, dict] = dict()
         for command in commands:
             parts = command.split(" ")
             leaf = results

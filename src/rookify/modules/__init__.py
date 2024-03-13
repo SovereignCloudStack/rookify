@@ -52,7 +52,7 @@ def load_modules(module_names: list) -> tuple[list, list]:
                 )
 
     # Load the modules in the given list and recursivley load required modules
-    required_modules = OrderedDict()
+    required_modules: OrderedDict[str, types.ModuleType] = OrderedDict()
 
     def load_required_modules(modules_out: OrderedDict, module_names: list) -> None:
         for module_name in module_names:
@@ -70,7 +70,7 @@ def load_modules(module_names: list) -> tuple[list, list]:
     load_required_modules(required_modules, module_names)
 
     # Recursively load the modules in the PREFLIGHT_REQUIRES attribute of the given modules
-    preflight_modules = OrderedDict()
+    preflight_modules: OrderedDict[str, types.ModuleType] = OrderedDict()
 
     def load_preflight_modules(
         modules_in: OrderedDict, modules_out: OrderedDict, module_names: list
@@ -94,10 +94,12 @@ def load_modules(module_names: list) -> tuple[list, list]:
             if module_name not in modules_in:
                 modules_out[module_name] = module
 
-    load_preflight_modules(required_modules, preflight_modules, required_modules.keys())
+    load_preflight_modules(
+        required_modules, preflight_modules, list(required_modules.keys())
+    )
 
     # Sort the modules by the AFTER keyword
-    modules = OrderedDict()
+    modules: OrderedDict[str, types.ModuleType] = OrderedDict()
 
     def sort_modules(
         modules_in: OrderedDict, modules_out: OrderedDict, module_names: list

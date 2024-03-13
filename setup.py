@@ -16,14 +16,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from typing import Dict, Any
+
 try:
     from setuptools import find_packages, setup
 except ImportError:
-    from distutils import find_packages, setup
-#
+    from distutils import find_packages, setup  # type: ignore
 
 
-def get_version():
+def get_version() -> str:
     """
     Returns the version currently in development.
 
@@ -36,7 +37,7 @@ def get_version():
 
 #
 
-_setup = {
+_setup: Dict[str, Any] = {
     "version": get_version()[1:],
     "data_files": [("docs", ["LICENSE", "README.md"])],
     "test_suite": "tests",
