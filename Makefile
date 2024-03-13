@@ -24,6 +24,7 @@ help: ## Display this help message
 	    awk -F ':.*?## ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
 
 .PHONY: setup
+<<<<<<< HEAD
 setup: setup-pre-commit check-radoslib setup-venv ## Setup the pre-commit environment and then the venv environment
 
 .PHONY: setup-pre-commit
@@ -31,6 +32,11 @@ setup-pre-commit:
 	pip install --user pre-commit && pre-commit install
 
 .PHONY: setup-venv
+=======
+setup: ## Setting up the docker-compose environment
+	${MAKE} setup-venv
+
+>>>>>>> b28c22e (feat: use ceph container for building container, also add more info to pyproject.toml, adapt Makefile and remove unnecessary methods and also add more clear tag)
 setup-venv:
 	python -m venv --system-site-packages ./.venv && \
 	source ./.venv/bin/activate && \
@@ -59,14 +65,6 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	cd src && python3 -m rookify
 
 .PHONY: build-container
-TAG ?= 0.0.1
+ROOKIFY_VERSION ?= 0.0.1
 build-container: ## Build container from Dockerfile, add e.g. TAG=0.0.0.1 to specify the version. Default value is 0.0.0-dev
-	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(TAG) -t rookify:latest -f Dockerfile .
-
-.PHONY: run-rookify-from-container
-run-rookify-from-container: ## Run rookify from the container (Note: the ceph volume needs to be set correctly)
-	${CONTAINERCMD} run -v ./src/config.yaml:/app/rookify/config.yaml:Z -v ./.ceph:/.ceph:Z rookify:latest
-
-.PHONY: run-interactive-container
-run-interactive-container: ## Run an insteractive container (make sure that Dockerfile has the DEBBUGING sleep command set at the end)
-	${CONTAINERCMD} run -it rookify:latest bash
+	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
