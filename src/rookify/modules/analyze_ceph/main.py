@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
-
 from ..module import ModuleHandler
+
+from typing import Any, Dict
 
 
 class AnalyzeCephHandler(ModuleHandler):
-    def run(self) -> dict:
+    def run(self) -> Dict[str, Any]:
         commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
 
-        results = dict()
+        results: Dict[str, Any] = dict()
         for command in commands:
             parts = command.split(" ")
             leaf = results

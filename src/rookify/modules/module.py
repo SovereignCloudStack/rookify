@@ -5,6 +5,7 @@ import abc
 import rados
 import kubernetes
 import fabric
+from typing import Any, Dict, List, Optional
 
 
 class ModuleException(Exception):
@@ -17,7 +18,7 @@ class ModuleHandler:
     """
 
     class __Ceph:
-        def __init__(self, config: dict):
+        def __init__(self, config: Dict[str, Any]):
             try:
                 self.__ceph = rados.Rados(
                     conffile=config["conf_file"], conf={"keyring": config["keyring"]}
@@ -26,16 +27,20 @@ class ModuleHandler:
             except rados.ObjectNotFound as err:
                 raise ModuleException(f"Could not connect to ceph: {err}")
 
-        def mon_command(self, command: str, **kwargs) -> dict:
+        def mon_command(
+            self, command: str, **kwargs: str
+        ) -> Dict[str, Any] | List[Any]:
             cmd = {"prefix": command, "format": "json"}
-            cmd.update(kwargs)
+            cmd.update(**kwargs)
             result = self.__ceph.mon_command(json.dumps(cmd), b"")
             if result[0] != 0:
                 raise ModuleException(f"Ceph did return an error: {result}")
-            return json.loads(result[1])
+            data = json.loads(result[1])
+            assert isinstance(data, dict) or isinstance(data, list)
+            return data
 
     class __K8s:
-        def __init__(self, config: dict):
+        def __init__(self, config: Dict[str, Any]):
             k8s_config = kubernetes.client.Configuration()
             k8s_config.api_key = config["api_key"]
             k8s_config.host = config["host"]
@@ -54,7 +59,7 @@ class ModuleHandler:
             return kubernetes.client.NodeV1Api(self.__client)
 
     class __SSH:
-        def __init__(self, config: dict):
+        def __init__(self, config: Dict[str, Any]):
             self.__config = config
 
         def command(self, host: str, command: str) -> fabric.runners.Result:
@@ -77,7 +82,7 @@ class ModuleHandler:
             ).run(command, hide=True)
             return result
 
-    def __init__(self, config: dict, data: dict):
+    def __init__(self, config: Dict[str, Any], data: Dict[str, Any]):
         """
         Construct a new 'ModuleHandler' object.
 
@@ -86,9 +91,9 @@ class ModuleHandler:
         """
         self._config = config
         self._data = data
-        self.__ceph = None
-        self.__k8s = None
-        self.__ssh = None
+        self.__ceph: Optional[ModuleHandler.__Ceph] = None
+        self.__k8s: Optional[ModuleHandler.__K8s] = None
+        self.__ssh: Optional[ModuleHandler.__SSH] = None
 
     @abc.abstractmethod
     def preflight_check(self) -> None:
@@ -98,7 +103,7 @@ class ModuleHandler:
         pass
 
     @abc.abstractmethod
-    def run(self) -> dict:
+    def run(self) -> Dict[str, Any]:
         """
         Run the modules tasks
 
@@ -109,17 +114,17 @@ class ModuleHandler:
     @property
     def ceph(self) -> __Ceph:
         if self.__ceph is None:
-            self.__ceph = self.__Ceph(self._config["ceph"])
+            self.__ceph = ModuleHandler.__Ceph(self._config["ceph"])
         return self.__ceph
 
     @property
     def k8s(self) -> __K8s:
         if self.__k8s is None:
-            self.__k8s = self.__K8s(self._config["kubernetes"])
+            self.__k8s = ModuleHandler.__K8s(self._config["kubernetes"])
         return self.__k8s
 
     @property
     def ssh(self) -> __SSH:
         if self.__ssh is None:
-            self.__ssh = self.__SSH(self._config["ssh"])
+            self.__ssh = ModuleHandler.__SSH(self._config["ssh"])
         return self.__ssh
