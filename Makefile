@@ -24,7 +24,6 @@ help: ## Display this help message
 	    awk -F ':.*?## ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
 
 .PHONY: setup
-<<<<<<< HEAD
 setup: setup-pre-commit check-radoslib setup-venv ## Setup the pre-commit environment and then the venv environment
 
 .PHONY: setup-pre-commit
@@ -32,11 +31,6 @@ setup-pre-commit:
 	pip install --user pre-commit && pre-commit install
 
 .PHONY: setup-venv
-=======
-setup: ## Setting up the docker-compose environment
-	${MAKE} setup-venv
-
->>>>>>> b28c22e (feat: use ceph container for building container, also add more info to pyproject.toml, adapt Makefile and remove unnecessary methods and also add more clear tag)
 setup-venv:
 	python -m venv --system-site-packages ./.venv && \
 	source ./.venv/bin/activate && \

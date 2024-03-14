@@ -12,7 +12,7 @@ RUN python -m build /app/rookify/
 
 
 # Base
-From quay.io/ceph/ceph:v17.2.7 as base
+From quay.io/ceph/ceph:v18.2.2 as base
 
 COPY requirements.txt /app/rookify/src/
 
