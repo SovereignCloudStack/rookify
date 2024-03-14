@@ -16,6 +16,7 @@ Rookify is designed to facilitate a smooth and efficient transition for existing
 - Access to a Kubernetes cluster with sufficient resources to host the migrated Ceph cluster.
   - Kubernetes nodes should be rolled out at least on the OSD nodes
 - Rook operator version 1.13 or higher installed in the Kubernetes cluster.
+- _local development enivornment_ requires radoslib version 2.0.0 installed
 
 ## Installation
 1. Clone the repository:
@@ -28,10 +29,18 @@ git clone https://github.com/SovereignCloudStack/rookify
 cd rookify
 ```
 
-3. __TODO:__ Install script
+3. To install the local development environment
+(_Note: This will install pre-commit in your local user context_):
+```bash
+make setup
+```
+
+4. __TODO:__ Install script for container-based setup
 
 ## Usage
 __TODO__
+
+Type `make` to get a list of available development specific commands.
 
 ## Support
 For issues, questions, or contributions, please open an issue or pull request in the GitHub repository. We welcome community feedback and contributions to enhance rookify.
