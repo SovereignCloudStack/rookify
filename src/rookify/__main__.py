@@ -6,7 +6,7 @@ from types import MappingProxyType
 from .yaml import load_yaml, save_yaml
 
 
-def main():
+def main() -> None:
     try:
         config = load_yaml("config.yaml")
     except FileNotFoundError as err:

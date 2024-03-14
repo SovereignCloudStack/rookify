@@ -21,7 +21,7 @@ from typing import Dict, Any
 try:
     from setuptools import find_packages, setup
 except ImportError:
-    from distutils import find_packages, setup  # type: ignore
+    from distutils import find_packages, setup  # type: ignore[attr-defined, unused-ignore]
 
 
 def get_version() -> str:
