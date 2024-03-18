@@ -19,8 +19,14 @@ ssh:
       user: dragon
 
 kubernetes:
-  host: 192.168.22.10
-  api_key: abc
+  config: ../.k8s/config
+
+rook:
+  cluster:
+    name: osism-ceph
+    namespace: rook-ceph
+  ceph:
+    image: quay.io/ceph/ceph:v18.2.1
 
 migration_modules:
 - migrate_osds
