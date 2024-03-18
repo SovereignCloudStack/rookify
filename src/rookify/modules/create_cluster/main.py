@@ -33,7 +33,6 @@ class CreateClusterHandler(ModuleHandler):
 
             # Get manager count
             mgr_count = 0
-
             for node, mgrs in node_ls_data["mgr"].items():
                 mgr_count += 1
                 if len(mons) > 1:
