@@ -6,12 +6,12 @@ from typing import Any, Dict
 
 
 class MigrateOSDsHandler(ModuleHandler):
-    def preflight_check(self) -> None:
+    def preflight(self) -> None:
         pass
         # result = self.ceph.mon_command("osd dump")
         # raise ModuleException('test error')
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> Any:
         osd_config: Dict[str, Any] = dict()
         for node, osds in self._data["analyze_ceph"]["node"]["ls"]["osd"].items():
             osd_config[node] = {"osds": {}}

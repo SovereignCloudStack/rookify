@@ -2,14 +2,14 @@
 
 from ..module import ModuleHandler, ModuleException
 
-from typing import Any, Dict
+from typing import Any
 
 
 class ExampleHandler(ModuleHandler):
-    def preflight_check(self) -> None:
+    def preflight(self) -> None:
         # Do something for checking if all needed preconditions are met else throw ModuleException
         raise ModuleException("Example module was loaded, so aborting!")
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> Any:
         # Run the migration tasks
         return {}
