@@ -89,3 +89,4 @@ cython_debug/
 data.yaml
 config.yaml
 .ceph
+.k8s

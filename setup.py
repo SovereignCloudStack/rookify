@@ -17,14 +17,15 @@ limitations under the License.
 """
 
 import os
+from typing import Dict, Any
 
 try:
     from setuptools import find_packages, setup
 except ImportError:
-    from distutils import find_packages, setup
+    from distutils import find_packages, setup  # type: ignore[attr-defined, unused-ignore]
 
 
-def get_version():
+def get_version() -> str:
     """
     Returns the version currently in development.
 
@@ -35,7 +36,7 @@ def get_version():
     return os.environ.get("ROOKIFY_VERSION", "0.0.0-dev")
 
 
-_setup = {
+_setup: Dict[str, Any] = {
     "version": get_version(),
     "data_files": [("docs", ["LICENSE", "README.md"])],
     "entry_points": {"console_scripts": ["rookify = rookify.__main__:main"]},

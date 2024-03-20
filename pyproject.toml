@@ -3,4 +3,24 @@ requires = [ "setuptools", "wheel" ]
 build-backend = "setuptools.build_meta"
 
 [project]
+dynamic = ["dependencies", "scripts", "version"]
 requires-python = ">=3.9"
+
+name = "Rookify"
+description = "Enable Ceph-Cluster migrations to Rook"
+readme = "README.md"
+authors = [{name = "Sovereign Cloud Stack Developers", email = "scs@osb-alliance.com"}]
+license = {file = "LICENSE"}
+classifiers = [
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Environment :: Console",
+    "Topic :: System :: Clustering",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities"
+]
+
+[project.urls]
+Homepage = "https://scs.community"
