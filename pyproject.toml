@@ -24,3 +24,6 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://scs.community"
+
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
