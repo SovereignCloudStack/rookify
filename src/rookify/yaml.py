@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import importlib.resources
+import importlib.resources.abc
 import yamale
 import yaml
-from importlib import resources
 from pathlib import Path
 from typing import Any, Dict
 
 
-_schema_file = Path("rookify", "config.schema.yaml")
-for entry in resources.files("rookify").iterdir():
+_schema_file: Path | importlib.resources.abc.Traversable = Path(
+    "rookify", "config.schema.yaml"
+)
+for entry in importlib.resources.files("rookify").iterdir():
     if entry.name == "config.schema.yaml":
         _schema_file = entry
 
