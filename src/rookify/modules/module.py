@@ -8,6 +8,8 @@ import rados
 import kubernetes
 import fabric
 import jinja2
+import structlog
+from rookify.logger import configure_logging
 from typing import Any, Dict, List, Optional
 
 
@@ -19,6 +21,17 @@ class ModuleHandler:
     """
     ModuleHandler is an abstract class that modules have to extend.
     """
+
+    class __Logger:
+        def __init__(self, config: Dict[str, Any]):
+            try:
+                configure_logging(config)
+            except ImportError as e:
+                raise ModuleException(f"Error initializing logger: {e}")
+
+        @property
+        def getLogger(self) -> structlog.getLogger:
+            return structlog.getLogger
 
     class __Ceph:
         def __init__(self, config: Dict[str, Any]):
@@ -162,6 +175,7 @@ class ModuleHandler:
         self.__ceph: Optional[ModuleHandler.__Ceph] = None
         self.__k8s: Optional[ModuleHandler.__K8s] = None
         self.__ssh: Optional[ModuleHandler.__SSH] = None
+        self.__logger: Optional[structlog.getLogger] = None
 
     @abc.abstractmethod
     def preflight(self) -> None:
@@ -196,6 +210,12 @@ class ModuleHandler:
         if self.__ssh is None:
             self.__ssh = ModuleHandler.__SSH(self._config["ssh"])
         return self.__ssh
+
+    @property
+    def logger(self) -> structlog.getLogger:
+        if self.__logger is None:
+            self.__logger = ModuleHandler.__Logger(self._config)
+        return self.__logger.getLogger()
 
     def load_template(self, filename: str, **variables: Any) -> __Template:
         template_path = os.path.join(self.__module_path, "templates", filename)

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from ..module import ModuleHandler
-
 from typing import Any, Dict
 
 
@@ -20,10 +19,11 @@ class AnalyzeCephHandler(ModuleHandler):
                     leaf[part] = self.ceph.mon_command(command)
                 leaf = leaf[part]
 
+        self.logger.info("Dictionary created")
         results["ssh"] = dict()
         results["ssh"]["osd"] = dict()
         for node, values in results["node"]["ls"]["osd"].items():
             devices = self.ssh.command(node, "find /dev/ceph-*/*").stdout.splitlines()
             results["ssh"]["osd"][node] = {"devices": devices}
-
+        self.logger.info("AnalyzeCephHandler ran successfully.")
         return results

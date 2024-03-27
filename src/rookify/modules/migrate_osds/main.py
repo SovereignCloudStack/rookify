@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from ..module import ModuleHandler
-
 from typing import Any, Dict
 
 
@@ -34,5 +33,5 @@ class MigrateOSDsHandler(ModuleHandler):
                         osd["device"] = device
                         break
 
-        print(osd_config)
+        self.logger.info(osd_config)
         return {}

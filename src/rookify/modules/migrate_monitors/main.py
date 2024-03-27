@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from ..module import ModuleHandler
+from typing import Dict, Any
 
 
 class MigrateMonitorsHandler(ModuleHandler):
-    pass
+    def run(self) -> Dict[str, Any]:
+        self.logger.info("MigrateMonitorsHandler ran successfully.")
+        return {}
