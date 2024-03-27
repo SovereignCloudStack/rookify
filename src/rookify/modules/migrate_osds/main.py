@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from rookify.logger import getLogger
 
+
 class MigrateOSDsHandler(ModuleHandler):
     def preflight(self) -> None:
         pass
@@ -13,6 +14,7 @@ class MigrateOSDsHandler(ModuleHandler):
         # raise ModuleException('test error')
 
     def run(self) -> Any:
+        log = getLogger()
         osd_config: Dict[str, Any] = dict()
         for node, osds in self._data["analyze_ceph"]["node"]["ls"]["osd"].items():
             osd_config[node] = {"osds": {}}
@@ -35,5 +37,5 @@ class MigrateOSDsHandler(ModuleHandler):
                         osd["device"] = device
                         break
 
-        print(osd_config)
+        log.info(osd_config)
         return {}

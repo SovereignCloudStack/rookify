@@ -8,7 +8,7 @@ logging:
     renderer: console # or: json
 
 ceph:
-  conf_file: ../.ceph/ceph.conf
+  config: ../.ceph/ceph.conf
   keyring: ../.ceph/ceph.client.admin.keyring
 
 ssh:

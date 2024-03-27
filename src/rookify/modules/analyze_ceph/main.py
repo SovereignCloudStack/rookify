@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from rookify.logger import getLogger
 
+
 class AnalyzeCephHandler(ModuleHandler):
     def run(self) -> Any:
         commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
@@ -22,6 +23,7 @@ class AnalyzeCephHandler(ModuleHandler):
                     leaf[part] = self.ceph.mon_command(command)
                 leaf = leaf[part]
 
+        log.info("Dictionary created")
         results["ssh"] = dict()
         results["ssh"]["osd"] = dict()
         for node, values in results["node"]["ls"]["osd"].items():

@@ -50,3 +50,8 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
 	source ./.venv/bin/activate && \
 	cd src && python3 -m rookify
+
+download-ceph-folder-from-testbed:
+	ssh testbed-node-0 'sudo cp -r /etc/ceph ~/ceph_configs && sudo chown -R $$USER:$$USER ~/ceph_configs'
+	scp -r testbed-node-0:ceph_configs ./.ceph
+	ssh testbed-node-0 'rm -rf ~/ceph_configs'
