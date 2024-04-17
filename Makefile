@@ -59,6 +59,6 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	cd src && python3 -m rookify
 
 .PHONY: build-container
-ROOKIFY_VERSION ?= 0.0.1
-build-container: ## Build container from Dockerfile, add e.g. TAG=0.0.0.1 to specify the version. Default value is 0.0.0-dev
+ROOKIFY_VERSION ?= 0.0.0.dev0
+build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
 	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
