@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 from typing import Dict, Any
 
 try:
@@ -32,14 +33,13 @@ def get_version() -> str:
     :since:  v0.0.1
     """
 
-    return "v0.0.1"
+    return os.environ.get("ROOKIFY_VERSION", "0.0.0-dev")
 
-
-#
 
 _setup: Dict[str, Any] = {
-    "version": get_version()[1:],
+    "version": get_version(),
     "data_files": [("docs", ["LICENSE", "README.md"])],
+    "entry_points": {"console_scripts": ["rookify = rookify.__main__:main"]},
     "test_suite": "tests",
 }
 

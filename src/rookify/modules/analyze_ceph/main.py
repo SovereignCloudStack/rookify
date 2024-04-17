@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 
 class AnalyzeCephHandler(ModuleHandler):
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> Any:
         commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
 
         results: Dict[str, Any] = dict()

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import rookify.modules
 
 from types import MappingProxyType
@@ -21,21 +22,34 @@ def main() -> None:
     except FileNotFoundError:
         pass
 
+    # Get absolute path of the rookify instance
+    rookify_path = os.path.dirname(__file__)
+
     # Run preflight requirement modules
     for preflight_module in preflight_modules:
+        module_path = os.path.join(
+            rookify_path, "modules", preflight_module.MODULE_NAME
+        )
         handler = preflight_module.HANDLER_CLASS(
-            config=MappingProxyType(config), data=MappingProxyType(module_data)
+            config=MappingProxyType(config),
+            data=MappingProxyType(module_data),
+            module_path=module_path,
         )
         result = handler.run()
         module_data[preflight_module.MODULE_NAME] = result
 
-    # Run preflight checks and append handlers to list
+    # Run preflight and append handlers to list
     handlers = list()
     for migration_module in migration_modules:
-        handler = migration_module.HANDLER_CLASS(
-            config=MappingProxyType(config), data=MappingProxyType(module_data)
+        module_path = os.path.join(
+            rookify_path, "modules", migration_module.MODULE_NAME
         )
-        handler.preflight_check()
+        handler = migration_module.HANDLER_CLASS(
+            config=MappingProxyType(config),
+            data=MappingProxyType(module_data),
+            module_path=module_path,
+        )
+        handler.preflight()
         handlers.append((migration_module, handler))
 
     # Run migration modules
