@@ -166,6 +166,8 @@ class ModuleHandler:
         self.__ssh: Optional[ModuleHandler.__SSH] = None
         self.__logger = get_logger()
 
+        self.__logger.debug("Executing {0}", self.__class__.__name__)
+
     @abc.abstractmethod
     def preflight(self) -> None:
         """
