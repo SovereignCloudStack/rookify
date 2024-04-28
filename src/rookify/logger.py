@@ -5,9 +5,10 @@ from typing import Any, Dict
 
 
 def configure_logging(config: Dict[str, Any]) -> None:
-    LOG_LEVEL = getattr(logging, config["logging"]["level"])
-    LOG_TIME_FORMAT = config["logging"]["format"]["time"]
-    LOG_RENDERER = config["logging"]["format"]["renderer"]
+    LOG_LEVEL = getattr(logging, config["level"], logging.INFO)
+    LOG_TIME_FORMAT = config["format"]["time"]
+    LOG_RENDERER = config["format"]["renderer"]
+
     structlog.configure(
         wrapper_class=structlog.make_filtering_bound_logger(LOG_LEVEL),
         processors=[
@@ -15,6 +16,7 @@ def configure_logging(config: Dict[str, Any]) -> None:
             structlog.processors.add_log_level,
         ],
     )
+
     if LOG_RENDERER == "console":
         structlog.configure(
             processors=[
@@ -31,5 +33,5 @@ def configure_logging(config: Dict[str, Any]) -> None:
         )
 
 
-def getLogger() -> structlog.getLogger:
+def get_logger() -> structlog.getLogger:
     return structlog.get_logger()
