@@ -36,6 +36,11 @@ setup-venv:
 	source ./.venv/bin/activate && \
 	pip install --ignore-installed -r requirements.txt
 
+.PHONY: run-precommit
+run-precommit: ## Run pre-commit to check if all files running through
+	pre-commit run --all-files
+
+
 .PHONY: update-requirements
 update-requirements: ## Update the requirements.txt with newer versions of pip packages
 	source ./.venv/bin/activate && \
