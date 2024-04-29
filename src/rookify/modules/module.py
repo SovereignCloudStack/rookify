@@ -8,6 +8,8 @@ import rados
 import kubernetes
 import fabric
 import jinja2
+import structlog
+from rookify.logger import get_logger
 from typing import Any, Dict, List, Optional
 
 
@@ -162,6 +164,9 @@ class ModuleHandler:
         self.__ceph: Optional[ModuleHandler.__Ceph] = None
         self.__k8s: Optional[ModuleHandler.__K8s] = None
         self.__ssh: Optional[ModuleHandler.__SSH] = None
+        self.__logger = get_logger()
+
+        self.__logger.debug("Executing {0}", self.__class__.__name__)
 
     @abc.abstractmethod
     def preflight(self) -> None:
@@ -184,6 +189,10 @@ class ModuleHandler:
         if self.__ceph is None:
             self.__ceph = ModuleHandler.__Ceph(self._config["ceph"])
         return self.__ceph
+
+    @property
+    def logger(self) -> structlog.getLogger:
+        return self.__logger
 
     @property
     def k8s(self) -> __K8s:

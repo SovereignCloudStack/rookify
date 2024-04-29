@@ -10,6 +10,13 @@ RADOSLIB_VERSION := 2.0.0
 GENERAL_LIB_LOCATION := $(shell pip show rados | grep -oP "(?<=Location: ).*")
 RADOSLIB_INSTALLED_VERSION := $(shell pip show rados | grep Version | awk '{print $$2}')
 
+## checking if docker, or podman should be used. Podman is preferred.
+ifeq ($(shell command -v podman 2> /dev/null),)
+	CONTAINERCMD=docker
+else
+	CONTAINERCMD=podman
+endif
+
 .PHONY: help
 help: ## Display this help message
 	@echo -e '${COLOUR_RED}Usage: make <command>${COLOUR_END}'
@@ -28,6 +35,11 @@ setup-venv:
 	python -m venv --system-site-packages ./.venv && \
 	source ./.venv/bin/activate && \
 	pip install --ignore-installed -r requirements.txt
+
+.PHONY: run-precommit
+run-precommit: ## Run pre-commit to check if all files running through
+	pre-commit run --all-files
+
 
 .PHONY: update-requirements
 update-requirements: ## Update the requirements.txt with newer versions of pip packages
@@ -50,3 +62,8 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
 	source ./.venv/bin/activate && \
 	cd src && python3 -m rookify
+
+.PHONY: build-container
+ROOKIFY_VERSION ?= 0.0.0.dev0
+build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
+	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .

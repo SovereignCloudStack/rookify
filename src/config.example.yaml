@@ -1,8 +1,14 @@
 general:
   module_data_file: data.yaml
 
+logging:
+  level: INFO # level at which logging should start
+  format:
+    time: "%Y-%m-%d %H:%M.%S" # other example: "iso"
+    renderer: console # or: json
+
 ceph:
-  conf_file: ../.ceph/ceph.conf
+  config: ../.ceph/ceph.conf
   keyring: ../.ceph/ceph.client.admin.keyring
 
 ssh:
