@@ -10,6 +10,13 @@ RADOSLIB_VERSION := 2.0.0
 GENERAL_LIB_LOCATION := $(shell pip show rados | grep -oP "(?<=Location: ).*")
 RADOSLIB_INSTALLED_VERSION := $(shell pip show rados | grep Version | awk '{print $$2}')
 
+## checking if docker, or podman should be used. Podman is preferred.
+ifeq ($(shell command -v podman 2> /dev/null),)
+	CONTAINERCMD=docker
+else
+	CONTAINERCMD=podman
+endif
+
 .PHONY: help
 help: ## Display this help message
 	@echo -e '${COLOUR_RED}Usage: make <command>${COLOUR_END}'
@@ -56,7 +63,7 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	source ./.venv/bin/activate && \
 	cd src && python3 -m rookify
 
-download-ceph-folder-from-testbed:
-	ssh testbed-node-0 'sudo cp -r /etc/ceph ~/ceph_configs && sudo chown -R $$USER:$$USER ~/ceph_configs'
-	scp -r testbed-node-0:ceph_configs ./.ceph
-	ssh testbed-node-0 'rm -rf ~/ceph_configs'
+.PHONY: build-container
+ROOKIFY_VERSION ?= 0.0.0.dev0
+build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
+	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .

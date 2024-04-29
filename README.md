@@ -35,7 +35,10 @@ cd rookify
 make setup
 ```
 
-4. __TODO:__ Install script for container-based setup
+4. To install the container-based environment
+```base
+make build-container
+```
 
 ## Usage
 __TODO__
