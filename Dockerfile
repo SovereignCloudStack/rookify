@@ -15,7 +15,7 @@ RUN python -m build /app/rookify/
 FROM ubuntu:24.04 as base
 
 # Update packages required for Rookify
-RUN apt-get update && apt-get install -qy python3-pip-whl python3-rados python3-venv
+RUN apt-get update && apt-get install -qy python3-pip-whl python3-rados python3-venv && apt-get clean
 
 # Generate virtualenv including system packages with simlinks
 RUN /usr/bin/python3 -m venv --system-site-packages /app/rookify/.venv
