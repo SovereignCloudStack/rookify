@@ -32,6 +32,9 @@ class ModuleHandler:
             except rados.ObjectNotFound as err:
                 raise ModuleException(f"Could not connect to ceph: {err}")
 
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self.__ceph, name)
+
         def mon_command(
             self, command: str, **kwargs: str
         ) -> Dict[str, Any] | List[Any]:
@@ -166,7 +169,7 @@ class ModuleHandler:
         self.__ssh: Optional[ModuleHandler.__SSH] = None
         self.__logger = get_logger()
 
-        self.__logger.debug("Executing {0}", self.__class__.__name__)
+        self.__logger.debug("Executing {0}".format(self.__class__.__name__))
 
     @abc.abstractmethod
     def preflight(self) -> None:
