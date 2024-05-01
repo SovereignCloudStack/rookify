@@ -8,16 +8,16 @@ from pathlib import Path
 from typing import Any, Dict
 
 
-_schema_file: Path | importlib.resources.abc.Traversable = Path(
+_config_schema_file: Path | importlib.resources.abc.Traversable = Path(
     "rookify", "config.schema.yaml"
 )
 for entry in importlib.resources.files("rookify").iterdir():
     if entry.name == "config.schema.yaml":
-        _schema_file = entry
+        _config_schema_file = entry
 
 
-def load_yaml(path: str) -> Dict[str, Any]:
-    schema = yamale.make_schema(_schema_file)
+def load_config(path: str) -> Dict[str, Any]:
+    schema = yamale.make_schema(_config_schema_file)
     data = yamale.make_data(path)
 
     yamale.validate(schema, data)
@@ -26,6 +26,13 @@ def load_yaml(path: str) -> Dict[str, Any]:
     return data[0][0]
 
 
-def save_yaml(path: str, data: Dict[str, Any]) -> None:
+def load_module_data(path: str) -> Dict[str, Any]:
+    with open(path, "r") as file:
+        data = yaml.safe_load(file)
+        assert isinstance(data, dict)
+        return data
+
+
+def save_module_data(path: str, data: Dict[str, Any]) -> None:
     with open(path, "w") as file:
         yaml.safe_dump(data, file)
