@@ -35,6 +35,7 @@ rook:
     image: quay.io/ceph/ceph:v18.2.1
 
 migration_modules:
+- cephx_auth_config
 - migrate_osds
 - migrate_monitors
 - example
