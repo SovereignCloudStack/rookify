@@ -33,7 +33,7 @@ def get_version() -> str:
     :since:  v0.0.1
     """
 
-    return os.environ.get("ROOKIFY_VERSION", "0.0.0-dev")
+    return os.environ.get("ROOKIFY_VERSION", "0.0.0.dev0")
 
 
 _setup: Dict[str, Any] = {
