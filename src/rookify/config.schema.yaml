@@ -1,8 +1,14 @@
 general:
   module_data_file: str()
 
+logging:
+  level: str()
+  format:
+    time: str()
+    renderer: str()
+
 ceph:
-  conf_file: str()
+  config: str()
   keyring: str()
 
 ssh:
