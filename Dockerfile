@@ -34,4 +34,4 @@ COPY --from=builder /app/rookify/dist/Rookify-${ROOKIFY_VERSION}-py3-none-any.wh
 RUN .venv/bin/pip3 install ./src/Rookify-${ROOKIFY_VERSION}-py3-none-any.whl
 
 # Set the ENTRYPOINT to activate the venv and then run the 'rookify' command
-ENTRYPOINT [".venv/bin/rookify"]
+ENTRYPOINT ["/app/rookify/.venv/bin/rookify"]

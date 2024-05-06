@@ -36,8 +36,9 @@ make setup
 ```
 
 4. To install the container-based environment
-```base
+```bash
 make build-container
+docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readonly --workdir=/app/rookify/src rookify:latest
 ```
 
 ## Usage
