@@ -2,16 +2,15 @@
 
 import os
 import rookify.modules
-
 from types import MappingProxyType
-from .yaml import load_yaml, save_yaml
-from rookify.logger import configure_logging, get_logger
+from .logger import configure_logging, get_logger
+from .yaml import load_config, load_module_data, save_module_data
 
 
 def main() -> None:
     # Load configuration file
     try:
-        config = load_yaml("config.yaml")
+        config = load_config("config.yaml")
     except FileNotFoundError as err:
         raise SystemExit(f"Could not load config: {err}")
 
@@ -31,7 +30,7 @@ def main() -> None:
     module_data = dict()
 
     try:
-        module_data.update(load_yaml(config["general"]["module_data_file"]))
+        module_data.update(load_module_data(config["general"]["module_data_file"]))
     except FileNotFoundError:
         pass
 
@@ -70,7 +69,7 @@ def main() -> None:
         result = handler.run()
         module_data[migration_module.MODULE_NAME] = result
 
-    save_yaml(config["general"]["module_data_file"], module_data)
+    save_module_data(config["general"]["module_data_file"], module_data)
 
     log.info("Data was updated to module_data_file.")
 
