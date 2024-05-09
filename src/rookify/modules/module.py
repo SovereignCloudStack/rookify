@@ -9,8 +9,10 @@ import kubernetes
 import fabric
 import jinja2
 import structlog
-from rookify.logger import get_logger
 from typing import Any, Dict, List, Optional
+
+from ..logger import get_logger
+from .machine import Machine
 
 
 class ModuleException(Exception):
@@ -152,7 +154,7 @@ class ModuleHandler:
                 self.__result_yaml = yaml.safe_load(self.raw)
             return self.__result_yaml
 
-    def __init__(self, config: Dict[str, Any], data: Dict[str, Any], module_path: str):
+    def __init__(self, machine: Machine, config: Dict[str, Any]):
         """
         Construct a new 'ModuleHandler' object.
 
@@ -162,14 +164,38 @@ class ModuleHandler:
         :return: returns nothing
         """
         self._config = config
-        self._data = data
-        self.__module_path = module_path
+        self._machine = machine
+
         self.__ceph: Optional[ModuleHandler.__Ceph] = None
         self.__k8s: Optional[ModuleHandler.__K8s] = None
         self.__ssh: Optional[ModuleHandler.__SSH] = None
         self.__logger = get_logger()
 
-        self.__logger.debug("Executing {0}".format(self.__class__.__name__))
+    @property
+    def ceph(self) -> __Ceph:
+        if self.__ceph is None:
+            self.__ceph = ModuleHandler.__Ceph(self._config["ceph"])
+        return self.__ceph
+
+    @property
+    def machine(self) -> Machine:
+        return self._machine
+
+    @property
+    def k8s(self) -> __K8s:
+        if self.__k8s is None:
+            self.__k8s = ModuleHandler.__K8s(self._config["kubernetes"])
+        return self.__k8s
+
+    @property
+    def logger(self) -> structlog.getLogger:
+        return self.__logger
+
+    @property
+    def ssh(self) -> __SSH:
+        if self.__ssh is None:
+            self.__ssh = ModuleHandler.__SSH(self._config["ssh"])
+        return self.__ssh
 
     @abc.abstractmethod
     def preflight(self) -> None:
@@ -187,30 +213,38 @@ class ModuleHandler:
         """
         pass
 
-    @property
-    def ceph(self) -> __Ceph:
-        if self.__ceph is None:
-            self.__ceph = ModuleHandler.__Ceph(self._config["ceph"])
-        return self.__ceph
-
-    @property
-    def logger(self) -> structlog.getLogger:
-        return self.__logger
-
-    @property
-    def k8s(self) -> __K8s:
-        if self.__k8s is None:
-            self.__k8s = ModuleHandler.__K8s(self._config["kubernetes"])
-        return self.__k8s
-
-    @property
-    def ssh(self) -> __SSH:
-        if self.__ssh is None:
-            self.__ssh = ModuleHandler.__SSH(self._config["ssh"])
-        return self.__ssh
-
     def load_template(self, filename: str, **variables: Any) -> __Template:
-        template_path = os.path.join(self.__module_path, "templates", filename)
+        template_path = os.path.join(os.path.dirname(__file__), "templates", filename)
         template = ModuleHandler.__Template(template_path)
         template.render(**variables)
         return template
+
+    @classmethod
+    def register_state(
+        cls, machine: Machine, config: Dict[str, Any], **kwargs: Any
+    ) -> None:
+        """
+        Register state for transitions
+        """
+
+        state_name = cls.STATE_NAME if hasattr(cls, "STATE_NAME") else cls.__name__
+
+        handler = cls(machine, config)
+
+        if hasattr(cls, "preflight") and not getattr(
+            cls.preflight, "__isabstractmethod__", False
+        ):
+            kwargs["on_enter"] = handler.preflight
+
+        if hasattr(cls, "run") and not getattr(cls.run, "__isabstractmethod__", False):
+            kwargs["on_exit"] = handler.run
+
+        if len(kwargs) > 0:
+            get_logger().debug("Registering state {0}".format(state_name))
+            machine.add_migrating_state(state_name, **kwargs)
+        else:
+            get_logger().warn(
+                "Not registering state {0} because ModuleHandler has no expected callables".format(
+                    state_name
+                )
+            )
