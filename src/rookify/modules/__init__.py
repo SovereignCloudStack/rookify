@@ -37,15 +37,9 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
     ):
         raise ModuleLoadException(module_name, "Module structure is invalid")
 
-    if hasattr(module.ModuleHandler, "PREFLIGHT_REQUIRES"):
-        assert isinstance(module.ModuleHandler.PREFLIGHT_REQUIRES, list)
-        additional_modules += module.ModuleHandler.PREFLIGHT_REQUIRES
-
     if hasattr(module.ModuleHandler, "REQUIRES"):
         assert isinstance(module.ModuleHandler.REQUIRES, list)
-        for module_name in module.ModuleHandler.REQUIRES:
-            if module_name not in additional_modules:
-                additional_modules.append(module_name)
+        additional_modules = module.ModuleHandler.REQUIRES
 
     for module_name in additional_modules:
         _load_module(machine, config, module_name)
