@@ -22,7 +22,7 @@ def main() -> None:
     log = get_logger()
     log.debug("Executing Rookify")
 
-    machine = Machine(config["general"]["machine_pickle_file"])
+    machine = Machine(config["general"].get("machine_pickle_file"))
     load_modules(machine, config)
 
     machine.execute()
