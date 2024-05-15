@@ -6,10 +6,10 @@ from ..module import ModuleHandler
 
 
 class AnalyzeCephHandler(ModuleHandler):
-    def run(self) -> Any:
+    def preflight(self) -> Any:
         commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
 
-        state = self.machine.get_state("AnalyzeCephHandler")
+        state = self.machine.get_preflight_state("AnalyzeCephHandler")
         state.data: Dict[str, Any] = {}  # type: ignore
 
         for command in commands:
@@ -33,12 +33,10 @@ class AnalyzeCephHandler(ModuleHandler):
 
         self.logger.info("AnalyzeCephHandler ran successfully.")
 
-    @classmethod
-    def register_state(
-        _, machine: Machine, config: Dict[str, Any], **kwargs: Any
+    @staticmethod
+    def register_preflight_state(
+        machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
     ) -> None:
-        """
-        Register state for transitions
-        """
-
-        super().register_state(machine, config, tags=["data"])
+        ModuleHandler.register_preflight_state(
+            machine, state_name, handler, tags=["data"]
+        )

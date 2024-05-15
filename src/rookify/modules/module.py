@@ -205,9 +205,9 @@ class ModuleHandler:
         pass
 
     @abc.abstractmethod
-    def run(self) -> Dict[str, Any]:
+    def execute(self) -> None:
         """
-        Run the modules tasks
+        Executes the modules tasks
 
         :return: returns result
         """
@@ -220,31 +220,58 @@ class ModuleHandler:
         return template
 
     @classmethod
-    def register_state(
-        cls, machine: Machine, config: Dict[str, Any], **kwargs: Any
-    ) -> None:
+    def register_states(cls, machine: Machine, config: Dict[str, Any]) -> None:
         """
-        Register state for transitions
+        Register states for transitions
         """
 
         state_name = cls.STATE_NAME if hasattr(cls, "STATE_NAME") else cls.__name__
 
         handler = cls(machine, config)
+        preflight_state_name = None
+        execution_state_name = None
 
         if hasattr(cls, "preflight") and not getattr(
             cls.preflight, "__isabstractmethod__", False
         ):
-            kwargs["on_enter"] = handler.preflight
+            preflight_state_name = Machine.STATE_NAME_PREFLIGHT_PREFIX + state_name
 
-        if hasattr(cls, "run") and not getattr(cls.run, "__isabstractmethod__", False):
-            kwargs["on_exit"] = handler.run
+        if hasattr(cls, "execute") and not getattr(
+            cls.execute, "__isabstractmethod__", False
+        ):
+            execution_state_name = Machine.STATE_NAME_EXECUTION_PREFIX + state_name
 
-        if len(kwargs) > 0:
-            get_logger().debug("Registering state {0}".format(state_name))
-            machine.add_migrating_state(state_name, **kwargs)
-        else:
+        if preflight_state_name is None and execution_state_name is None:
             get_logger().warn(
                 "Not registering state {0} because ModuleHandler has no expected callables".format(
                     state_name
                 )
             )
+        else:
+            get_logger().debug("Registering states for {0}".format(state_name))
+
+            if preflight_state_name is not None:
+                cls.register_preflight_state(machine, preflight_state_name, handler)
+
+            if execution_state_name is not None:
+                cls.register_execution_state(machine, execution_state_name, handler)
+
+    @staticmethod
+    def register_preflight_state(
+        machine: Machine, state_name: str, handler: Any, **kwargs: Any
+    ) -> None:
+        """
+        Register state for transitions
+        """
+
+        machine.add_preflight_state(state_name, on_enter=handler.preflight, **kwargs)
+
+    @staticmethod
+    def register_execution_state(
+        machine: Machine, state_name: str, handler: Any, **kwargs: Any
+    ) -> None:
+        """
+        Register state for transitions
+        """
+
+        machine.add_execution_state(state_name, on_enter=handler.execute, **kwargs)

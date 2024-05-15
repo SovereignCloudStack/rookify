@@ -1,5 +1,5 @@
 general:
-  module_data_file: data.yaml
+  machine_pickle_file: data.pickle
 
 logging:
   level: INFO # level at which logging should start

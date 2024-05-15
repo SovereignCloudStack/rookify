@@ -33,7 +33,7 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
     additional_modules = []
 
     if not hasattr(module, "ModuleHandler") or not callable(
-        getattr(module.ModuleHandler, "register_state")
+        getattr(module.ModuleHandler, "register_states")
     ):
         raise ModuleLoadException(module_name, "Module structure is invalid")
 
@@ -50,7 +50,7 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
     for module_name in additional_modules:
         _load_module(machine, config, module_name)
 
-    module.ModuleHandler.register_state(machine, config)
+    module.ModuleHandler.register_states(machine, config)
 
 
 def load_modules(machine: Machine, config: Dict[str, Any]) -> None:

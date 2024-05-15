@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Dict
+from typing import Any
 from ..machine import Machine
 from ..module import ModuleException, ModuleHandler
 
@@ -22,18 +22,16 @@ class CephXAuthHandler(ModuleHandler):
                 "Ceph config value auth_client_required does not contain cephx"
             )
 
-        self.machine.get_state("CephXAuthHandler").verified = True
+        self.machine.get_preflight_state("CephXAuthHandler").verified = True
         self.logger.info("Validated Ceph to expect cephx auth")
 
     def is_cephx_set(self, values: str) -> Any:
         return "cephx" in [value.strip() for value in values.split(",")]
 
-    @classmethod
-    def register_state(
-        _, machine: Machine, config: Dict[str, Any], **kwargs: Any
+    @staticmethod
+    def register_preflight_state(
+        machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
     ) -> None:
-        """
-        Register state for transitions
-        """
-
-        super().register_state(machine, config, tags=["verified"])
+        ModuleHandler.register_preflight_state(
+            machine, state_name, handler, tags=["verified"]
+        )

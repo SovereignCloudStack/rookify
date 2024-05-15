@@ -7,7 +7,7 @@ from ..module import ModuleHandler
 class MigrateOSDsHandler(ModuleHandler):
     REQUIRES = ["analyze_ceph"]
 
-    def run(self) -> Any:
+    def execute(self) -> Any:
         osd_config: Dict[str, Any] = {}
         state_data = self.machine.get_state("AnalyzeCephHandler").data
 

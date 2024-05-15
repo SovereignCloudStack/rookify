@@ -12,6 +12,6 @@ class ExampleHandler(ModuleHandler):
         # Do something for checking if all needed preconditions are met else throw ModuleException
         raise ModuleException("Example module was loaded, so aborting!")
 
-    def run(self) -> Any:
+    def execute(self) -> Any:
         # Run the migration tasks
         return {}
