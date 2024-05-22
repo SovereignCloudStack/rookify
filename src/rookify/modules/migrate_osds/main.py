@@ -9,7 +9,7 @@ class MigrateOSDsHandler(ModuleHandler):
 
     def execute(self) -> Any:
         osd_config: Dict[str, Any] = {}
-        state_data = self.machine.get_state("AnalyzeCephHandler").data
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         for node, osds in state_data["node"]["ls"]["osd"].items():
             osd_config[node] = {"osds": {}}
