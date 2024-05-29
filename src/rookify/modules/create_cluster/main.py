@@ -1,16 +1,40 @@
 # -*- coding: utf-8 -*-
 
-from ..module import ModuleHandler, ModuleException
-
-from typing import Any
-
 import kubernetes
+from typing import Any
+from ..machine import Machine
+from ..module import ModuleHandler, ModuleException
 
 
 class CreateClusterHandler(ModuleHandler):
-    def __create_cluster_definition(self) -> Any:
+    REQUIRES = [
+        "analyze_ceph",
+        "cephx_auth_config",
+        "k8s_prerequisites_check",
+        "create_configmap",
+    ]
+
+    @property
+    def __mon_placement_label(self) -> str:
+        return (
+            self._config["rook"]["cluster"]["mon_placement_label"]
+            if "mon_placement_label" in self._config["rook"]["cluster"]
+            else f"placement-{self._config["rook"]["cluster"]["name"]}-mon"
+        )
+
+    @property
+    def __mgr_placement_label(self) -> str:
+        return (
+            self._config["rook"]["cluster"]["mgr_placement_label"]
+            if "mgr_placement_label" in self._config["rook"]["cluster"]
+            else f"placement-{self._config["rook"]["cluster"]["name"]}-mgr"
+        )
+
+    def __create_cluster_definition(self) -> None:
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
         try:
-            node_ls_data = self._data["analyze_ceph"]["node"]["ls"]
+            node_ls_data = state_data["node"]["ls"]
 
             # Get monitor count
             mon_count = 0
@@ -31,30 +55,20 @@ class CreateClusterHandler(ModuleHandler):
                     )
 
             # Render cluster config from template
-            self.__cluster_name = self._config["rook"]["cluster"]["name"]
-            self.__cluster_namespace = self._config["rook"]["cluster"]["namespace"]
-            self.__cluster_image = self._config["rook"]["ceph"]["image"]
-            self.__mon_placement_label = (
-                self._config["rook"]["cluster"]["mon_placement_label"]
-                if "mon_placement_label" in self._config["rook"]["cluster"]
-                else f"placement-{self.__cluster_name}-mon"
-            )
-            self.__mgr_placement_label = (
-                self._config["rook"]["cluster"]["mgr_placement_label"]
-                if "mgr_placement_label" in self._config["rook"]["cluster"]
-                else f"placement-{self.__cluster_name}-mgr"
-            )
-            self.__cluster_definition = self.load_template(
+            cluster_definition = self.load_template(
                 "cluster.yaml.j2",
-                cluster_name=self.__cluster_name,
-                cluster_namespace=self.__cluster_namespace,
-                ceph_image=self.__cluster_image,
+                cluster_name=self._config["rook"]["cluster"]["name"],
+                cluster_namespace=self._config["rook"]["cluster"]["namespace"],
+                ceph_image=self._config["rook"]["ceph"]["image"],
                 mon_count=mon_count,
                 mgr_count=mgr_count,
                 mon_placement_label=self.__mon_placement_label,
                 mgr_placement_label=self.__mgr_placement_label,
             )
 
+            self.machine.get_preflight_state(
+                "CreateClusterHandler"
+            ).cluster_definition = cluster_definition.yaml
         except KeyError:
             raise ModuleException("Ceph monitor data is incomplete")
 
@@ -78,39 +92,37 @@ class CreateClusterHandler(ModuleHandler):
                     f"Label {self.__mon_placement_label} is set on node {node.metadata.name}"
                 )
 
-        # We have to check if our namespace exists
-        namespace_exists = False
-        namespaces = self.k8s.core_v1_api.list_namespace().items
-        for namespace in namespaces:
-            if namespace.metadata.name == self.__cluster_namespace:
-                namespace_exists = True
-        if not namespace_exists:
-            raise ModuleException(
-                f"Namespace {self.__cluster_namespace} does not exist"
-            )
-
     def preflight(self) -> None:
-        self.__create_cluster_definition()
         self.__check_k8s_prerequisites()
+        self.__create_cluster_definition()
 
-    def run(self) -> Any:
+    def execute(self) -> None:
         # Create CephCluster
-        self.k8s.crd_api_apply(self.__cluster_definition.yaml)
+        cluster_definition = self.machine.get_preflight_state(
+            "CreateClusterHandler"
+        ).cluster_definition
+
+        self.k8s.crd_api_apply(cluster_definition)
+
+        cluster_name = self._config["rook"]["cluster"]["name"]
 
         # Wait for CephCluster to get into Progressing phase
+        result = None
         watcher = kubernetes.watch.Watch()
+
         stream = watcher.stream(
             self.k8s.custom_objects_api.list_namespaced_custom_object,
             "ceph.rook.io",
             "v1",
-            self.__cluster_namespace,
+            self._config["rook"]["cluster"]["namespace"],
             "cephclusters",
             timeout_seconds=60,
         )
+
         for event in stream:
             event_object = event["object"]
 
-            if event_object["metadata"]["name"] != self.__cluster_name:
+            if event_object["metadata"]["name"] != cluster_name:
                 continue
 
             try:
@@ -119,9 +131,16 @@ class CreateClusterHandler(ModuleHandler):
                     break
             except KeyError:
                 pass
+
         watcher.stop()
 
-        try:
-            return result
-        except NameError:
+        if result == None:
             raise ModuleException("CephCluster did not come up")
+
+    @staticmethod
+    def register_preflight_state(
+        machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
+    ) -> None:
+        ModuleHandler.register_preflight_state(
+            machine, state_name, handler, tags=["cluster_definition"]
+        )
