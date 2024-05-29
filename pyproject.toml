@@ -3,7 +3,7 @@ requires = [ "setuptools", "wheel" ]
 build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = ["version"]
+dynamic = ["dependencies", "scripts", "version"]
 requires-python = ">=3.9"
 
 name = "Rookify"
@@ -24,3 +24,6 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://scs.community"
+
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]

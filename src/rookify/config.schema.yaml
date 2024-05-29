@@ -1,0 +1,32 @@
+general:
+  machine_pickle_file: str(required=False)
+
+logging:
+  level: str()
+  format:
+    time: str()
+    renderer: str()
+
+ceph:
+  config: str()
+  keyring: str()
+
+ssh:
+  private_key: str()
+  hosts: map(include("ssh_host"), key=str(), min=1)
+
+kubernetes:
+  config: str()
+
+rook:
+  cluster:
+    name: str()
+    namespace: str()
+  ceph:
+    image: str()
+
+migration_modules: list(str())
+---
+ssh_host:
+    address: ip()
+    user: str()

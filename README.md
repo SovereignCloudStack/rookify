@@ -35,7 +35,11 @@ cd rookify
 make setup
 ```
 
-4. __TODO:__ Install script for container-based setup
+4. To install the container-based environment
+```bash
+make build-container
+docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readonly --workdir=/app/rookify/src rookify:latest
+```
 
 ## Usage
 __TODO__

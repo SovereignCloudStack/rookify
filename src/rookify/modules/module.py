@@ -8,7 +8,11 @@ import rados
 import kubernetes
 import fabric
 import jinja2
+import structlog
 from typing import Any, Dict, List, Optional
+
+from ..logger import get_logger
+from .machine import Machine
 
 
 class ModuleException(Exception):
@@ -29,6 +33,9 @@ class ModuleHandler:
                 self.__ceph.connect()
             except rados.ObjectNotFound as err:
                 raise ModuleException(f"Could not connect to ceph: {err}")
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self.__ceph, name)
 
         def mon_command(
             self, command: str, **kwargs: str
@@ -147,21 +154,47 @@ class ModuleHandler:
                 self.__result_yaml = yaml.safe_load(self.raw)
             return self.__result_yaml
 
-    def __init__(self, config: Dict[str, Any], data: Dict[str, Any], module_path: str):
+    def __init__(self, machine: Machine, config: Dict[str, Any]):
         """
         Construct a new 'ModuleHandler' object.
 
+        :param machine: Machine object
         :param config: The global config file
-        :param data: The output of modules required by this module
-        :param module_path: The filesystem path of this module
         :return: returns nothing
         """
         self._config = config
-        self._data = data
-        self.__module_path = module_path
+        self._machine = machine
+
         self.__ceph: Optional[ModuleHandler.__Ceph] = None
         self.__k8s: Optional[ModuleHandler.__K8s] = None
         self.__ssh: Optional[ModuleHandler.__SSH] = None
+        self.__logger = get_logger()
+
+    @property
+    def ceph(self) -> __Ceph:
+        if self.__ceph is None:
+            self.__ceph = ModuleHandler.__Ceph(self._config["ceph"])
+        return self.__ceph
+
+    @property
+    def machine(self) -> Machine:
+        return self._machine
+
+    @property
+    def k8s(self) -> __K8s:
+        if self.__k8s is None:
+            self.__k8s = ModuleHandler.__K8s(self._config["kubernetes"])
+        return self.__k8s
+
+    @property
+    def logger(self) -> structlog.getLogger:
+        return self.__logger
+
+    @property
+    def ssh(self) -> __SSH:
+        if self.__ssh is None:
+            self.__ssh = ModuleHandler.__SSH(self._config["ssh"])
+        return self.__ssh
 
     @abc.abstractmethod
     def preflight(self) -> None:
@@ -171,34 +204,73 @@ class ModuleHandler:
         pass
 
     @abc.abstractmethod
-    def run(self) -> Dict[str, Any]:
+    def execute(self) -> None:
         """
-        Run the modules tasks
+        Executes the modules tasks
 
         :return: returns result
         """
         pass
 
-    @property
-    def ceph(self) -> __Ceph:
-        if self.__ceph is None:
-            self.__ceph = ModuleHandler.__Ceph(self._config["ceph"])
-        return self.__ceph
-
-    @property
-    def k8s(self) -> __K8s:
-        if self.__k8s is None:
-            self.__k8s = ModuleHandler.__K8s(self._config["kubernetes"])
-        return self.__k8s
-
-    @property
-    def ssh(self) -> __SSH:
-        if self.__ssh is None:
-            self.__ssh = ModuleHandler.__SSH(self._config["ssh"])
-        return self.__ssh
-
     def load_template(self, filename: str, **variables: Any) -> __Template:
-        template_path = os.path.join(self.__module_path, "templates", filename)
+        template_path = os.path.join(os.path.dirname(__file__), "templates", filename)
         template = ModuleHandler.__Template(template_path)
         template.render(**variables)
         return template
+
+    @classmethod
+    def register_states(cls, machine: Machine, config: Dict[str, Any]) -> None:
+        """
+        Register states for transitions
+        """
+
+        state_name = cls.STATE_NAME if hasattr(cls, "STATE_NAME") else cls.__name__
+
+        handler = cls(machine, config)
+        preflight_state_name = None
+        execution_state_name = None
+
+        if hasattr(cls, "preflight") and not getattr(
+            cls.preflight, "__isabstractmethod__", False
+        ):
+            preflight_state_name = Machine.STATE_NAME_PREFLIGHT_PREFIX + state_name
+
+        if hasattr(cls, "execute") and not getattr(
+            cls.execute, "__isabstractmethod__", False
+        ):
+            execution_state_name = Machine.STATE_NAME_EXECUTION_PREFIX + state_name
+
+        if preflight_state_name is None and execution_state_name is None:
+            get_logger().warn(
+                "Not registering state {0} because ModuleHandler has no expected callables".format(
+                    state_name
+                )
+            )
+        else:
+            get_logger().debug("Registering states for {0}".format(state_name))
+
+            if preflight_state_name is not None:
+                cls.register_preflight_state(machine, preflight_state_name, handler)
+
+            if execution_state_name is not None:
+                cls.register_execution_state(machine, execution_state_name, handler)
+
+    @staticmethod
+    def register_preflight_state(
+        machine: Machine, state_name: str, handler: Any, **kwargs: Any
+    ) -> None:
+        """
+        Register state for transitions
+        """
+
+        machine.add_preflight_state(state_name, on_enter=handler.preflight, **kwargs)
+
+    @staticmethod
+    def register_execution_state(
+        machine: Machine, state_name: str, handler: Any, **kwargs: Any
+    ) -> None:
+        """
+        Register state for transitions
+        """
+
+        machine.add_execution_state(state_name, on_enter=handler.execute, **kwargs)
