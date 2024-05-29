@@ -1,18 +1,58 @@
 # -*- coding: utf-8 -*-
 
-from ..module import ModuleHandler, ModuleException
 import kubernetes
+from ..machine import Machine
+from ..module import ModuleHandler, ModuleException
 
-from typing import Any
+from typing import Any, Dict
 
 
 class CreateConfigMapHandler(ModuleHandler):
-    def __create_configmap_definition(self) -> Any:
-        pass
+    REQUIRES = ["analyze_ceph", "k8s_prerequisites_check"]
+
+    def __create_configmap_definition(self) -> None:
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        metadata = kubernetes.client.V1ObjectMeta(name="rook-ceph-mon-endpoints")
+        configmap_mon_list = ""
+
+        for mon in state_data["mon"]["dump"]["mons"]:
+            if configmap_mon_list != "":
+                configmap_mon_list += ","
+
+            configmap_mon_list += "{0}:{1}".format(
+                mon["name"], mon["public_addr"].rsplit("/", 1)[0]
+            )
+
+        configmap_data = {
+            "data": configmap_mon_list,
+            "mapping": "{}",
+            "maxMonId": "-1",
+        }
+
+        configmap = kubernetes.client.V1ConfigMap(
+            api_version="v1", kind="ConfigMap", metadata=metadata, data=configmap_data
+        )
+
+        self.machine.get_preflight_state(
+            "CreateConfigMapHandler"
+        ).configmap = configmap.to_dict()
 
     def preflight(self) -> None:
         self.__cluster_name = self._config["rook"]["cluster"]["name"]
-        self.__fsid = self._data["analyze_ceph"]["mon"]["dump"]["fsid"]
+
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+        self.__fsid = state_data["mon"]["dump"]["fsid"]
+
+        # If the configmap or secret already exists, we have to abort to not override it
+        try:
+            self.k8s.core_v1_api.read_namespaced_config_map(
+                "rook-ceph-mon-endpoints", self._config["rook"]["cluster"]["namespace"]
+            )
+        except kubernetes.client.exceptions.ApiException:
+            pass
+        else:
+            raise ModuleException("Configmap rook-ceph-mon-endpoints already exists")
 
         # If the secret already exists, we have to abort to not override it
         try:
@@ -24,19 +64,33 @@ class CreateConfigMapHandler(ModuleHandler):
         else:
             raise ModuleException("Secret rook-ceph-mon already exists")
 
-    def run(self) -> Any:
+        self.__create_configmap_definition()
+
+    def execute(self) -> None:
+        configmap = kubernetes.client.V1ConfigMap(
+            **self.machine.get_preflight_state("CreateConfigMapHandler").configmap
+        )
+
+        configmap = self.k8s.core_v1_api.create_namespaced_config_map(
+            self._config["rook"]["cluster"]["namespace"], body=configmap
+        )
+
+        self.machine.get_execution_state(
+            "CreateConfigMapHandler"
+        ).configmap = configmap.to_dict()
+
         # Get or create needed auth keys
-        admin_auth = self.ceph.mon_command(
+        admin_auth: Dict[str, Any] = self.ceph.mon_command(
             "auth get-or-create-key",
             entity="client.admin",
             mon="allow *",
             mgr="allow *",
             mds="allow *",
-        )
+        )  # type: ignore
 
-        mon_auth = self.ceph.mon_command(
+        mon_auth: Dict[str, Any] = self.ceph.mon_command(
             "auth get-or-create-key", entity="mon.", mon="allow *"
-        )
+        )  # type: ignore
 
         metadata = kubernetes.client.V1ObjectMeta(name="rook-ceph-mon")
 
@@ -55,4 +109,22 @@ class CreateConfigMapHandler(ModuleHandler):
             self._config["rook"]["cluster"]["namespace"], body=secret
         )
 
-        return secret.to_dict()
+        self.machine.get_execution_state(
+            "CreateConfigMapHandler"
+        ).secret = secret.to_dict()
+
+    @staticmethod
+    def register_execution_state(
+        machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
+    ) -> None:
+        ModuleHandler.register_execution_state(
+            machine, state_name, handler, tags=["secret"]
+        )
+
+    @staticmethod
+    def register_preflight_state(
+        machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
+    ) -> None:
+        ModuleHandler.register_preflight_state(
+            machine, state_name, handler, tags=["configmap"]
+        )
