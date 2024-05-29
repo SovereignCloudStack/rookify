@@ -1,5 +1,5 @@
 general:
-  module_data_file: str()
+  machine_pickle_file: str(required=False)
 
 logging:
   level: str()

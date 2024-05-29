@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
 
-from ..module import ModuleHandler
 from typing import Any, Dict
+from ..module import ModuleHandler
 
 
 class MigrateOSDsHandler(ModuleHandler):
-    def preflight(self) -> None:
-        pass
-        # result = self.ceph.mon_command("osd dump")
-        # raise ModuleException('test error')
+    REQUIRES = ["analyze_ceph"]
 
-    def run(self) -> Any:
-        osd_config: Dict[str, Any] = dict()
-        for node, osds in self._data["analyze_ceph"]["node"]["ls"]["osd"].items():
+    def execute(self) -> Any:
+        osd_config: Dict[str, Any] = {}
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        for node, osds in state_data["node"]["ls"]["osd"].items():
             osd_config[node] = {"osds": {}}
             for osd in osds:
                 osd_config[node]["osds"][osd] = dict()
 
-        for osd in self._data["analyze_ceph"]["osd"]["dump"]["osds"]:
+        for osd in state_data["osd"]["dump"]["osds"]:
             number = osd["osd"]
             uuid = osd["uuid"]
             for host in osd_config.values():
@@ -26,7 +25,7 @@ class MigrateOSDsHandler(ModuleHandler):
                     break
 
         for node, values in osd_config.items():
-            devices = self._data["analyze_ceph"]["ssh"]["osd"][node]["devices"]
+            devices = state_data["ssh"]["osd"][node]["devices"]
             for osd in values["osds"].values():
                 for device in devices:
                     if osd["uuid"] in device:
@@ -34,4 +33,3 @@ class MigrateOSDsHandler(ModuleHandler):
                         break
 
         self.logger.info(osd_config)
-        return {}
