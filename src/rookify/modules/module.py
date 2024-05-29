@@ -158,9 +158,8 @@ class ModuleHandler:
         """
         Construct a new 'ModuleHandler' object.
 
+        :param machine: Machine object
         :param config: The global config file
-        :param data: The output of modules required by this module
-        :param module_path: The filesystem path of this module
         :return: returns nothing
         """
         self._config = config
