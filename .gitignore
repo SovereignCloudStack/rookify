@@ -86,7 +86,7 @@ dmypy.json
 cython_debug/
 
 # Project specific
-data.yaml
+data.pickle
 config.yaml
 .ceph
 .k8s
