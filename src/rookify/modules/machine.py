@@ -28,7 +28,8 @@ class Machine(_Machine):  # type: ignore
 
     def execute(self) -> None:
         for state in self._preflight_states + self._execution_states:
-            self.add_state(state)
+            if state.name not in self.states:
+                self.add_state(state)
 
         self.add_state("migrated")
         self.add_ordered_transitions(loop=False)
