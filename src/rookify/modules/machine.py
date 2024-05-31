@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from dill import Pickler, Unpickler
-from transitions import MachineError
+from transitions import MachineError, State
 from transitions import Machine as _Machine
 from transitions.extensions.states import add_state_features, Tags, Timeout
 from typing import Any, Dict, IO, Optional, List
@@ -15,8 +15,8 @@ class Machine(_Machine):  # type: ignore
 
     def __init__(self, machine_pickle_file: Optional[str] = None) -> None:
         self._machine_pickle_file = machine_pickle_file
-        self._execution_states: List[str] = []
-        self._preflight_states: List[str] = []
+        self._execution_states: List[State] = []
+        self._preflight_states: List[State] = []
 
         _Machine.__init__(self, states=["uninitialized"], initial="uninitialized")
 
@@ -28,10 +28,12 @@ class Machine(_Machine):  # type: ignore
 
     def execute(self, dry_run_mode: bool = False) -> None:
         states = self._preflight_states
-        if not dry_run_mode: states = states + self._execution_states
+        if not dry_run_mode:
+            states = states + self._execution_states
 
         for state in states:
-            self.add_state(state)
+            if state.name not in self.states:
+                self.add_state(state)
 
         self.add_state("migrated")
         self.add_ordered_transitions(loop=False)
