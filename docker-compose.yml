@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  rookify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ROOKIFY_VERSION: ${ROOKIFY_VERSION}
+    volumes:
+      - ./config.yaml:/app/rookify/config.yaml:Z
+    command: bash -c "sleep infinity"

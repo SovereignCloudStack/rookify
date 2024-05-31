@@ -67,3 +67,8 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 ROOKIFY_VERSION ?= 0.0.0.dev0
 build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
 	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
+
+.PHONY: run-container
+ROOKIFY_VERSION ?= 0.0.0.dev0
+run-container: ## Runs the container as specified in docker-compose.yml and opens a bash terminal
+	${CONTAINERCMD} compose up
