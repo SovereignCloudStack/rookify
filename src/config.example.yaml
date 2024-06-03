@@ -8,11 +8,12 @@ logging:
     renderer: console # or: json
 
 ceph:
-  config: ../.ceph/ceph.conf
-  keyring: ../.ceph/ceph.client.admin.keyring
+  config: ./.ceph/ceph.conf
+  keyring: ./.ceph/ceph.client.admin.keyring
 
+# fill in correct path to private key
 ssh:
-  private_key: /home/fusselkater/.ssh/regiocloud
+  private_key: /home/USER/.ssh/cloud.private
   hosts:
     testbed-node-0:
       address: 192.168.16.10
@@ -25,7 +26,7 @@ ssh:
       user: dragon
 
 kubernetes:
-  config: ../.k8s/config
+  config: ./k8s/config
 
 rook:
   cluster:
