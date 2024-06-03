@@ -2,13 +2,17 @@ version: '3'
 
 services:
   rookify:
+    image: "rookify-dev:latest"
+    container_name: rookify-dev
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        ROOKIFY_VERSION: ${ROOKIFY_VERSION}
+        - ROOKIFY_VERSION=${ROOKIFY_VERSION:-0.0.0.dev0}
     volumes:
-      - ./src/config.yaml:/app/rookify/config.yaml:Z # Be sure your config.yaml is correct, see src/config.example.yml and copy it to the root of the app
-      - .ceph:/app/.ceph:Z # note: you might need to use sshuttle or `make vpn-sshuttle` from you testbed repo to be able to reach the container as if it was in your local network
-      - .ssh/.id_rsa.regiocloud:/app/.ssh/.id_rsa.regiocloud:Z # note: you might to need to copy this key from testbed/terraform/.ssh (depending on what your name is from the testbed)
-    command: bash -c "sleep infinity"
+      - ./src:/app/rookify/src:Z # Be sure your config.yaml is correct, see src/config.example.yml and copy it to the root of the app
+                                 # note: you might have to copy the dir `.ceph/` from your testbed and then use sshuttle or `make vpn-sshuttle` from you testbed repo to be able to reach the remotes locally
+                                 # note: you might to need to copy rsa-keys from testbed/terraform/.ssh (depending on what your name is from the testbed)
+      - ./tests:/app/rookify/tests:Z # adding the tests to run them in the container
+    entrypoint: ["sleep"]
+    command: ["infinity"]

@@ -74,22 +74,28 @@ build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.
 	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
 
 .PHONY: run-container
-ROOKIFY_VERSION ?= 0.0.0.dev0
+export ROOKIFY_VERSION ?= "0.0.0.dev0"
 run-container: ## Runs the container as specified in docker-compose.yml and opens a bash terminal
 	${CONTAINERCMD} compose up -d
 
-.PHONY: run-tests
-run-tests: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
+.PHONY: run-tests-locally
+run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
 	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src") \
 	source ./.venv/bin/activate && \
 	.venv/bin/python3 -m pytest
 
+.PHONY: run-tests
+run-tests: ## Runs the tests in the container
+	${CONTAINERCMD} exec -it rookify-dev bash -c "source ./.venv/bin/activate && \
+	.venv/bin/python3 -m unittest ./tests/test_mock_*"
+
 .PHONY: enter
+ROOKIFY_VERSION ?= 0.0.0.dev0
 enter: ## Enter the container
 	${CONTAINERCMD} exec -it rookify-dev bash
 
 .PHONY: logs
-enter: ## Logs the container
+logs: ## Logs the container
 	${CONTAINERCMD} logs -f rookify-dev
 
 .PHONY: down
