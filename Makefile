@@ -4,11 +4,12 @@ COLOUR_BLUE=\033[0;34m
 COLOUR_END=\033[0m
 
 .DEFAULT_GOAL:=help
+SHELL := /bin/bash
 
 # Get needed paths and information from locally installed librados
-RADOSLIB_VERSION := 2.0.0
-GENERAL_LIB_LOCATION := $(shell pip show rados | grep -oP "(?<=Location: ).*")
-RADOSLIB_INSTALLED_VERSION := $(shell pip show rados | grep Version | awk '{print $$2}')
+export RADOSLIB_VERSION := 2.0.0
+export GENERAL_LIB_LOCATION := ${shell pip show rados | grep -oP "(?<=Location: ).*"}
+export RADOSLIB_INSTALLED_VERSION := ${shell pip show rados | grep Version | awk '{print $$2}'}
 
 ## checking if docker, or podman should be used. Podman is preferred.
 ifeq ($(shell command -v podman 2> /dev/null),)
@@ -48,13 +49,17 @@ update-requirements: ## Update the requirements.txt with newer versions of pip p
 
 .PHONY: check-radoslib
 check-radoslib: ## Checks if radoslib is installed and if it contains the right version
-	@if [ -z "$(GENERAL_LIB_LOCATION)" ]; then \
+	@if [ -z "${GENERAL_LIB_LOCATION}" ]; then \
 		echo -e "${COLOUR_RED}ERROR: 'rados' library not found. Please make sure it's installed.${COLOUR_END}"; \
 		exit 1; \
+	else \
+		echo -e "GENERAL_LIB_LOCATION: $(GENERAL_LIB_LOCATION)"; \
 	fi
-	@if [ "$(RADOSLIB_INSTALLED_VERSION)" != "$(RADOSLIB_VERSION)" ]; then \
+	@if [ "${RADOSLIB_INSTALLED_VERSION}" != "${RADOSLIB_VERSION}" ]; then \
 		echo -e "${COLOUR_RED}ERROR: Incorrect version of 'rados' library found. Expected version $(RADOSLIB_VERSION), found $$RADOSLIB_INSTALLED_VERSION.${COLOUR_END}"; \
 		exit 1; \
+	else \
+		echo -e "RADOSLIB_INSTALLED_VERSION: $(RADOSLIB_INSTALLED_VERSION)"; \
 	fi
 
 .PHONY: run-local-rookify
