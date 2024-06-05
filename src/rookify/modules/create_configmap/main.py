@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import kubernetes
-from ..machine import Machine
-from ..module import ModuleHandler, ModuleException
-
 from typing import Any, Dict
+from ..exception import ModuleException
+from ..machine import Machine
+from ..module import ModuleHandler
 
 
 class CreateConfigMapHandler(ModuleHandler):

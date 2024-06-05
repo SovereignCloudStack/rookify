@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from ..module import ModuleException, ModuleHandler
+from ..exception import ModuleException
+from ..module import ModuleHandler
 
 
 class K8sPrerequisitesCheckHandler(ModuleHandler):
