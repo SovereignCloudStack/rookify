@@ -70,13 +70,13 @@ run-local-rookify: ## Runs rookify in the local development environment (require
 	source ./.venv/bin/activate && \
 	cd src && python -m rookify
 
+.PHONY: run-rookify
+run-rookify: ## Runs rookify in the container
+	docker exec -it rookify-dev /app/rookify/.venv/bin/rookify
+
 .PHONY: build-container
 build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
 	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
-
-.PHONY: run-container
-run-container: ## Runs the container as specified in docker-compose.yml and opens a bash terminal
-	${CONTAINERCMD} compose up -d
 
 .PHONY: run-tests-locally
 run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
@@ -98,3 +98,7 @@ logs: ## Logs the container
 .PHONY: down
 down: ## Remove the containers as setup by docker-compose.yml
 	${CONTAINERCMD} compose down
+
+.PHONY: up
+up: ## Sets up the container as specified in docker-compose.yml and opens a bash terminal
+	${CONTAINERCMD} compose up -d
