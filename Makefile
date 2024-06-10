@@ -18,6 +18,9 @@ else
 	CONTAINERCMD=podman
 endif
 
+## Export default rookify version
+export ROOKIFY_VERSION ?= "0.0.0.dev0"
+
 .PHONY: help
 help: ## Display this help message
 	@echo -e '${COLOUR_RED}Usage: make <command>${COLOUR_END}'
@@ -35,12 +38,11 @@ setup-pre-commit:
 setup-venv:
 	python -m venv --system-site-packages ./.venv && \
 	source ./.venv/bin/activate && \
-	pip install --ignore-installed -r requirements.txt
+	pip install -r requirements.txt
 
 .PHONY: run-precommit
 run-precommit: ## Run pre-commit to check if all files running through
 	pre-commit run --all-files
-
 
 .PHONY: update-requirements
 update-requirements: ## Update the requirements.txt with newer versions of pip packages
@@ -66,31 +68,26 @@ check-radoslib: ## Checks if radoslib is installed and if it contains the right 
 run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
 	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
 	source ./.venv/bin/activate && \
-	cd src && python3 -m rookify
+	cd src && python -m rookify
 
 .PHONY: build-container
-ROOKIFY_VERSION ?= 0.0.0.dev0
 build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
 	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
 
 .PHONY: run-container
-export ROOKIFY_VERSION ?= "0.0.0.dev0"
 run-container: ## Runs the container as specified in docker-compose.yml and opens a bash terminal
 	${CONTAINERCMD} compose up -d
 
 .PHONY: run-tests-locally
 run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
-	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src") \
-	source ./.venv/bin/activate && \
-	.venv/bin/python3 -m pytest
+	.venv/bin/python -m pytest
 
 .PHONY: run-tests
 run-tests: ## Runs the tests in the container
 	${CONTAINERCMD} exec -it rookify-dev bash -c "source ./.venv/bin/activate && \
-	.venv/bin/python3 -m unittest ./tests/test_mock_*"
+	.venv/bin/python -m unittest ./tests/test_mock_*"
 
 .PHONY: enter
-ROOKIFY_VERSION ?= 0.0.0.dev0
 enter: ## Enter the container
 	${CONTAINERCMD} exec -it rookify-dev bash
 
