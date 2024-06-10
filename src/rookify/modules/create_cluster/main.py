@@ -17,7 +17,7 @@ class CreateClusterHandler(ModuleHandler):
     @property
     def __mon_placement_label(self) -> str:
         return (
-            self._config["rook"]["cluster"]["mon_placement_label"]
+            str(self._config["rook"]["cluster"]["mon_placement_label"])
             if "mon_placement_label" in self._config["rook"]["cluster"]
             else f"placement-{self._config["rook"]["cluster"]["name"]}-mon"
         )
@@ -25,7 +25,7 @@ class CreateClusterHandler(ModuleHandler):
     @property
     def __mgr_placement_label(self) -> str:
         return (
-            self._config["rook"]["cluster"]["mgr_placement_label"]
+            str(self._config["rook"]["cluster"]["mgr_placement_label"])
             if "mgr_placement_label" in self._config["rook"]["cluster"]
             else f"placement-{self._config["rook"]["cluster"]["name"]}-mgr"
         )
