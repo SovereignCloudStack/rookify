@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import pytest
+import unittest
 
 from rookify.modules.example.main import ExampleHandler
 from rookify.modules.exception import ModuleException
 from rookify.modules.machine import Machine
 
 
-def test_preflight() -> None:
-    with pytest.raises(ModuleException):
-        ExampleHandler(Machine(), {}).preflight()
+class TestExampleHandler(unittest.TestCase):
+    def test_preflight(self) -> None:
+        with self.assertRaises(ModuleException):
+            ExampleHandler(Machine(), {}).preflight()
