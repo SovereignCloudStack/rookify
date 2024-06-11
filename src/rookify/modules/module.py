@@ -12,7 +12,7 @@ from .ssh import SSH
 from .template import Template
 
 
-class ModuleHandler:
+class ModuleHandler(object):
     """
     ModuleHandler is an abstract class that modules have to extend.
     """
