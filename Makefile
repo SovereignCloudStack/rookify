@@ -84,8 +84,7 @@ run-tests-locally: ## Runs the tests in the tests directory. NB: check that your
 
 .PHONY: run-tests
 run-tests: ## Runs the tests in the container
-	${CONTAINERCMD} exec -it rookify-dev bash -c "source ./.venv/bin/activate && \
-	.venv/bin/python -m unittest ./tests/test_mock_*"
+	${CONTAINERCMD} exec -it rookify-dev bash -c "/app/rookify/.venv/bin/python -m unittest /app/rookify/src/tests/test_mock_*"
 
 .PHONY: enter
 enter: ## Enter the container
