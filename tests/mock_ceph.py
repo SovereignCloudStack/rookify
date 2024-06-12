@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Callable
-from rookify.modules.module import ModuleException
+from rookify.modules.exception import ModuleException
 from typing import Any, Dict, List, Tuple
 
 

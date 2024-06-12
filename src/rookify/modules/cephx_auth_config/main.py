@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any
+from ..exception import ModuleException
 from ..machine import Machine
-from ..module import ModuleException, ModuleHandler
+from ..module import ModuleHandler
 
 
 class CephXAuthHandler(ModuleHandler):

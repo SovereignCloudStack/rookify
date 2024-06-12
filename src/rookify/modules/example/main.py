@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any
-from ..module import ModuleHandler, ModuleException
+from ..exception import ModuleException
+from ..module import ModuleHandler
 
 
 class ExampleHandler(ModuleHandler):

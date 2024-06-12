@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import kubernetes
 from typing import Any
+from ..exception import ModuleException
 from ..machine import Machine
-from ..module import ModuleHandler, ModuleException
+from ..module import ModuleHandler
 
 
 class CreateClusterHandler(ModuleHandler):
@@ -115,15 +115,11 @@ class CreateClusterHandler(ModuleHandler):
 
         self.k8s.crd_api_apply(cluster_definition)
 
+        # Wait for CephCluster to get into Progressing phase
         self.logger.info("Waiting for Rook cluster created")
 
-        cluster_name = self._config["rook"]["cluster"]["name"]
-
-        # Wait for CephCluster to get into Progressing phase
-        result = None
-        watcher = kubernetes.watch.Watch()
-
-        stream = watcher.stream(
+        result = self.k8s.watch_events(
+            self._watch_cluster_phase_callback,
             self.k8s.custom_objects_api.list_namespaced_custom_object,
             "ceph.rook.io",
             "v1",
@@ -132,23 +128,21 @@ class CreateClusterHandler(ModuleHandler):
             timeout_seconds=60,
         )
 
-        for event in stream:
-            event_object = event["object"]
-
-            if event_object["metadata"]["name"] != cluster_name:
-                continue
-
-            try:
-                if event_object["status"]["phase"] == "Progressing":
-                    result = event_object
-                    break
-            except KeyError:
-                pass
-
-        watcher.stop()
-
         if result is None:
             raise ModuleException("CephCluster did not come up")
+
+    def _watch_cluster_phase_callback(self, event_object: Any) -> Any:
+        try:
+            if (
+                event_object["metadata"]["name"]
+                == self._config["rook"]["cluster"]["name"]
+                and event_object["status"]["phase"] == "Progressing"
+            ):
+                return event_object
+        except KeyError:
+            pass
+
+        return None
 
     @staticmethod
     def register_preflight_state(
