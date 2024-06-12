@@ -16,16 +16,16 @@ class CreateClusterHandler(ModuleHandler):
 
     @property
     def __mon_placement_label(self) -> str:
-        return (  # type: ignore
-            self._config["rook"]["cluster"]["mon_placement_label"]
+        return (
+            str(self._config["rook"]["cluster"]["mon_placement_label"])
             if "mon_placement_label" in self._config["rook"]["cluster"]
             else f"placement-{self._config["rook"]["cluster"]["name"]}-mon"
         )
 
     @property
     def __mgr_placement_label(self) -> str:
-        return (  # type: ignore
-            self._config["rook"]["cluster"]["mgr_placement_label"]
+        return (
+            str(self._config["rook"]["cluster"]["mgr_placement_label"])
             if "mgr_placement_label" in self._config["rook"]["cluster"]
             else f"placement-{self._config["rook"]["cluster"]["name"]}-mgr"
         )
@@ -53,6 +53,15 @@ class CreateClusterHandler(ModuleHandler):
                     raise ModuleException(
                         f"There are more than 1 mgr running on node {node}"
                     )
+
+            self.logger.debug(
+                "Rook cluster definition values: {0} {1} with mon label {2} and mgr label {3}".format(
+                    self._config["rook"]["cluster"]["namespace"],
+                    self._config["rook"]["cluster"]["name"],
+                    self.__mon_placement_label,
+                    self.__mgr_placement_label,
+                )
+            )
 
             # Render cluster config from template
             cluster_definition = self.load_template(
@@ -97,6 +106,8 @@ class CreateClusterHandler(ModuleHandler):
         self.__create_cluster_definition()
 
     def execute(self) -> None:
+        self.logger.info("Creating Rook cluster definition")
+
         # Create CephCluster
         cluster_definition = self.machine.get_preflight_state(
             "CreateClusterHandler"
@@ -105,6 +116,8 @@ class CreateClusterHandler(ModuleHandler):
         self.k8s.crd_api_apply(cluster_definition)
 
         # Wait for CephCluster to get into Progressing phase
+        self.logger.info("Waiting for Rook cluster created")
+
         result = self.k8s.watch_events(
             self._watch_cluster_phase_callback,
             self.k8s.custom_objects_api.list_namespaced_custom_object,

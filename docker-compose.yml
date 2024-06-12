@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  rookify:
+    image: "rookify-dev:latest"
+    container_name: rookify-dev
+    working_dir: /app/rookify/src
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: rookify-dev
+      args:
+        - ROOKIFY_VERSION=${ROOKIFY_VERSION:-0.0.0.dev1}
+    volumes:
+      - ./:/app/rookify/src:Z # Be sure your config.yaml is correct, see src/config.example.yml and copy it to the root of the app
+                              # note: you might have to copy the dir `.ceph/` from your testbed and then use sshuttle or `make vpn-sshuttle` from you testbed repo to be able to reach the remotes locally
+                              # note: you might to need to copy rsa-keys from testbed/terraform/.ssh (depending on what your name is from the testbed)
+    entrypoint: ["sleep"]
+    command: ["infinity"]
