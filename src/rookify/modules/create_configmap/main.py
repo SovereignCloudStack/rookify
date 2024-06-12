@@ -71,13 +71,13 @@ class CreateConfigMapHandler(ModuleHandler):
             **self.machine.get_preflight_state("CreateConfigMapHandler").configmap
         )
 
-        configmap = self.k8s.core_v1_api.create_namespaced_config_map(
+        configmap_created = self.k8s.core_v1_api.create_namespaced_config_map(
             self._config["rook"]["cluster"]["namespace"], body=configmap
         )
 
         self.machine.get_execution_state(
             "CreateConfigMapHandler"
-        ).configmap = configmap.to_dict()
+        ).configmap = configmap_created.to_dict()
 
         # Get or create needed auth keys
         admin_auth: Dict[str, Any] = self.ceph.mon_command(
