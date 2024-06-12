@@ -213,7 +213,12 @@ class ModuleHandler:
         pass
 
     def load_template(self, filename: str, **variables: Any) -> __Template:
-        template_path = os.path.join(os.path.dirname(__file__), "templates", filename)
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            self.__class__.__module__.rsplit(".", 2)[1],
+            "templates",
+            filename,
+        )
         template = ModuleHandler.__Template(template_path)
         template.render(**variables)
         return template

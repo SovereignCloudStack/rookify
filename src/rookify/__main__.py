@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from argparse import ArgumentParser
 from .modules import load_modules
 from .modules.machine import Machine
 from .logger import configure_logging, get_logger
@@ -7,6 +8,10 @@ from .yaml import load_config
 
 
 def main() -> None:
+    arg_parser = ArgumentParser("Rookify")
+    arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
+    args = arg_parser.parse_args()
+
     # Load configuration file
     try:
         config = load_config("config.yaml")
@@ -25,4 +30,4 @@ def main() -> None:
     machine = Machine(config["general"].get("machine_pickle_file"))
     load_modules(machine, config)
 
-    machine.execute()
+    machine.execute(args.dry_run_mode)
