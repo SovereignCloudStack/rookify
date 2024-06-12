@@ -2,9 +2,8 @@ import unittest
 from unittest.mock import Mock
 
 from rookify.modules.exception import ModuleException
-from ..mock_k8s import MockK8s
-from ..mock_k8s_prerequisite_check import MockK8sPrerequisitesCheckHandler
 from typing import Any, Dict, List
+from ..mock_k8s_prerequisite_check import MockK8sPrerequisitesCheckHandler
 
 
 # Note: currently this test works with pytest but not with unittest, which is not able to import needed classes
@@ -41,22 +40,19 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
         )
 
     def test_namespaces(self) -> None:
-        # Instantiate MockK8s
-        mock_k8s = MockK8s(self._request_callback)
         # Instantiate K8sPrerequisitesCheckHandler with the mock ModuleHandler
-        handler_instance = MockK8sPrerequisitesCheckHandler(Mock(), self.config)
+        handler_instance = MockK8sPrerequisitesCheckHandler(
+            self._request_callback, Mock(), self.config
+        )
         # Set the k8s attribute to the mock_k8s instance
-        handler_instance.k8s = mock_k8s
-        # Call the preflight method to run the test
         handler_instance.preflight()
 
     def test_namespaces_fails(self) -> None:
-        # Instantiate MockK8s
-        mock_k8s = MockK8s(self._request_callback)
         # Instantiate K8sPrerequisitesCheckHandler with the mock ModuleHandler
-        handler_instance = MockK8sPrerequisitesCheckHandler(Mock(), self.config)
-        # Set the k8s attribute to the mock_k8s instance
-        handler_instance.k8s = mock_k8s
+        handler_instance = MockK8sPrerequisitesCheckHandler(
+            self._request_callback, Mock(), self.config
+        )
+
         # Modify the config to have a different namespace than what is expected
         handler_instance._config["rook"]["cluster"]["namespace"] = "wrong-namespace"
         # Call the preflight method to run the test
