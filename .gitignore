@@ -90,3 +90,4 @@ data.pickle
 config.yaml
 .ceph
 .k8s
+.ssh
