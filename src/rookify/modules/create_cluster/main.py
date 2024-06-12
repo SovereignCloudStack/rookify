@@ -147,7 +147,7 @@ class CreateClusterHandler(ModuleHandler):
 
         watcher.stop()
 
-        if result == None:
+        if result is None:
             raise ModuleException("CephCluster did not come up")
 
     @staticmethod
