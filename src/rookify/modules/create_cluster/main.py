@@ -54,6 +54,15 @@ class CreateClusterHandler(ModuleHandler):
                         f"There are more than 1 mgr running on node {node}"
                     )
 
+            self.logger.debug(
+                "Rook cluster definition values: {0} {1} with mon label {2} and mgr label {3}".format(
+                    self._config["rook"]["cluster"]["namespace"],
+                    self._config["rook"]["cluster"]["name"],
+                    self.__mon_placement_label,
+                    self.__mgr_placement_label,
+                )
+            )
+
             # Render cluster config from template
             cluster_definition = self.load_template(
                 "cluster.yaml.j2",
@@ -97,12 +106,16 @@ class CreateClusterHandler(ModuleHandler):
         self.__create_cluster_definition()
 
     def execute(self) -> None:
+        self.logger.info("Creating Rook cluster definition")
+
         # Create CephCluster
         cluster_definition = self.machine.get_preflight_state(
             "CreateClusterHandler"
         ).cluster_definition
 
         self.k8s.crd_api_apply(cluster_definition)
+
+        self.logger.info("Waiting for Rook cluster created")
 
         cluster_name = self._config["rook"]["cluster"]["name"]
 
