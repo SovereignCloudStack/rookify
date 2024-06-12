@@ -3,7 +3,7 @@ from typing import Any
 
 
 # Note: currently this test works with pytest but not with unittest, which is not able to import needed classes
-class MockK8sPrerequisitesCheckHandler(K8sPrerequisitesCheckHandler):  # type: ignore[misc]
+class MockK8sPrerequisitesCheckHandler(K8sPrerequisitesCheckHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._k8s = None
