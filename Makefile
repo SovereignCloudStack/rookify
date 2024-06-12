@@ -19,7 +19,7 @@ else
 endif
 
 ## Export default rookify version
-export ROOKIFY_VERSION ?= "0.0.0.dev0"
+export ROOKIFY_VERSION ?= "0.0.0.dev1"
 
 .PHONY: help
 help: ## Display this help message
@@ -75,16 +75,16 @@ run-rookify: ## Runs rookify in the container
 	docker exec -it rookify-dev /app/rookify/.venv/bin/rookify
 
 .PHONY: build-container
-build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev0
-	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) -t rookify:latest -f Dockerfile .
+build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev1
+	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) --target rookify -t rookify:latest -f Dockerfile .
 
 .PHONY: run-tests-locally
 run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
 	.venv/bin/python -m pytest
 
 .PHONY: run-tests
-run-tests: ## Runs the tests in the container
-	${CONTAINERCMD} exec -it rookify-dev bash -c "/app/rookify/.venv/bin/python -m unittest /app/rookify/src/tests/test_mock_*"
+run-tests: up ## Runs the tests in the container
+	${CONTAINERCMD} exec -it rookify-dev bash -c "/app/rookify/.venv/bin/python -m pytest"
 
 .PHONY: enter
 enter: ## Enter the container
