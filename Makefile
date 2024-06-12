@@ -38,8 +38,7 @@ setup-venv:
 
 .PHONY: run-precommit
 run-precommit: ## Run pre-commit to check if all files running through
-	pre-commit run --all-files
-
+	pre-commit run --show-diff-on-failure --color=always --all-files
 
 .PHONY: update-requirements
 update-requirements: ## Update the requirements.txt with newer versions of pip packages

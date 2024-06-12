@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
-from rookify.modules.module import ModuleException
+from rookify.modules.exception import ModuleException
 from ..mock_k8s import MockK8s
 from ..mock_k8s_prerequisite_check import MockK8sPrerequisitesCheckHandler
 from typing import Any, Dict, List

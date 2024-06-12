@@ -3,10 +3,9 @@ from typing import Any
 
 
 # Note: currently this test works with pytest but not with unittest, which is not able to import needed classes
-class MockK8sPrerequisitesCheckHandler(K8sPrerequisitesCheckHandler):  # type: ignore
+class MockK8sPrerequisitesCheckHandler(K8sPrerequisitesCheckHandler):  # type: ignore[misc]
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        # Set a mock object as the value of the k8s attribute
         self._k8s = None
 
     @property
@@ -18,7 +17,10 @@ class MockK8sPrerequisitesCheckHandler(K8sPrerequisitesCheckHandler):  # type: i
         self._k8s = value
 
     def preflight(self) -> None:
-        # Call original preflight method
         super().preflight()
-        # Add additional mocking behavior here if needed
+        pass
+
+    # Note: This solves the error 'cannot instantiate abstract class "MockK8sPrerequisitesCheckHandler" with abstract attribute "execute"'
+    def execute(self) -> None:
+        super().execute()
         pass
