@@ -22,15 +22,6 @@ class AnalyzeCephHandler(ModuleHandler):
                     leaf[part] = self.ceph.mon_command(command)
                 leaf = leaf[part]
 
-        self.logger.debug("AnalyzeCephHandler commands executed")
-
-        state.data["ssh"] = {}
-        state.data["ssh"]["osd"] = {}
-
-        for node, values in state.data["node"]["ls"]["osd"].items():
-            devices = self.ssh.command(node, "find /dev/ceph-*/*").stdout.splitlines()
-            state.data["ssh"]["osd"][node] = {"devices": devices}
-
         self.logger.info("AnalyzeCephHandler ran successfully.")
 
     @staticmethod
