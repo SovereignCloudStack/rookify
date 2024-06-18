@@ -19,12 +19,10 @@ class Ceph:
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__ceph, name)
 
-    def mon_command(self, command: str, **kwargs: str) -> Dict[str, Any] | List[Any]:
-        cmd = {"prefix": command, "format": "json"}
-        cmd.update(**kwargs)
-
-        result = self.__ceph.mon_command(json.dumps(cmd), b"")
-
+    def _json_command(
+        self, handler: Any, *args: List[Any]
+    ) -> Dict[str, Any] | List[Any]:
+        result = handler(*args)
         if result[0] != 0:
             raise ModuleException(f"Ceph did return an error: {result}")
 
