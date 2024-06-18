@@ -35,3 +35,15 @@ class Ceph:
             assert isinstance(data, dict) or isinstance(data, list)
 
         return data
+
+    def mon_command(self, command: str, **kwargs: str) -> Dict[str, Any] | List[Any]:
+        cmd = {"prefix": command, "format": "json"}
+        cmd.update(**kwargs)
+        return self._json_command(self.__ceph.mon_command, json.dumps(cmd), b"")  # type: ignore
+
+    def osd_command(
+        self, osd_id: int, command: str, **kwargs: str
+    ) -> Dict[str, Any] | List[Any]:
+        cmd = {"prefix": command, "format": "json"}
+        cmd.update(**kwargs)
+        return self._json_command(self.__ceph.osd_command, osd_id, json.dumps(cmd), b"")  # type: ignore
