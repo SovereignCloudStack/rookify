@@ -1,0 +1,6 @@
+metadata:
+  name: {{ cluster_name }}
+  namespace: {{ cluster_namespace }}
+spec:
+  storage: # cluster level storage configuration and selection
+    nodes: {{ nodes_osd_devices_list }}
