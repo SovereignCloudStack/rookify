@@ -46,7 +46,7 @@ class ModuleHandler:
     @property
     def k8s(self) -> K8s:
         if self.__k8s is None:
-            self.__k8s = K8s(self._config["kubernetes"])
+            self.__k8s = K8s(self._config)
         return self.__k8s
 
     @property
