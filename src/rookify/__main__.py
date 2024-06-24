@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from argparse import ArgumentParser
+import sys
+from argparse import ArgumentParser, Namespace
 from .modules import load_modules
 from .modules.machine import Machine
 from .logger import configure_logging, get_logger
 from .yaml import load_config
 
 
-def main() -> None:
+def parse_args(args: list[str]) -> Namespace:
+    # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
     arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
     arg_parser.add_argument(
@@ -16,7 +18,11 @@ def main() -> None:
         dest="show_progress",
         help="Show the current state of progress, as read from the pickle file",
     )
-    args = arg_parser.parse_args()
+    return arg_parser.parse_args(args)
+
+
+def main() -> None:
+    args = parse_args(sys.argv[1:])
 
     # Load configuration file
     try:
