@@ -19,9 +19,11 @@ class CreateClusterHandler(ModuleHandler):
 
         try:
             node_ls_data = state_data["node"]["ls"]
+            rook_config = self._config["rook"]
 
             # Get monitor count
             mon_count = 0
+
             for node, mons in node_ls_data["mon"].items():
                 mon_count += 1
                 if len(mons) > 1:
@@ -31,6 +33,7 @@ class CreateClusterHandler(ModuleHandler):
 
             # Get manager count
             mgr_count = 0
+
             for node, mgrs in node_ls_data["mgr"].items():
                 mgr_count += 1
                 if len(mons) > 1:
@@ -40,37 +43,44 @@ class CreateClusterHandler(ModuleHandler):
 
             self.logger.debug(
                 "Rook cluster definition values: {0} {1} with mon label {2} and mgr label {3}".format(
-                    self._config["rook"]["cluster"]["namespace"],
-                    self._config["rook"]["cluster"]["name"],
+                    rook_config["cluster"]["namespace"],
+                    rook_config["cluster"]["name"],
                     self.k8s.mon_placement_label,
                     self.k8s.mgr_placement_label,
                 )
             )
 
             cluster_definition_values = {
-                "cluster_name":self._config["rook"]["cluster"]["name"],
-                "cluster_namespace":self._config["rook"]["cluster"]["namespace"],
-                "ceph_image":self._config["rook"]["ceph"]["image"],
-                "mon_count":mon_count,
-                "mgr_count":mgr_count,
-                "mon_placement_label":self.k8s.mon_placement_label,
-                "mgr_placement_label":self.k8s.mgr_placement_label,
+                "cluster_name": rook_config["cluster"]["name"],
+                "cluster_namespace": rook_config["cluster"]["namespace"],
+                "ceph_image": rook_config["ceph"]["image"],
+                "mon_count": mon_count,
+                "mgr_count": mgr_count,
+                "mon_placement_label": self.k8s.mon_placement_label,
+                "mgr_placement_label": self.k8s.mgr_placement_label,
             }
 
-            if len(self._config["rook"]["ceph"].get("public_network", "")) > 0:
-                cluster_definition_values["public_network"] = self._config["rook"]["ceph"]["public_network"]
+            if len(rook_config["ceph"].get("public_network", "")) > 0:
+                cluster_definition_values["public_network"] = rook_config["ceph"][
+                    "public_network"
+                ]
             else:
-                self.logger.warn("Rook Ceph cluster will be configured without a public network and determine it automatically during runtime")
+                self.logger.warn(
+                    "Rook Ceph cluster will be configured without a public network and determine it automatically during runtime"
+                )
 
-            if len(self._config["rook"]["ceph"].get("cluster_network", "")) > 0:
-                cluster_definition_values["cluster_network"] = self._config["rook"]["ceph"]["cluster_network"]
+            if len(rook_config["ceph"].get("cluster_network", "")) > 0:
+                cluster_definition_values["cluster_network"] = rook_config["ceph"][
+                    "cluster_network"
+                ]
             else:
-                self.logger.info("Rook Ceph cluster will be configured without a cluster network")
+                self.logger.info(
+                    "Rook Ceph cluster will be configured without a cluster network"
+                )
 
             # Render cluster config from template
             cluster_definition = self.load_template(
-                "cluster.yaml.j2",
-                **cluster_definition_values
+                "cluster.yaml.j2", **cluster_definition_values
             )
 
             self.machine.get_preflight_state(
