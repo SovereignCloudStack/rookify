@@ -2,6 +2,7 @@
 
 import importlib
 from typing import Any, Dict
+from ..logger import get_logger
 from .machine import Machine
 
 
@@ -55,6 +56,20 @@ def load_modules(machine: Machine, config: Dict[str, Any]) -> None:
     :return: returns tuple of preflight_modules, modules
     """
 
+    migration_modules = config["migration_modules"].copy()
+
     for entry in importlib.resources.files("rookify.modules").iterdir():
         if entry.is_dir() and entry.name in config["migration_modules"]:
+            migration_modules.remove(entry.name)
             _load_module(machine, config, entry.name)
+
+    if len(migration_modules) > 0 or len(config["migration_modules"]) < 1:
+        logger = get_logger()
+
+        if len(config["migration_modules"]) < 1:
+            logger.error("No modules configured for migration")
+        elif len(migration_modules) > 0:
+            for invalid_module_name in migration_modules:
+                logger.error(
+                    "Invalid module configured: {0}".format(invalid_module_name)
+                )
