@@ -6,7 +6,12 @@ from typing import Any, Callable, Dict, Optional
 
 class K8s:
     def __init__(self, config: Dict[str, Any]):
-        k8s_config = kubernetes.config.load_kube_config(config_file=config["config"])
+        k8s_config = kubernetes.config.load_kube_config(
+            config_file=config["kubernetes"]["config"]
+        )
+
+        self._rook_config = config["rook"]
+
         self.__client = kubernetes.client.ApiClient(k8s_config)
         self.__dynamic_client: Optional[kubernetes.dynamic.DynamicClient] = None
 
@@ -31,6 +36,38 @@ class K8s:
         if not self.__dynamic_client:
             self.__dynamic_client = kubernetes.dynamic.DynamicClient(self.__client)
         return self.__dynamic_client
+
+    @property
+    def mds_placement_label(self) -> str:
+        return (
+            str(self._rook_config["cluster"]["mds_placement_label"])
+            if "mds_placement_label" in self._rook_config["cluster"]
+            else f"placement-{self._rook_config["cluster"]["name"]}-mds"
+        )
+
+    @property
+    def mon_placement_label(self) -> str:
+        return (
+            str(self._rook_config["cluster"]["mon_placement_label"])
+            if "mon_placement_label" in self._rook_config["cluster"]
+            else f"placement-{self._rook_config["cluster"]["name"]}-mon"
+        )
+
+    @property
+    def mgr_placement_label(self) -> str:
+        return (
+            str(self._rook_config["cluster"]["mgr_placement_label"])
+            if "mgr_placement_label" in self._rook_config["cluster"]
+            else f"placement-{self._rook_config["cluster"]["name"]}-mgr"
+        )
+
+    @property
+    def osd_placement_label(self) -> str:
+        return (
+            str(self._rook_config["cluster"]["osd_placement_label"])
+            if "osd_placement_label" in self._rook_config["cluster"]
+            else f"placement-{self._rook_config["cluster"]["name"]}-osd"
+        )
 
     def crd_api(
         self, api_version: str, kind: str
