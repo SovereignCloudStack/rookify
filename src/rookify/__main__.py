@@ -10,6 +10,12 @@ from .yaml import load_config
 def main() -> None:
     arg_parser = ArgumentParser("Rookify")
     arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
+    arg_parser.add_argument(
+        "--show",
+        action="store_true",
+        dest="show_progress",
+        help="Show the current state of progress, as read from the pickle file",
+    )
     args = arg_parser.parse_args()
 
     # Load configuration file
@@ -30,4 +36,4 @@ def main() -> None:
     machine = Machine(config["general"].get("machine_pickle_file"))
     load_modules(machine, config)
 
-    machine.execute(args.dry_run_mode)
+    machine.execute(dry_run_mode=args.dry_run_mode, show_progress=args.show_progress)
