@@ -26,7 +26,7 @@ class Machine(_Machine):  # type: ignore
     def add_preflight_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
         self._preflight_states.append(self.__class__.state_cls(name, **kwargs))
 
-    def execute(self, dry_run_mode: bool = False) -> None:
+    def execute(self, dry_run_mode: bool = False, show_progress: bool = False) -> None:
         states = self._preflight_states
         if not dry_run_mode:
             states = states + self._execution_states
@@ -42,15 +42,23 @@ class Machine(_Machine):  # type: ignore
             self._execute()
         else:
             with open(self._machine_pickle_file, "ab+") as file:
-                self._execute(file)
+                self._execute(file, show_progress)
 
-    def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
+    def _execute(
+        self, pickle_file: Optional[IO[Any]] = None, show_progress: bool = False
+    ) -> None:
         states_data = {}
 
         if pickle_file is not None and pickle_file.tell() > 0:
             pickle_file.seek(0)
 
             states_data = Unpickler(pickle_file).load()
+
+            if show_progress:
+                get_logger().info(
+                    "Current state as retrieved pickle-file: {0}".format(states_data)
+                )
+
             self._restore_state_data(states_data)
 
         try:
@@ -62,6 +70,7 @@ class Machine(_Machine):  # type: ignore
 
                     if len(state_data) > 0:
                         states_data[self.state] = state_data
+
         except MachineError:
             if self.state != "migrated":
                 raise
