@@ -6,7 +6,10 @@ from typing import Any, Callable, Dict, Optional
 
 class K8s:
     def __init__(self, config: Dict[str, Any]):
-        k8s_config = kubernetes.config.load_kube_config(config_file=config["kubernetes"]["config"])
+        k8s_config = kubernetes.config.load_kube_config(
+            config_file=config["kubernetes"]["config"]
+        )
+
         self._rook_config = config["rook"]
 
         self.__client = kubernetes.client.ApiClient(k8s_config)
