@@ -19,7 +19,7 @@ else
 endif
 
 ## Export default rookify version
-export ROOKIFY_VERSION ?= "0.0.0.dev1"
+export ROOKIFY_VERSION ?= 0.0.0.dev1
 
 .PHONY: help
 help: ## Display this help message
@@ -65,10 +65,11 @@ check-radoslib: ## Checks if radoslib is installed and if it contains the right 
 	fi
 
 .PHONY: run-local-rookify
-run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
-	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
-	source ./.venv/bin/activate && \
-	cd src && python -m rookify
+run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv and currently requires build of the )
+	@if [ ! -d .venv ]; then \
+		$(MAKE) setup-venv; \
+	fi; \
+    . .venv/bin/activate && pip install -e . && rookify
 
 .PHONY: run-rookify
 run-rookify: ## Runs rookify in the container
