@@ -49,6 +49,7 @@ class Machine(_Machine):  # type: ignore
     ) -> None:
         states_data = {}
 
+        # Read pickle file if it exists, to continue from the stored state
         if pickle_file is not None and pickle_file.tell() > 0:
             pickle_file.seek(0)
 
@@ -56,7 +57,9 @@ class Machine(_Machine):  # type: ignore
 
             if show_progress:
                 get_logger().info(
-                    "Current state as retrieved pickle-file: {0}".format(states_data)
+                    "Current state as retrieved from pickle-file: {0}".format(
+                        states_data
+                    )
                 )
 
             self._restore_state_data(states_data)
@@ -75,8 +78,13 @@ class Machine(_Machine):  # type: ignore
             if self.state != "migrated":
                 raise
         finally:
+            # store state data and eventuelly show it to stdout
             if pickle_file is not None:
-                get_logger().debug("Storing state data: {0}".format(states_data))
+                if show_progress:
+                    get_logger().info("Storing state data: {0}".format(states_data))
+                else:
+                    get_logger().debug("Storing state data: {0}".format(states_data))
+
                 pickle_file.truncate(0)
 
                 Pickler(pickle_file).dump(states_data)
