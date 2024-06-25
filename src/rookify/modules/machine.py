@@ -42,11 +42,9 @@ class Machine(_Machine):  # type: ignore
             self._execute()
         else:
             with open(self._machine_pickle_file, "ab+") as file:
-                self._execute(file, show_progress)
+                self._execute(file)
 
-    def _execute(
-        self, pickle_file: Optional[IO[Any]] = None, show_progress: bool = False
-    ) -> None:
+    def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
         states_data = {}
 
         # Read pickle file if it exists, to continue from the stored state
@@ -54,13 +52,6 @@ class Machine(_Machine):  # type: ignore
             pickle_file.seek(0)
 
             states_data = Unpickler(pickle_file).load()
-
-            if show_progress:
-                get_logger().info(
-                    "Current state as retrieved from pickle-file: {0}".format(
-                        states_data
-                    )
-                )
 
             self._restore_state_data(states_data)
 
@@ -80,10 +71,7 @@ class Machine(_Machine):  # type: ignore
         finally:
             # store state data and eventuelly show it to stdout
             if pickle_file is not None:
-                if show_progress:
-                    get_logger().info("Storing state data: {0}".format(states_data))
-                else:
-                    get_logger().debug("Storing state data: {0}".format(states_data))
+                get_logger().debug("Storing state data: {0}".format(states_data))
 
                 pickle_file.truncate(0)
 

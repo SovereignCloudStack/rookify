@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from pickle import Unpickler
 import sys
 from argparse import ArgumentParser, Namespace
+from typing import Any
 from .modules import load_modules
 from .modules.machine import Machine
 from .logger import configure_logging, get_logger
@@ -21,6 +23,13 @@ def parse_args(args: list[str]) -> Namespace:
     return arg_parser.parse_args(args)
 
 
+def load_pickler(pickle_file: str) -> Any:
+    with open(pickle_file, "ab+") as file:
+        file.seek(0)
+        states_data = Unpickler(file).load()
+        return states_data
+
+
 def main() -> None:
     args = parse_args(sys.argv[1:])
 
@@ -37,9 +46,26 @@ def main() -> None:
         raise SystemExit(f"Error configuring logging: {e}")
 
     log = get_logger()
-    log.debug("Executing Rookify")
 
-    machine = Machine(config["general"].get("machine_pickle_file"))
-    load_modules(machine, config)
+    # Get Pickle File if configured in config.yaml
+    pickle_file_name = config["general"].get("machine_pickle_file")
+    if pickle_file_name is None:
+        log.info("No pickle file was set in the configuration.")
+        args.show_progress = False
+    else:
+        log.info(f"Pickle file set: {pickle_file_name}")
 
-    machine.execute(dry_run_mode=args.dry_run_mode, show_progress=args.show_progress)
+    # If show_progress is true, only show the current progress of the migration
+    if args.show_progress:
+        states_data = load_pickler(pickle_file_name)
+        get_logger().info(
+            "Current state as retrieved from pickle-file: {0}".format(states_data)
+        )
+    # Else run the migration
+    else:
+        log.debug("Executing Rookify")
+
+        machine = Machine(pickle_file_name)
+        load_modules(machine, config)
+
+        machine.execute(dry_run_mode=args.dry_run_mode)
