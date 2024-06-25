@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from pickle import Unpickler
 import sys
 from argparse import ArgumentParser, Namespace
@@ -30,9 +31,11 @@ def load_pickler(pickle_file_name: str) -> Any:
         return states_data
 
 
-def sort_pickle_file(states_data: Any) -> Any:
+def sort_pickle_file(unsorted_states_data: Any) -> Any:
     # sort the pickle-file alfabetically
-    sorted_data_by_keys = dict(sorted(states_data))
+    first_key = next(iter(unsorted_states_data))
+    data_values = unsorted_states_data[first_key]["data"]
+    sorted_data_by_keys = {k: data_values[k] for k in sorted(data_values)}
     return sorted_data_by_keys
 
 
@@ -65,8 +68,11 @@ def main() -> None:
         if pickle_file_name is None:
             return
         states_data = load_pickler(pickle_file_name)
+        sorted_states_data = sort_pickle_file(states_data)
         get_logger().info(
-            "Current state as retrieved from pickle-file: {0}".format(states_data)
+            "Current state as retrieved from pickle-file: {0}".format(
+                json.dumps(sorted_states_data, indent=4)
+            )
         )
     # Else run the rook migration
     else:
