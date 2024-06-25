@@ -23,11 +23,17 @@ def parse_args(args: list[str]) -> Namespace:
     return arg_parser.parse_args(args)
 
 
-def load_pickler(pickle_file: str) -> Any:
-    with open(pickle_file, "ab+") as file:
-        file.seek(0)
-        states_data = Unpickler(file).load()
+def load_pickler(pickle_file_name: str) -> Any:
+    with open(pickle_file_name, "ab+") as pickle_file:
+        pickle_file.seek(0)
+        states_data = Unpickler(pickle_file).load()
         return states_data
+
+
+def sort_pickle_file(states_data: Any) -> Any:
+    # sort the pickle-file alfabetically
+    sorted_data_by_keys = dict(sorted(states_data))
+    return sorted_data_by_keys
 
 
 def main() -> None:
@@ -51,17 +57,18 @@ def main() -> None:
     pickle_file_name = config["general"].get("machine_pickle_file")
     if pickle_file_name is None:
         log.info("No pickle file was set in the configuration.")
-        args.show_progress = False
     else:
         log.info(f"Pickle file set: {pickle_file_name}")
 
-    # If show_progress is true, only show the current progress of the migration
+    # If show_progress is true and pickle_file_name  is not None, show the current progress of the migration
     if args.show_progress:
+        if pickle_file_name is None:
+            return
         states_data = load_pickler(pickle_file_name)
         get_logger().info(
             "Current state as retrieved from pickle-file: {0}".format(states_data)
         )
-    # Else run the migration
+    # Else run the rook migration
     else:
         log.debug("Executing Rookify")
 
