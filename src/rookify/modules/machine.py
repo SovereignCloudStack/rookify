@@ -47,10 +47,12 @@ class Machine(_Machine):  # type: ignore
     def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
         states_data = {}
 
+        # Read pickle file if it exists, to continue from the stored state
         if pickle_file is not None and pickle_file.tell() > 0:
             pickle_file.seek(0)
 
             states_data = Unpickler(pickle_file).load()
+
             self._restore_state_data(states_data)
 
         try:
@@ -62,12 +64,15 @@ class Machine(_Machine):  # type: ignore
 
                     if len(state_data) > 0:
                         states_data[self.state] = state_data
+
         except MachineError:
             if self.state != "migrated":
                 raise
         finally:
+            # store state data and eventuelly show it to stdout
             if pickle_file is not None:
                 get_logger().debug("Storing state data: {0}".format(states_data))
+
                 pickle_file.truncate(0)
 
                 Pickler(pickle_file).dump(states_data)
