@@ -3,8 +3,9 @@
 import json
 from pickle import Unpickler
 import sys
+import argparse
 from argparse import ArgumentParser, Namespace
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from .modules import load_modules
 from .modules.machine import Machine
 from .logger import configure_logging, get_logger
@@ -15,11 +16,26 @@ def parse_args(args: list[str]) -> Namespace:
     # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
     arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
+
+    # Custom ShowAction to set 'all' if nothing is specified for --show
+    class ShowAction(argparse.Action):
+        def __call__(
+            self,
+            parser: ArgumentParser,
+            namespace: Namespace,
+            values: Optional[Any],
+            option_string: Optional[str] = None,
+        ) -> None:
+            setattr(namespace, self.dest, values if values is not None else "all")
+
     arg_parser.add_argument(
         "--show",
-        action="store_true",
+        nargs="?",
+        action=ShowAction,
         dest="show_progress",
-        help="Show the current state of progress, as read from the pickle file",
+        metavar="<section>",
+        help="Show the state of progress, as read from the pickle file. Default argument is 'all', you can also specify a section you want to look at.",
+        required=False,
     )
     return arg_parser.parse_args(args)
 
@@ -64,15 +80,24 @@ def main() -> None:
     else:
         log.info(f"Pickle file set: {pickle_file_name}")
 
-    # If show_progress is true and pickle_file_name  is not None, show the current progress of the migration
-    if args.show_progress:
+    # If show_progress is not None and pickle_file_name is not None, show the current progress of the migration
+    if args.show_progress is not None:
         if pickle_file_name is None:
             return
         states_data = load_pickler(pickle_file_name)
         sorted_states_data = sort_pickle_file(states_data)
+
+        # Check if a specific section should be listed
+        if args.show_progress != "all":
+            if args.show_progress not in sorted_states_data.keys():
+                get_logger().error(f"The section {args.show_progress} does not exist")
+                return
+            else:
+                sorted_states_data = sorted_states_data[args.show_progress]
+
         get_logger().info(
-            "Current state as retrieved from pickle-file: {0}".format(
-                json.dumps(sorted_states_data, indent=4)
+            'Current state as retrieved from pickle-file: \n "{0}": {1}'.format(
+                args.show_progress, json.dumps(sorted_states_data, indent=4)
             )
         )
     # Else run the rook migration
