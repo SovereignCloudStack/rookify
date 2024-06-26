@@ -15,25 +15,25 @@ import rookify.yaml
 # Test the arugment parser
 def test_parse_args_dry_run() -> None:
     args = parse_args(["--dry-run"])
-    expected = Namespace(dry_run_mode=True, show_progress=False)
+    expected = Namespace(dry_run_mode=True, show_progress=None)
     assert args == expected
 
 
 def test_parse_args_show_progress() -> None:
     args = parse_args(["--show"])
-    expected = Namespace(dry_run_mode=False, show_progress=True)
+    expected = Namespace(dry_run_mode=False, show_progress="all")
     assert args == expected
 
 
 def test_parse_args_both_flags() -> None:
     args = parse_args(["--dry-run", "--show"])
-    expected = Namespace(dry_run_mode=True, show_progress=True)
+    expected = Namespace(dry_run_mode=True, show_progress="all")
     assert args == expected
 
 
 def test_parse_args_no_flags() -> None:
     args = parse_args([])
-    expected = Namespace(dry_run_mode=False, show_progress=False)
+    expected = Namespace(dry_run_mode=False, show_progress=None)
     assert args == expected
 
 
@@ -88,7 +88,8 @@ def test_main_show_progress(
 
     # Verify logging messages
     expected_log_message = (
-        "Current state as retrieved from pickle-file: {\n"
+        'Current state as retrieved from pickle-file: \n "all": '
+        "{\n"
         '    "mock_key": "mock_value"\n'
         "}"
     )
