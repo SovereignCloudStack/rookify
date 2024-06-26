@@ -4,7 +4,7 @@ import json
 from pickle import Unpickler
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import Any
+from typing import Any, Dict
 from .modules import load_modules
 from .modules.machine import Machine
 from .logger import configure_logging, get_logger
@@ -31,9 +31,10 @@ def load_pickler(pickle_file_name: str) -> Any:
         return states_data
 
 
-def sort_pickle_file(unsorted_states_data: Any) -> Any:
+def sort_pickle_file(unsorted_states_data: Dict[str, Any]) -> Dict[str, Any]:
     # sort the pickle-file alfabetically
-    first_key = next(iter(unsorted_states_data))
+    iterable_dict = iter(unsorted_states_data)
+    first_key = next(iterable_dict)
     data_values = unsorted_states_data[first_key]["data"]
     sorted_data_by_keys = {k: data_values[k] for k in sorted(data_values)}
     return sorted_data_by_keys
