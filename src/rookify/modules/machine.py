@@ -78,7 +78,8 @@ class Machine(_Machine):  # type: ignore
 
         if len(state.tags) > 0:
             for tag in state.tags:
-                data[tag] = getattr(state, tag)
+                if hasattr(state, tag):
+                    data[tag] = getattr(state, tag)
 
         return data
 
