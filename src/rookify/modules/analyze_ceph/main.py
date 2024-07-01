@@ -7,7 +7,7 @@ from ..module import ModuleHandler
 
 class AnalyzeCephHandler(ModuleHandler):
     def preflight(self) -> Any:
-        commands = ["mon dump", "osd dump", "device ls", "fs dump", "node ls"]
+        commands = ["mon dump", "osd dump", "device ls", "fs ls", "node ls"]
 
         state = self.machine.get_preflight_state("AnalyzeCephHandler")
         state.data: Dict[str, Any] = {}  # type: ignore
