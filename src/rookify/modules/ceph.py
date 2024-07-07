@@ -46,6 +46,11 @@ class Ceph:
                 osd_pool["erasure_code_profile"], erasure_code_profiles["default"]
             )
 
+            if osd_pool["erasure_code_configuration"].get("plugin") != "jerasure":
+                raise ModuleException(
+                    "Unsupported Ceph erasure code profile plugin in use"
+                )
+
         return osd_pools
 
     def mon_command(self, command: str, **kwargs: str) -> Dict[str, Any] | List[Any]:

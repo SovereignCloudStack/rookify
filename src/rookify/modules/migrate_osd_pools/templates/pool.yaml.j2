@@ -13,6 +13,11 @@ metadata:
 spec:
   # The failure domain will spread the replicas of the data across different failure zones
   failureDomain: host
+  {% if erasure_code_configuration %}
+  erasureCoded:
+    dataChunks: {{ erasure_code_configuration.data }}
+    codingChunks: {{ erasure_code_configuration.coding }}
+  {% else %}
   # For a pool based on raw copies, specify the number of copies. A size of 1 indicates no redundancy.
   replicated:
     size: {{ size }}
@@ -26,6 +31,7 @@ spec:
     # replicasPerFailureDomain: 2
     # The name of the failure domain to place further down replicas
     # subFailureDomain: host
+  {% endif %}
   # Ceph CRUSH root location of the rule
   # For reference: https://docs.ceph.com/docs/master/rados/operations/crush-map/#types-and-buckets
   #crushRoot: my-root
