@@ -23,8 +23,13 @@ class Ceph:
         result = handler(*args)
         if result[0] != 0:
             raise ModuleException(f"Ceph did return an error: {result}")
-        data = json.loads(result[1])
-        assert isinstance(data, dict) or isinstance(data, list)
+
+        data = {}
+
+        if len(result) > 0 and result[1] != b"":
+            data = json.loads(result[1])
+            assert isinstance(data, dict) or isinstance(data, list)
+
         return data
 
     def get_osd_pool_configurations_from_osd_dump(
