@@ -61,10 +61,10 @@ class MigrateMonsHandler(ModuleHandler):
             "Enabling Rook based Ceph mon daemon '{0}'".format(mon["name"])
         )
 
-        node_patch = {"metadata": {"labels": {"ceph-mon-placement": "enabled"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.mon_placement_label: "enabled"}}}
 
         if (
-            "ceph-mon-placement"
+            self.k8s.mon_placement_label
             not in self.k8s.core_v1_api.patch_node(
                 mon["name"], node_patch
             ).metadata.labels

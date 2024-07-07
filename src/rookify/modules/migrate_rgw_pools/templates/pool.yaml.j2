@@ -57,35 +57,23 @@ spec:
     instances: 1
     # The affinity rules to apply to the rgw deployment.
     placement:
-      podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - rook-ceph-rgw
-              # topologyKey: */zone can be used to spread RGW across different AZ
-              # Use <topologyKey: failure-domain.beta.kubernetes.io/zone> in k8s cluster if your cluster is v1.16 or lower
-              # Use <topologyKey: topology.kubernetes.io/zone>  in k8s cluster is v1.17 or upper
-              topologyKey: kubernetes.io/hostname
-    # A key/value list of annotations
-    #  nodeAffinity:
-    #    requiredDuringSchedulingIgnoredDuringExecution:
-    #      nodeSelectorTerms:
-    #      - matchExpressions:
-    #        - key: role
-    #          operator: In
-    #          values:
-    #          - rgw-node
-    #  topologySpreadConstraints:
-    #  tolerations:
-    #  - key: rgw-node
-    #    operator: Exists
-    #  podAffinity:
-    #  podAntiAffinity:
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+        - key: "node-role.kubernetes.io/master"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: {{ mds_placement_label }}
+                  operator: In
+                  values:
+                    - enabled
     # A key/value list of annotations
     annotations:
     #  key: value

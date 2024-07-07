@@ -56,10 +56,10 @@ class MigrateMgrsHandler(ModuleHandler):
             )
         )
 
-        node_patch = {"metadata": {"labels": {"ceph-mgr-placement": "enabled"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.mgr_placement_label: "enabled"}}}
 
         if (
-            "ceph-mgr-placement"
+            self.k8s.mgr_placement_label
             not in self.k8s.core_v1_api.patch_node(mgr_host, node_patch).metadata.labels
         ):
             raise ModuleException(
