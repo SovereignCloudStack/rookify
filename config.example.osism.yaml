@@ -1,0 +1,47 @@
+general:
+  machine_pickle_file: data.pickle
+
+logging:
+  level: INFO # level at which logging should start
+  format:
+    time: "%Y-%m-%d %H:%M.%S" # other example: "iso"
+    renderer: console # or: json
+
+ceph:
+  config: ./.ceph/ceph.conf
+  keyring: ./.ceph/ceph.client.admin.keyring
+
+# fill in correct path to private key
+ssh:
+  private_key: /home/USER/.ssh/cloud.private
+  hosts:
+    testbed-node-0:
+      address: 192.168.16.10
+      user: dragon
+    testbed-node-1:
+      address: 192.168.16.11
+      user: dragon
+    testbed-node-2:
+      address: 192.168.16.12
+      user: dragon
+
+kubernetes:
+  config: ./k8s/config
+
+rook:
+  cluster:
+    name: osism-ceph
+    namespace: rook-ceph
+    mds_placement_label: node-role.osism.tech/rook-mds
+    mgr_placement_label: node-role.osism.tech/rook-mgr
+    mon_placement_label: node-role.osism.tech/rook-mon
+    osd_placement_label: node-role.osism.tech/rook-osd
+    rgw_placement_label: node-role.osism.tech/rook-rgw
+  ceph:
+    image: quay.io/ceph/ceph:v18.2.1
+
+migration_modules:
+- cephx_auth_config
+- migrate_osds
+- migrate_monitors
+- example
