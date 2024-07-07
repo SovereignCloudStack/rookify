@@ -98,6 +98,7 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "cluster_namespace": self._config["rook"]["cluster"]["namespace"],
             "name": pool["name"],
             "mds_size": pool_metadata_osd_configuration["size"],
+            "mds_placement_label": self.k8s.mds_placement_label,
         }
 
         filesystem_definition_values["data_pools"] = []

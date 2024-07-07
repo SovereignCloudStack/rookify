@@ -219,6 +219,15 @@ spec:
               operator: In
               values:
               - enabled
+    osd:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: {{ osd_placement_label }}
+              operator: In
+              values:
+              - enabled
 
   # Monitor deployments may contain an anti-affinity rule for avoiding monitor
   # collocation on the same node. This is a required rule when host network is used

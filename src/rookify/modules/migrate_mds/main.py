@@ -67,10 +67,10 @@ class MigrateMdsHandler(ModuleHandler):
             )
         )
 
-        node_patch = {"metadata": {"labels": {"ceph-mds-placement": "enabled"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.mds_placement_label: "enabled"}}}
 
         if (
-            "ceph-mds-placement"
+            self.k8s.mds_placement_label
             not in self.k8s.core_v1_api.patch_node(mds_host, node_patch).metadata.labels
         ):
             raise ModuleException(

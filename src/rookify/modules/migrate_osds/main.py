@@ -88,6 +88,19 @@ class MigrateOSDsHandler(ModuleHandler):
             body=cluster_patch_templated.yaml,
         )
 
+        for host in osd_host_devices:
+            node_patch = {
+                "metadata": {"labels": {self.k8s.mon_placement_label: "enabled"}}
+            }
+
+            if (
+                self.k8s.mon_placement_label
+                not in self.k8s.core_v1_api.patch_node(host, node_patch).metadata.labels
+            ):
+                raise ModuleException(
+                    "Failed to patch k8s node for Ceph mon daemon '{0}'".format(host)
+                )
+
         self.machine.get_execution_state("MigrateOSDsHandler").migrated = True
 
     @staticmethod

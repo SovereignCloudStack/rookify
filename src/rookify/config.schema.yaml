@@ -22,6 +22,11 @@ rook:
   cluster:
     name: str()
     namespace: str()
+    mds_placement_label: str(required=False)
+    mgr_placement_label: str(required=False)
+    mon_placement_label: str(required=False)
+    osd_placement_label: str(required=False)
+    rgw_placement_label: str(required=False)
   ceph:
     image: str()
     public_network: regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(/(3[0-2]|2[0-9]|1[0-9]|[0-9]))?$", required=False)
