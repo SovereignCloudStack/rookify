@@ -111,6 +111,14 @@ class MigrateMdsPoolsHandler(ModuleHandler):
                 "size": osd_configuration["size"],
             }
 
+            if osd_configuration.get("erasure_code_profile", "") != "":
+                profile_configuration = osd_configuration["erasure_code_configuration"]
+
+                definition_data_pool["erasure_code_configuration"] = {
+                    "coding": profile_configuration["m"],
+                    "data": profile_configuration["k"],
+                }
+
             filesystem_definition_values["data_pools"].append(definition_data_pool)
 
         # Render cluster config from template
