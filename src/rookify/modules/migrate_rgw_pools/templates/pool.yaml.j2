@@ -29,11 +29,17 @@ spec:
   # The pool spec used to create the data pool. Can use replication or erasure coding.
   dataPool:
     failureDomain: host
+    {% if data_erasure_code_configuration %}
+    erasureCoded:
+      dataChunks: {{ data_erasure_code_configuration.data }}
+      codingChunks: {{ data_erasure_code_configuration.coding }}
+    {% else %}
     replicated:
       size: {{ data_pool_size }}
       # Disallow setting pool with replica 1, this could lead to data loss without recovery.
       # Make sure you're *ABSOLUTELY CERTAIN* that is what you want
       requireSafeReplicaSize: true
+    {% endif %}
     parameters:
       # Inline compression mode for the data pool
       # Further reference: https://docs.ceph.com/docs/master/rados/configuration/bluestore-config-ref/#inline-compression

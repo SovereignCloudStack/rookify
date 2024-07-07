@@ -59,6 +59,14 @@ class MigrateOSDPoolsHandler(ModuleHandler):
             "size": pool["size"],
         }
 
+        if pool.get("erasure_code_profile", "") != "":
+            profile_configuration = pool["erasure_code_configuration"]
+
+            pool_definition_values["erasure_code_configuration"] = {
+                "coding": profile_configuration["m"],
+                "data": profile_configuration["k"],
+            }
+
         # Render cluster config from template
         pool_definition = self.load_template("pool.yaml.j2", **pool_definition_values)
 
