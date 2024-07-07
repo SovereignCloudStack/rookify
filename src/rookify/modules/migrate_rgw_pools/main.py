@@ -91,6 +91,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "name": zone_name,
             "metadata_size": pool_metadata_osd_pool_data["size"],
             "data_pool_size": pool_buckets_data_osd_pool_data["size"],
+            "rgw_placement_label": self.k8s.rgw_placement_label,
         }
 
         # Render cluster config from template

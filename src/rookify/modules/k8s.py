@@ -69,6 +69,14 @@ class K8s:
             else f"placement-{self._rook_config["cluster"]["name"]}-osd"
         )
 
+    @property
+    def rgw_placement_label(self) -> str:
+        return (
+            str(self._rook_config["cluster"]["rgw_placement_label"])
+            if "rgw_placement_label" in self._rook_config["cluster"]
+            else f"placement-{self._rook_config["cluster"]["name"]}-rgw"
+        )
+
     def crd_api(
         self, api_version: str, kind: str
     ) -> kubernetes.dynamic.resource.Resource:
