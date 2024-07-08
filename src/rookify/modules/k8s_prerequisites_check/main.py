@@ -43,4 +43,5 @@ class K8sPrerequisitesCheckHandler(ModuleHandler):
                     raise ModuleException(
                         "Label {0} is set on node {1}".format(label, node.metadata.name)
                     )
+
         self.logger.info("K8sPrerequisitesCheck completed")
