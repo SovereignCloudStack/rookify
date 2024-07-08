@@ -1,5 +1,5 @@
 # Builder
-FROM python:3.11 as builder
+FROM python:3.11 AS builder
 
 ARG ROOKIFY_VERSION=0.0.0.dev1
 ENV ROOKIFY_VERSION=$ROOKIFY_VERSION
@@ -12,7 +12,7 @@ RUN python -m build /app/rookify/
 
 
 # Base
-FROM ubuntu:24.04 as base
+FROM ubuntu:24.04 AS base
 
 # Update packages required for Rookify
 RUN apt-get update && apt-get install -qy python3-pip-whl python3-rados python3-venv && apt-get clean
