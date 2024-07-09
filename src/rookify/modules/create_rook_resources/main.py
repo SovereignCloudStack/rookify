@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import kubernetes
+import json
 from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
 from ..module import ModuleHandler
 
 
-class CreateConfigMapHandler(ModuleHandler):
+class CreateRookResourcesHandler(ModuleHandler):
     REQUIRES = ["analyze_ceph", "k8s_prerequisites_check"]
 
     def __create_configmap_definition(self) -> None:
@@ -15,19 +16,26 @@ class CreateConfigMapHandler(ModuleHandler):
 
         metadata = kubernetes.client.V1ObjectMeta(name="rook-ceph-mon-endpoints")
         configmap_mon_list = ""
+        mapping = {}
 
         for mon in state_data["mon"]["dump"]["mons"]:
             if configmap_mon_list != "":
                 configmap_mon_list += ","
 
-            configmap_mon_list += "{0}:{1}".format(
+            configmap_mon_list += "{0}={1}".format(
                 mon["name"], mon["public_addr"].rsplit("/", 1)[0]
             )
 
+            mapping[mon["name"]] = {
+                "Name": mon["name"],
+                "Hostname": mon["name"],
+                "Address": mon["public_addr"].rsplit(":", 1)[0],
+            }
+
         configmap_data = {
             "data": configmap_mon_list,
-            "mapping": "{}",
-            "maxMonId": "-1",
+            "mapping": json.dumps({"node": mapping}),
+            "maxMonId": "{0:d}".format(len(state_data["mon"]["dump"]["mons"])),
         }
 
         configmap = kubernetes.client.V1ConfigMap(
@@ -35,14 +43,16 @@ class CreateConfigMapHandler(ModuleHandler):
         )
 
         self.machine.get_preflight_state(
-            "CreateConfigMapHandler"
+            "CreateRookResourcesHandler"
         ).configmap = configmap.to_dict()
 
     def preflight(self) -> None:
-        self.__cluster_name = self._config["rook"]["cluster"]["name"]
+        configmap = self.machine.get_preflight_state_data(
+            "CreateRookResourcesHandler", "configmap", default_value={}
+        )
 
-        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
-        self.__fsid = state_data["mon"]["dump"]["fsid"]
+        if len(configmap) > 0:
+            return
 
         # If the configmap or secret already exists, we have to abort to not override it
         try:
@@ -67,8 +77,18 @@ class CreateConfigMapHandler(ModuleHandler):
         self.__create_configmap_definition()
 
     def execute(self) -> None:
+        if (
+            len(
+                self.machine.get_execution_state_data(
+                    "CreateRookResourcesHandler", "secret", default_value={}
+                )
+            )
+            > 0
+        ):
+            return
+
         configmap = kubernetes.client.V1ConfigMap(
-            **self.machine.get_preflight_state("CreateConfigMapHandler").configmap
+            **self.machine.get_preflight_state("CreateRookResourcesHandler").configmap
         )
 
         configmap_created = self.k8s.core_v1_api.create_namespaced_config_map(
@@ -76,7 +96,7 @@ class CreateConfigMapHandler(ModuleHandler):
         )
 
         self.machine.get_execution_state(
-            "CreateConfigMapHandler"
+            "CreateRookResourcesHandler"
         ).configmap = configmap_created.to_dict()
 
         # Get or create needed auth keys
@@ -94,15 +114,17 @@ class CreateConfigMapHandler(ModuleHandler):
 
         metadata = kubernetes.client.V1ObjectMeta(name="rook-ceph-mon")
 
-        string_data = {
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        secret_data = {
             "admin-secret": admin_auth["key"],
-            "cluster-name": self.__cluster_name,
-            "fsid": self.__fsid,
+            "cluster-name": self._config["rook"]["cluster"]["name"],
+            "fsid": state_data["mon"]["dump"]["fsid"],
             "mon-secret": mon_auth["key"],
         }
 
         secret = kubernetes.client.V1Secret(
-            api_version="v1", kind="Secret", metadata=metadata, string_data=string_data
+            api_version="v1", kind="Secret", metadata=metadata, string_data=secret_data
         )
 
         secret = self.k8s.core_v1_api.create_namespaced_secret(
@@ -110,7 +132,7 @@ class CreateConfigMapHandler(ModuleHandler):
         )
 
         self.machine.get_execution_state(
-            "CreateConfigMapHandler"
+            "CreateRookResourcesHandler"
         ).secret = secret.to_dict()
 
     @staticmethod
@@ -118,7 +140,7 @@ class CreateConfigMapHandler(ModuleHandler):
         machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
     ) -> None:
         ModuleHandler.register_execution_state(
-            machine, state_name, handler, tags=["secret"]
+            machine, state_name, handler, tags=["configmap", "secret"]
         )
 
     @staticmethod
