@@ -8,9 +8,18 @@ from ..module import ModuleHandler
 
 
 class MigrateMdsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "create_cluster"]
+    REQUIRES = ["migrate_mons"]
 
     def preflight(self) -> None:
+        migrated_mds = self.machine.get_execution_state_data(
+            "MigrateMdsHandler", "migrated_mds", default_value=[]
+        )
+
+        if len(migrated_mds) > 0:
+            return
+
+        self.k8s.check_nodes_for_initial_label_state(self.k8s.mds_placement_label)
+
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         for node, mds_daemons in state_data["node"]["ls"]["mds"].items():
@@ -28,8 +37,8 @@ class MigrateMdsHandler(ModuleHandler):
             self._migrate_mds(node)
 
     def _migrate_mds(self, mds_host: str) -> None:
-        migrated_mds = getattr(
-            self.machine.get_execution_state("MigrateMdsHandler"), "migrated_mds", []
+        migrated_mds = self.machine.get_execution_state_data(
+            "MigrateMdsHandler", "migrated_mds", default_value=[]
         )
         if mds_host in migrated_mds:
             return
@@ -67,7 +76,7 @@ class MigrateMdsHandler(ModuleHandler):
             )
         )
 
-        node_patch = {"metadata": {"labels": {self.k8s.mds_placement_label: "enabled"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.mds_placement_label: "true"}}}
 
         if (
             self.k8s.mds_placement_label

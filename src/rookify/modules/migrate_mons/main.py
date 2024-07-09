@@ -8,7 +8,16 @@ from ..module import ModuleHandler
 
 
 class MigrateMonsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "create_cluster"]
+    REQUIRES = ["analyze_ceph", "create_rook_cluster"]
+
+    def preflight(self) -> None:
+        migrated_mons = self.machine.get_execution_state_data(
+            "MigrateMonsHandler", "migrated_mons", default_value=[]
+        )
+        if len(migrated_mons) > 0:
+            return
+
+        self.k8s.check_nodes_for_initial_label_state(self.k8s.mon_placement_label)
 
     def execute(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
@@ -17,8 +26,8 @@ class MigrateMonsHandler(ModuleHandler):
             self._migrate_mon(mon)
 
     def _migrate_mon(self, mon: Dict[str, Any]) -> None:
-        migrated_mons = getattr(
-            self.machine.get_execution_state("MigrateMonsHandler"), "migrated_mons", []
+        migrated_mons = self.machine.get_execution_state_data(
+            "MigrateMonsHandler", "migrated_mons", default_value=[]
         )
         if mon["name"] in migrated_mons:
             return
@@ -61,7 +70,7 @@ class MigrateMonsHandler(ModuleHandler):
             "Enabling Rook based Ceph mon daemon '{0}'".format(mon["name"])
         )
 
-        node_patch = {"metadata": {"labels": {self.k8s.mon_placement_label: "enabled"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.mon_placement_label: "true"}}}
 
         if (
             self.k8s.mon_placement_label
@@ -74,20 +83,29 @@ class MigrateMonsHandler(ModuleHandler):
             )
 
         migrated_mons += mon["name"]
+
         self.machine.get_execution_state(
-            "MigrateMonsHandler"
+            "MigrateMonsHandler",
         ).migrated_mons = migrated_mons
 
-        self.logger.debug("Waiting for a quorum of 3 Ceph mon daemons")
+        mon_count_expected = self.machine.get_execution_state(
+            "CreateRookClusterHandler"
+        ).mon_count
+
+        self.logger.debug(
+            "Waiting for a quorum of {0:d} Ceph mon daemons".format(mon_count_expected)
+        )
 
         while True:
             result = self.ceph.mon_command("mon stat")
-            if result["num_mons"] >= 3:
+            if len(result["quorum"]) >= mon_count_expected:
                 break
 
             sleep(2)
 
-        self.logger.debug("Quorum of 3 Ceph mon daemons successful")
+        self.logger.debug(
+            "Quorum of {0:d} Ceph mon daemons successful".format(mon_count_expected)
+        )
 
     @staticmethod
     def register_execution_state(

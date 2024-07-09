@@ -37,6 +37,10 @@ class CreateRookClusterHandler(ModuleHandler):
 
                 mon_count += 1
 
+            # Maximum number of mgr daemons currently supported by Rook (1.14), provide custom override
+            if mon_count > 9:
+                mon_count = rook_config["cluster"].get("max_mon_count", 9)
+
             # Get manager count
             mgr_count = 0
 
@@ -54,6 +58,18 @@ class CreateRookClusterHandler(ModuleHandler):
                     rook_config["cluster"]["name"],
                 )
             )
+
+            # Maximum number of mgr daemons currently supported by Rook (1.14), provide custom override
+            if mgr_count > 5:
+                mgr_count = rook_config["cluster"].get("max_mgr_count", 5)
+
+            self.machine.get_execution_state(
+                "CreateRookClusterHandler"
+            ).mgr_count = mgr_count
+
+            self.machine.get_execution_state(
+                "CreateRookClusterHandler"
+            ).mon_count = mon_count
 
             cluster_definition_values = {
                 "cluster_name": rook_config["cluster"]["name"],
@@ -154,5 +170,8 @@ class CreateRookClusterHandler(ModuleHandler):
         machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
     ) -> None:
         ModuleHandler.register_preflight_state(
-            machine, state_name, handler, tags=["cluster_definition"]
+            machine,
+            state_name,
+            handler,
+            tags=["cluster_definition", "mgr_count", "mon_count"],
         )

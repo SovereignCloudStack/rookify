@@ -7,7 +7,7 @@ from ..module import ModuleHandler
 
 
 class MigrateOSDsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "create_cluster"]
+    REQUIRES = ["migrate_mons"]
 
     def _get_devices_of_hosts(self) -> Dict[str, List[str]]:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
@@ -44,24 +44,22 @@ class MigrateOSDsHandler(ModuleHandler):
         return osd_devices
 
     def preflight(self) -> None:
-        osd_host_devices = getattr(
-            self.machine.get_preflight_state("MigrateOSDsHandler"),
-            "osd_host_devices",
-            {},
+        osd_host_devices = self.machine.get_preflight_state_data(
+            "MigrateOSDsHandler", "osd_host_devices", default_value={}
         )
 
         if len(osd_host_devices) > 0:
             return
+
+        self.k8s.check_nodes_for_initial_label_state(self.k8s.osd_placement_label)
 
         self.machine.get_preflight_state(
             "MigrateOSDsHandler"
         ).osd_host_devices = self._get_devices_of_hosts()
 
     def execute(self) -> None:
-        if getattr(
-            self.machine.get_execution_state("MigrateOSDsHandler"),
-            "migrated",
-            False,
+        if self.machine.get_execution_state_data(
+            "MigrateOSDsHandler", "migrated", default_value=False
         ):
             return
 
@@ -90,7 +88,7 @@ class MigrateOSDsHandler(ModuleHandler):
 
         for host in osd_host_devices:
             node_patch = {
-                "metadata": {"labels": {self.k8s.mon_placement_label: "enabled"}}
+                "metadata": {"labels": {self.k8s.mon_placement_label: "true"}}
             }
 
             if (

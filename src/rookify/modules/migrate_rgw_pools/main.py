@@ -12,8 +12,8 @@ class MigrateRgwPoolsHandler(ModuleHandler):
     def preflight(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        zones = getattr(
-            self.machine.get_preflight_state("MigrateRgwPoolsHandler"), "zones", {}
+        zones = self.machine.get_preflight_state_data(
+            "MigrateRgwPoolsHandler", "zones", default_value={}
         )
 
         service_data = self.ceph.mon_command("service dump")
@@ -68,19 +68,14 @@ class MigrateRgwPoolsHandler(ModuleHandler):
     def _migrate_zone(
         self, zone_name: str, zone_osd_pools_configuration: Dict[str, Any]
     ) -> None:
-        migrated_zones = getattr(
-            self.machine.get_execution_state("MigrateRgwPoolsHandler"),
-            "migrated_zones",
-            [],
+        migrated_zones = self.machine.get_execution_state_data(
+            "MigrateRgwPoolsHandler", "migrated_zones", default_value=[]
         )
-
         if zone_name in migrated_zones:
             return
 
-        migrated_pools = getattr(
-            self.machine.get_execution_state("MigrateRgwPoolsHandler"),
-            "migrated_pools",
-            [],
+        migrated_pools = self.machine.get_execution_state_data(
+            "MigrateRgwPoolsHandler", "migrated_pools", default_value=[]
         )
 
         self.logger.debug("Migrating Ceph RGW zone '{0}'".format(zone_name))

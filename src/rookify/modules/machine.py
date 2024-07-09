@@ -31,17 +31,22 @@ class Machine(_Machine):  # type: ignore
         if not dry_run_mode:
             states = states + self._execution_states
 
+        logger = get_logger()
+
         for state in states:
             if state.name not in self.states:
+                logger.debug("Registering state '{0}'".format(state.name))
                 self.add_state(state)
 
         self.add_state("migrated")
         self.add_ordered_transitions(loop=False)
 
         if self._machine_pickle_file is None:
+            logger.info("Execution started without machine pickle file")
             self._execute()
         else:
             with open(self._machine_pickle_file, "ab+") as file:
+                logger.info("Execution started with machine pickle file")
                 self._execute(file)
 
     def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
@@ -83,21 +88,21 @@ class Machine(_Machine):  # type: ignore
 
         return data
 
-    def get_execution_state(self, name: Optional[str] = None) -> Any:
-        if name is None:
-            name = self.state
-        else:
-            name = self.__class__.STATE_NAME_EXECUTION_PREFIX + name
+    def get_execution_state(self, name: str) -> Any:
+        return self.get_state(self.__class__.STATE_NAME_EXECUTION_PREFIX + name)
 
-        return self.get_state(name)
+    def get_execution_state_data(
+        self, name: str, tag: str, default_value: Any = None
+    ) -> Any:
+        return getattr(self.get_execution_state(name), tag, default_value)
 
-    def get_preflight_state(self, name: Optional[str] = None) -> Any:
-        if name is None:
-            name = self.state
-        else:
-            name = self.__class__.STATE_NAME_PREFLIGHT_PREFIX + name
+    def get_preflight_state(self, name: str) -> Any:
+        return self.get_state(self.__class__.STATE_NAME_PREFLIGHT_PREFIX + name)
 
-        return self.get_state(name)
+    def get_preflight_state_data(
+        self, name: str, tag: str, default_value: Any = None
+    ) -> Any:
+        return getattr(self.get_preflight_state(name), tag, default_value)
 
     def _restore_state_data(self, data: Dict[str, Any]) -> None:
         for state_name in data:
