@@ -44,4 +44,3 @@ migration_modules:
 - migrate_mds_pools
 - migrate_rgws
 - migrate_rgw_pools
-
