@@ -6,15 +6,20 @@ from ..machine import Machine
 from ..module import ModuleHandler
 
 
-class CreateClusterHandler(ModuleHandler):
+class CreateRookClusterHandler(ModuleHandler):
     REQUIRES = [
         "analyze_ceph",
         "cephx_auth_config",
         "k8s_prerequisites_check",
-        "create_configmap",
+        "create_rook_resources",
     ]
 
     def preflight(self) -> None:
+        if self.machine.get_execution_state_data(
+            "CreateRookClusterHandler", "generated", default_value=False
+        ):
+            return
+
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         try:
@@ -25,21 +30,23 @@ class CreateClusterHandler(ModuleHandler):
             mon_count = 0
 
             for node, mons in node_ls_data["mon"].items():
-                mon_count += 1
                 if len(mons) > 1:
                     raise ModuleException(
                         f"There are more than 1 mon running on node {node}"
                     )
 
+                mon_count += 1
+
             # Get manager count
             mgr_count = 0
 
             for node, mgrs in node_ls_data["mgr"].items():
-                mgr_count += 1
                 if len(mons) > 1:
                     raise ModuleException(
                         f"There are more than 1 mgr running on node {node}"
                     )
+
+                mgr_count += 1
 
             self.logger.debug(
                 "Rook cluster definition values: {0} {1}".format(
@@ -83,17 +90,22 @@ class CreateClusterHandler(ModuleHandler):
             )
 
             self.machine.get_preflight_state(
-                "CreateClusterHandler"
+                "CreateRookClusterHandler"
             ).cluster_definition = cluster_definition.yaml
         except KeyError:
             raise ModuleException("Ceph monitor data is incomplete")
 
     def execute(self) -> None:
+        if self.machine.get_execution_state_data(
+            "CreateRookClusterHandler", "generated", default_value=False
+        ):
+            return
+
         self.logger.info("Creating Rook cluster definition")
 
         # Create CephCluster
         cluster_definition = self.machine.get_preflight_state(
-            "CreateClusterHandler"
+            "CreateRookClusterHandler"
         ).cluster_definition
 
         self.k8s.crd_api_apply(cluster_definition)
@@ -114,6 +126,8 @@ class CreateClusterHandler(ModuleHandler):
         if result is None:
             raise ModuleException("CephCluster did not come up")
 
+        self.machine.get_execution_state("CreateRookClusterHandler").generated = True
+
     def _watch_cluster_phase_callback(self, event_object: Any) -> Any:
         try:
             if (
@@ -126,6 +140,14 @@ class CreateClusterHandler(ModuleHandler):
             pass
 
         return None
+
+    @staticmethod
+    def register_execution_state(
+        machine: Machine, state_name: str, handler: ModuleHandler, **kwargs: Any
+    ) -> None:
+        ModuleHandler.register_execution_state(
+            machine, state_name, handler, tags=["generated"]
+        )
 
     @staticmethod
     def register_preflight_state(

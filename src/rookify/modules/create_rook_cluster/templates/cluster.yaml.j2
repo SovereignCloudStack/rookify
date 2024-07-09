@@ -99,19 +99,19 @@ spec:
       # and clients will be required to connect to the Ceph cluster with the v2 port (3300).
       # Requires a kernel that supports msgr v2 (kernel 5.11 or CentOS 8.4 or newer).
       requireMsgr2: false
-      {% if public_network is defined or cluster_network is defined %}
-      addressRanges:
-        {% if public_network is defined %}
-        public:
-        - "{{ public_network }}"
-        {% endif %}
-        {% if cluster_network is defined %}
-        cluster:
-        - "{{ cluster_network }}"
-        {% endif %}
-      {% endif %}
     # enable host networking
     provider: host
+    {% if public_network is defined or cluster_network is defined %}
+    addressRanges:
+      {% if public_network is defined %}
+      public:
+      - "{{ public_network }}"
+      {% endif %}
+      {% if cluster_network is defined %}
+      cluster:
+      - "{{ cluster_network }}"
+      {% endif %}
+    {% endif %}
     # enable the Multus network provider
     #provider: multus
     #selectors:
