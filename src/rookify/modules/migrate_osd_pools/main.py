@@ -6,21 +6,21 @@ from ..module import ModuleHandler
 
 
 class MigrateOSDPoolsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "migrate_mds_pools", "migrate_rgw_pools"]
+    REQUIRES = [
+        "analyze_ceph",
+        "migrate_osds",
+        "migrate_mds_pools",
+        "migrate_rgw_pools",
+    ]
 
     def execute(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        migrated_mds_pools = getattr(
-            self.machine.get_execution_state("MigrateMdsPoolsHandler"),
-            "migrated_pools",
-            [],
+        migrated_mds_pools = self.machine.get_execution_state_data(
+            name="MigrateMdsPoolsHandler", tag="migrated_pools", default_value=[]
         )
-
-        migrated_rgw_pools = getattr(
-            self.machine.get_execution_state("MigrateRgwPoolsHandler"),
-            "migrated_pools",
-            [],
+        migrated_rgw_pools = self.machine.get_execution_state_data(
+            name="MigrateRgwPoolsHandler", tag="migrated_pools", default_value=[]
         )
 
         migrated_pools = migrated_mds_pools + migrated_rgw_pools
@@ -42,10 +42,8 @@ class MigrateOSDPoolsHandler(ModuleHandler):
             self._migrate_pool(pool)
 
     def _migrate_pool(self, pool: Dict[str, Any]) -> None:
-        migrated_pools = getattr(
-            self.machine.get_execution_state("MigrateOSDPoolsHandler"),
-            "migrated_pools",
-            [],
+        migrated_pools = self.machine.get_execution_state_data(
+            "MigrateOSDPoolsHandler", "migrated_pools", default_value=[]
         )
 
         if pool["pool_name"] in migrated_pools:

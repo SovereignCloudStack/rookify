@@ -2,6 +2,7 @@
 
 import kubernetes
 from typing import Any, Callable, Dict, Optional
+from .exception import ModuleException
 
 
 class K8s:
@@ -76,6 +77,17 @@ class K8s:
             if "rgw_placement_label" in self._rook_config["cluster"]
             else f"placement-{self._rook_config["cluster"]["name"]}-rgw"
         )
+
+    def check_nodes_for_initial_label_state(self, label: str) -> None:
+        nodes = self.core_v1_api.list_node().items
+
+        for node in nodes:
+            node_labels = node.metadata.labels
+
+            if label in node_labels and node_labels[label] == "true":
+                raise ModuleException(
+                    "Label {0} is set on node {1}".format(label, node.metadata.name)
+                )
 
     def crd_api(
         self, api_version: str, kind: str

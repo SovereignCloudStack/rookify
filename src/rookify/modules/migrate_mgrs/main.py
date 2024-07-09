@@ -8,7 +8,16 @@ from ..module import ModuleHandler
 
 
 class MigrateMgrsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "create_cluster"]
+    REQUIRES = ["migrate_mons"]
+
+    def preflight(self) -> None:
+        migrated_mgrs = self.machine.get_execution_state_data(
+            "MigrateMgrsHandler", "migrated_mgrs", default_value=[]
+        )
+        if len(migrated_mgrs) > 0:
+            return
+
+        self.k8s.check_nodes_for_initial_label_state(self.k8s.mgr_placement_label)
 
     def execute(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
@@ -17,8 +26,8 @@ class MigrateMgrsHandler(ModuleHandler):
             self._migrate_mgr(node)
 
     def _migrate_mgr(self, mgr_host: str) -> None:
-        migrated_mgrs = getattr(
-            self.machine.get_execution_state("MigrateMgrsHandler"), "migrated_mgrs", []
+        migrated_mgrs = self.machine.get_execution_state_data(
+            "MigrateMgrsHandler", "migrated_mgrs", default_value=[]
         )
         if mgr_host in migrated_mgrs:
             return
@@ -56,7 +65,7 @@ class MigrateMgrsHandler(ModuleHandler):
             )
         )
 
-        node_patch = {"metadata": {"labels": {self.k8s.mgr_placement_label: "enabled"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.mgr_placement_label: "true"}}}
 
         if (
             self.k8s.mgr_placement_label
@@ -72,7 +81,15 @@ class MigrateMgrsHandler(ModuleHandler):
             "MigrateMgrsHandler"
         ).migrated_mgrs = migrated_mgrs
 
-        self.logger.debug("Waiting for 3 Ceph mgr daemons to be available")
+        mgr_count_expected = self.machine.get_execution_state(
+            "CreateRookClusterHandler"
+        ).mgr_count
+
+        self.logger.debug(
+            "Waiting for {0:d} Ceph mgr daemons to be available".format(
+                mgr_count_expected
+            )
+        )
 
         while True:
             result = self.ceph.mon_command("node ls")
@@ -81,7 +98,9 @@ class MigrateMgrsHandler(ModuleHandler):
 
             sleep(2)
 
-        self.logger.debug("3 Ceph mgr daemons are available")
+        self.logger.debug(
+            "{0:d} Ceph mgr daemons are available".format(mgr_count_expected)
+        )
 
     @staticmethod
     def register_execution_state(

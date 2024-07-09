@@ -115,8 +115,6 @@ class ModuleHandler:
                 )
             )
         else:
-            get_logger().debug("Registering states for {0}".format(state_name))
-
             if preflight_state_name is not None:
                 cls.register_preflight_state(machine, preflight_state_name, handler)
 

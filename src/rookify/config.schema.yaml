@@ -22,6 +22,8 @@ rook:
   cluster:
     name: str()
     namespace: str()
+    max_mgr_count: int(required=False)
+    max_mon_count: int(required=False)
     mds_placement_label: str(required=False)
     mgr_placement_label: str(required=False)
     mon_placement_label: str(required=False)

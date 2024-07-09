@@ -24,6 +24,7 @@ class CephXAuthHandler(ModuleHandler):
             )
 
         self.machine.get_preflight_state("CephXAuthHandler").verified = True
+
         self.logger.info("Validated Ceph to expect cephx auth")
 
     def is_cephx_set(self, values: str) -> Any:

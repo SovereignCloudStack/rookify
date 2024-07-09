@@ -11,8 +11,8 @@ class MigrateMdsPoolsHandler(ModuleHandler):
     def preflight(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        pools = getattr(
-            self.machine.get_preflight_state("MigrateMdsPoolsHandler"), "pools", {}
+        pools = self.machine.get_preflight_state_data(
+            "MigrateMdsPoolsHandler", "pools", default_value={}
         )
 
         osd_pools = self.ceph.get_osd_pool_configurations_from_osd_dump(
@@ -28,10 +28,8 @@ class MigrateMdsPoolsHandler(ModuleHandler):
                 )
 
                 # Store pools for incompatible MDS filesystem as migrated ones
-                migrated_pools = getattr(
-                    self.machine.get_execution_state("MigrateMdsPoolsHandler"),
-                    "migrated_pools",
-                    [],
+                migrated_pools = self.machine.get_execution_state_data(
+                    "MigrateMdsPoolsHandler", "migrated_pools", default_value=[]
                 )
 
                 if mds_fs_data["metadata_pool"] not in migrated_pools:
@@ -74,19 +72,14 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             self._migrate_pool(pool)
 
     def _migrate_pool(self, pool: Dict[str, Any]) -> None:
-        migrated_mds_pools = getattr(
-            self.machine.get_execution_state("MigrateMdsPoolsHandler"),
-            "migrated_mds_pools",
-            [],
+        migrated_mds_pools = self.machine.get_execution_state_data(
+            "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
         )
-
         if pool["name"] in migrated_mds_pools:
             return
 
-        migrated_pools = getattr(
-            self.machine.get_execution_state("MigrateMdsPoolsHandler"),
-            "migrated_pools",
-            [],
+        migrated_pools = self.machine.get_execution_state_data(
+            "MigrateMdsPoolsHandler", "migrated_pools", default_value=[]
         )
 
         self.logger.debug("Migrating Ceph MDS pool '{0}'".format(pool["name"]))

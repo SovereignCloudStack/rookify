@@ -8,7 +8,7 @@ from ..module import ModuleHandler
 
 
 class MigrateRgwsHandler(ModuleHandler):
-    REQUIRES = ["create_cluster"]
+    REQUIRES = ["migrate_mons"]
 
     def _get_rgw_daemon_hosts(self) -> List[str]:
         ceph_status = self.ceph.mon_command("status")
@@ -29,6 +29,15 @@ class MigrateRgwsHandler(ModuleHandler):
         return rgw_daemon_hosts
 
     def preflight(self) -> None:
+        migrated_rgws = self.machine.get_execution_state_data(
+            "MigrateRgwsHandler", "migrated_rgws", default_value=[]
+        )
+
+        if len(migrated_rgws) > 0:
+            return
+
+        self.k8s.check_nodes_for_initial_label_state(self.k8s.rgw_placement_label)
+
         rgw_daemon_hosts = self._get_rgw_daemon_hosts()
 
         for rgw_daemon_host in rgw_daemon_hosts:
@@ -46,8 +55,8 @@ class MigrateRgwsHandler(ModuleHandler):
             self._migrate_rgw(rgw_daemon_host)
 
     def _migrate_rgw(self, rgw_host: str) -> None:
-        migrated_rgws = getattr(
-            self.machine.get_execution_state("MigrateRgwsHandler"), "migrated_rgws", []
+        migrated_rgws = self.machine.get_execution_state_data(
+            "MigrateRgwsHandler", "migrated_rgws", default_value=[]
         )
         if rgw_host in migrated_rgws:
             return
@@ -85,7 +94,7 @@ class MigrateRgwsHandler(ModuleHandler):
             )
         )
 
-        node_patch = {"metadata": {"labels": {"ceph-rgw-placement": "enabled"}}}
+        node_patch = {"metadata": {"labels": {"ceph-rgw-placement": "true"}}}
 
         if (
             "ceph-rgw-placement"
