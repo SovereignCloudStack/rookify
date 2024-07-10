@@ -67,6 +67,13 @@ class ModuleHandler:
         pass
 
     @abc.abstractmethod
+    def show_progress(self) -> None:
+        """
+        Run the modules show function to interpret current state of progess
+        """
+        pass
+
+    @abc.abstractmethod
     def execute(self) -> None:
         """
         Executes the modules tasks
@@ -96,6 +103,7 @@ class ModuleHandler:
 
         handler = cls(machine, config)
         preflight_state_name = None
+        show_progress_state_name = None
         execution_state_name = None
 
         if hasattr(cls, "preflight") and not getattr(
@@ -103,24 +111,47 @@ class ModuleHandler:
         ):
             preflight_state_name = Machine.STATE_NAME_PREFLIGHT_PREFIX + state_name
 
+        if hasattr(cls, "show_progress") and not getattr(
+            cls.show_progress, "__isabstractmethod__", False
+        ):
+            show_progress_state_name = (
+                Machine.STATE_NAME_SHOW_PROGRESS_PREFIX + state_name
+            )
+
         if hasattr(cls, "execute") and not getattr(
             cls.execute, "__isabstractmethod__", False
         ):
             execution_state_name = Machine.STATE_NAME_EXECUTION_PREFIX + state_name
 
-        if preflight_state_name is None and execution_state_name is None:
+        if (
+            preflight_state_name is None
+            and execution_state_name is None
+            and show_progress_state_name is None
+        ):
             get_logger().warn(
                 "Not registering state {0} because ModuleHandler has no expected callables".format(
                     state_name
                 )
             )
         else:
-            get_logger().debug("Registering states for {0}".format(state_name))
-
             if preflight_state_name is not None:
+                get_logger().debug(
+                    "Registering states for {0} (Preflight Mode)".format(state_name)
+                )
                 cls.register_preflight_state(machine, preflight_state_name, handler)
 
+            if show_progress_state_name is not None:
+                get_logger().debug(
+                    "Registering states for {0} (Show Progress Mode)".format(state_name)
+                )
+                cls.register_show_progress_state(
+                    machine, show_progress_state_name, handler
+                )
+
             if execution_state_name is not None:
+                get_logger().debug(
+                    "Registering states for {0} (Execution Mode)".format(state_name)
+                )
                 cls.register_execution_state(machine, execution_state_name, handler)
 
     @staticmethod
@@ -132,6 +163,18 @@ class ModuleHandler:
         """
 
         machine.add_preflight_state(state_name, on_enter=handler.preflight, **kwargs)
+
+    @staticmethod
+    def register_show_progress_state(
+        machine: Machine, state_name: str, handler: Any, **kwargs: Any
+    ) -> None:
+        """
+        Register state for show progres
+        """
+
+        machine.add_show_progress_state(
+            state_name, on_enter=handler.show_progress, **kwargs
+        )
 
     @staticmethod
     def register_execution_state(

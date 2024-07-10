@@ -12,23 +12,34 @@ from ..logger import get_logger
 class Machine(_Machine):  # type: ignore
     STATE_NAME_EXECUTION_PREFIX = "Execution"
     STATE_NAME_PREFLIGHT_PREFIX = "Preflight"
+    STATE_NAME_SHOW_PROGRESS_PREFIX = "ShowProgress"
 
     def __init__(self, machine_pickle_file: Optional[str] = None) -> None:
         self._machine_pickle_file = machine_pickle_file
         self._execution_states: List[State] = []
         self._preflight_states: List[State] = []
+        self._show_progress_states: List[State] = []
 
         _Machine.__init__(self, states=["uninitialized"], initial="uninitialized")
 
     def add_execution_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
         self._execution_states.append(self.__class__.state_cls(name, **kwargs))
 
+    def add_show_progress_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
+        self._show_progress_states.append(self.__class__.state_cls(name, **kwargs))
+
     def add_preflight_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
         self._preflight_states.append(self.__class__.state_cls(name, **kwargs))
 
-    def execute(self, dry_run_mode: bool = False) -> None:
-        states = self._preflight_states
-        if not dry_run_mode:
+    def execute(
+        self, dry_run_mode: bool = False, show_progress_mode: bool = False
+    ) -> None:
+        if show_progress_mode:
+            states = self._show_progress_states
+        else:
+            states = self._preflight_states
+
+        if not dry_run_mode and not show_progress_mode:
             states = states + self._execution_states
 
         for state in states:
@@ -39,16 +50,22 @@ class Machine(_Machine):  # type: ignore
         self.add_ordered_transitions(loop=False)
 
         if self._machine_pickle_file is None:
-            self._execute()
+            self._execute(None, show_progress_mode)
         else:
             with open(self._machine_pickle_file, "ab+") as file:
-                self._execute(file)
+                self._execute(file, show_progress_mode)
 
-    def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
+    def _execute(
+        self, pickle_file: Optional[IO[Any]] = None, show_progress_mode: bool = False
+    ) -> None:
         states_data = {}
 
         # Read pickle file if it exists, to continue from the stored state
-        if pickle_file is not None and pickle_file.tell() > 0:
+        if (
+            pickle_file is not None
+            and pickle_file.tell() > 0
+            and not show_progress_mode
+        ):
             pickle_file.seek(0)
 
             states_data = Unpickler(pickle_file).load()
@@ -70,7 +87,7 @@ class Machine(_Machine):  # type: ignore
                 raise
         finally:
             # store state data and eventuelly show it to stdout
-            if pickle_file is not None:
+            if pickle_file is not None and show_progress_mode is False:
                 get_logger().debug("Storing state data: {0}".format(states_data))
 
                 pickle_file.truncate(0)
@@ -93,7 +110,10 @@ class Machine(_Machine):  # type: ignore
             name = self.state
         else:
             name = self.__class__.STATE_NAME_EXECUTION_PREFIX + name
+        return self.get_state(name)
 
+    def get_progress_state(self, name: Optional[str] = None) -> Any:
+        name = self.state
         return self.get_state(name)
 
     def get_preflight_state(self, name: Optional[str] = None) -> Any:
@@ -108,7 +128,6 @@ class Machine(_Machine):  # type: ignore
         for state_name in data:
             try:
                 state = self.get_state(state_name)
-
                 for tag in data[state_name]:
                     setattr(state, tag, data[state_name][tag])
             except Exception as exc:
