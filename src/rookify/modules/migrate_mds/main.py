@@ -99,7 +99,9 @@ class MigrateMdsHandler(ModuleHandler):
         ).migrated_mds = migrated_mds
 
         if is_migration_required:
-            self.logger.debug("Waiting for Rook based mds daemon '{0}'".format(mds_host))
+            self.logger.debug(
+                "Waiting for Rook based mds daemon '{0}'".format(mds_host)
+            )
 
             while True:
                 result = self.ceph.mon_command("node ls")
