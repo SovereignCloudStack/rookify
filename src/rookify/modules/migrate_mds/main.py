@@ -45,36 +45,42 @@ class MigrateMdsHandler(ModuleHandler):
 
         self.logger.debug("Migrating Ceph mds daemon '{0}'".format(mds_host))
 
-        result = self.ssh.command(
-            mds_host, "sudo systemctl disable --now ceph-mds.target"
+        migrated_mds_pools = self.machine.get_execution_state_data(
+            "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
         )
+        is_migration_required = len(migrated_mds_pools) > 0
 
-        if result.failed:
-            raise ModuleException(
-                "Disabling original Ceph mds daemon at host {0} failed: {1}".format(
-                    mds_host, result.stderr
+        if is_migration_required:
+            result = self.ssh.command(
+                mds_host, "sudo systemctl disable --now ceph-mds.target"
+            )
+
+            if result.failed:
+                raise ModuleException(
+                    "Disabling original Ceph mds daemon at host {0} failed: {1}".format(
+                        mds_host, result.stderr
+                    )
+                )
+
+            self.logger.debug(
+                "Waiting for disabled original Ceph mds daemon '{0}' to disconnect".format(
+                    mds_host
                 )
             )
 
-        self.logger.debug(
-            "Waiting for disabled original Ceph mds daemon '{0}' to disconnect".format(
-                mds_host
+            while True:
+                result = self.ceph.mon_command("node ls")
+
+                if mds_host not in result["mds"]:
+                    break
+
+                sleep(2)
+
+            self.logger.info(
+                "Disabled Ceph mds daemon '{0}' and enabling Rook based Ceph mds daemon '{0}'".format(
+                    mds_host
+                )
             )
-        )
-
-        while True:
-            result = self.ceph.mon_command("node ls")
-
-            if mds_host not in result["mds"]:
-                break
-
-            sleep(2)
-
-        self.logger.info(
-            "Disabled Ceph mds daemon '{0}' and enabling Rook based Ceph mds daemon '{0}'".format(
-                mds_host
-            )
-        )
 
         node_patch = {"metadata": {"labels": {self.k8s.mds_placement_label: "true"}}}
 
@@ -92,17 +98,18 @@ class MigrateMdsHandler(ModuleHandler):
             "MigrateMdsHandler"
         ).migrated_mds = migrated_mds
 
-        self.logger.debug("Waiting for Rook based mds daemon '{0}'".format(mds_host))
+        if is_migration_required:
+            self.logger.debug("Waiting for Rook based mds daemon '{0}'".format(mds_host))
 
-        while True:
-            result = self.ceph.mon_command("node ls")
+            while True:
+                result = self.ceph.mon_command("node ls")
 
-            if mds_host in result["mds"]:
-                break
+                if mds_host in result["mds"]:
+                    break
 
-            sleep(2)
+                sleep(2)
 
-        self.logger.debug("Rook based mds daemon '{0}' available")
+            self.logger.debug("Rook based mds daemon '{0}' available")
 
     @staticmethod
     def register_execution_state(
