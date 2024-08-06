@@ -63,41 +63,47 @@ class MigrateRgwsHandler(ModuleHandler):
 
         self.logger.debug("Migrating Ceph rgw daemon '{0}'".format(rgw_host))
 
-        result = self.ssh.command(
-            rgw_host, "sudo systemctl disable --now ceph-radosgw.target"
+        migrated_zones = self.machine.get_execution_state_data(
+            "MigrateRgwPoolsHandler", "migrated_zones", default_value=[]
         )
+        is_migration_required = len(migrated_zones) > 0
 
-        if result.failed:
-            raise ModuleException(
-                "Disabling original Ceph rgw daemon at host {0} failed: {1}".format(
-                    rgw_host, result.stderr
+        if is_migration_required:
+            result = self.ssh.command(
+                rgw_host, "sudo systemctl disable --now ceph-radosgw.target"
+            )
+
+            if result.failed:
+                raise ModuleException(
+                    "Disabling original Ceph rgw daemon at host {0} failed: {1}".format(
+                        rgw_host, result.stderr
+                    )
+                )
+
+            self.logger.debug(
+                "Waiting for disabled original Ceph rgw daemon '{0}' to disconnect".format(
+                    rgw_host
                 )
             )
 
-        self.logger.debug(
-            "Waiting for disabled original Ceph rgw daemon '{0}' to disconnect".format(
-                rgw_host
+            while True:
+                rgw_daemon_hosts = self._get_rgw_daemon_hosts()
+
+                if rgw_host not in rgw_daemon_hosts:
+                    break
+
+                sleep(2)
+
+            self.logger.info(
+                "Disabled Ceph rgw daemon '{0}' and enabling Rook based Ceph rgw daemon '{0}'".format(
+                    rgw_host
+                )
             )
-        )
 
-        while True:
-            rgw_daemon_hosts = self._get_rgw_daemon_hosts()
-
-            if rgw_host not in rgw_daemon_hosts:
-                break
-
-            sleep(2)
-
-        self.logger.info(
-            "Disabled Ceph rgw daemon '{0}' and enabling Rook based Ceph rgw daemon '{0}'".format(
-                rgw_host
-            )
-        )
-
-        node_patch = {"metadata": {"labels": {"ceph-rgw-placement": "true"}}}
+        node_patch = {"metadata": {"labels": {self.k8s.rgw_placement_label: "true"}}}
 
         if (
-            "ceph-rgw-placement"
+            self.k8s.rgw_placement_label
             not in self.k8s.core_v1_api.patch_node(rgw_host, node_patch).metadata.labels
         ):
             raise ModuleException(
@@ -110,17 +116,18 @@ class MigrateRgwsHandler(ModuleHandler):
             "MigrateRgwsHandler"
         ).migrated_rgws = migrated_rgws
 
-        self.logger.debug("Waiting for Rook based rgw daemon '{0}'".format(rgw_host))
+        if is_migration_required:
+            self.logger.debug("Waiting for Rook based rgw daemon '{0}'".format(rgw_host))
 
-        while True:
-            rgw_daemon_hosts = self._get_rgw_daemon_hosts()
+            while True:
+                rgw_daemon_hosts = self._get_rgw_daemon_hosts()
 
-            if rgw_host in rgw_daemon_hosts:
-                break
+                if rgw_host in rgw_daemon_hosts:
+                    break
 
-            sleep(2)
+                sleep(2)
 
-        self.logger.debug("Rook based rgw daemon '{0}' available")
+            self.logger.debug("Rook based rgw daemon '{0}' available")
 
     @staticmethod
     def register_execution_state(
