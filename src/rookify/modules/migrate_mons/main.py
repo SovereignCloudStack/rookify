@@ -88,9 +88,9 @@ class MigrateMonsHandler(ModuleHandler):
             "MigrateMonsHandler",
         ).migrated_mons = migrated_mons
 
-        mon_count_expected = self.machine.get_execution_state(
-            "CreateRookClusterHandler"
-        ).mon_count
+        mon_count_expected = self.machine.get_execution_state_data(
+            "CreateRookClusterHandler", "mon_count", default_value=3
+        )
 
         self.logger.debug(
             "Waiting for a quorum of {0:d} Ceph mon daemons".format(mon_count_expected)

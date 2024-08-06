@@ -117,7 +117,9 @@ class MigrateRgwsHandler(ModuleHandler):
         ).migrated_rgws = migrated_rgws
 
         if is_migration_required:
-            self.logger.debug("Waiting for Rook based rgw daemon '{0}'".format(rgw_host))
+            self.logger.debug(
+                "Waiting for Rook based rgw daemon '{0}'".format(rgw_host)
+            )
 
             while True:
                 rgw_daemon_hosts = self._get_rgw_daemon_hosts()
