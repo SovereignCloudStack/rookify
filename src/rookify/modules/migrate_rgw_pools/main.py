@@ -7,7 +7,7 @@ from ..module import ModuleHandler
 
 
 class MigrateRgwPoolsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "migrate_rgws"]
+    REQUIRES = ["analyze_ceph", "migrate_mons"]
 
     def preflight(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data

@@ -8,7 +8,7 @@ from ..module import ModuleHandler
 
 
 class MigrateRgwsHandler(ModuleHandler):
-    REQUIRES = ["migrate_mons"]
+    REQUIRES = ["migrate_rgw_pools"]
 
     def _get_rgw_daemon_hosts(self) -> List[str]:
         ceph_status = self.ceph.mon_command("status")
