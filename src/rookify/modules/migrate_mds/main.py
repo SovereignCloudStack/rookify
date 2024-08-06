@@ -8,7 +8,7 @@ from ..module import ModuleHandler
 
 
 class MigrateMdsHandler(ModuleHandler):
-    REQUIRES = ["migrate_mons"]
+    REQUIRES = ["migrate_mds_pools"]
 
     def preflight(self) -> None:
         migrated_mds = self.machine.get_execution_state_data(
