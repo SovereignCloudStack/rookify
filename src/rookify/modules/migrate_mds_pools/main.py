@@ -6,7 +6,7 @@ from ..module import ModuleHandler
 
 
 class MigrateMdsPoolsHandler(ModuleHandler):
-    REQUIRES = ["analyze_ceph", "migrate_mds"]
+    REQUIRES = ["analyze_ceph", "migrate_mons"]
 
     def preflight(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
