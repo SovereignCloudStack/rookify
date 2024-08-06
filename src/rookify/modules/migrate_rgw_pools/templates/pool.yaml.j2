@@ -76,7 +76,7 @@ spec:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
-                - key: {{ mds_placement_label }}
+                - key: {{ rgw_placement_label }}
                   operator: In
                   values:
                     - "true"
