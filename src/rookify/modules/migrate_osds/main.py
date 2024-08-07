@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from time import sleep
 from typing import Any, Dict, List
 from ..exception import ModuleException
 from ..machine import Machine
@@ -86,20 +87,76 @@ class MigrateOSDsHandler(ModuleHandler):
             body=cluster_patch_templated.yaml,
         )
 
-        for host in osd_host_devices:
-            node_patch = {
-                "metadata": {"labels": {self.k8s.mon_placement_label: "true"}}
-            }
-
-            if (
-                self.k8s.mon_placement_label
-                not in self.k8s.core_v1_api.patch_node(host, node_patch).metadata.labels
-            ):
-                raise ModuleException(
-                    "Failed to patch k8s node for Ceph mon daemon '{0}'".format(host)
-                )
+        for host in osd_host_devices.keys():
+            self._migrate_osd_node(host)
 
         self.machine.get_execution_state("MigrateOSDsHandler").migrated = True
+
+    def _migrate_osd_node(self, host: str) -> None:
+        node_patch = {"metadata": {"labels": {self.k8s.osd_placement_label: "true"}}}
+
+        if (
+            self.k8s.osd_placement_label
+            not in self.k8s.core_v1_api.patch_node(host, node_patch).metadata.labels
+        ):
+            raise ModuleException(
+                "Failed to patch k8s node for Ceph OSD host '{0}'".format(host)
+            )
+
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        for osd_id in state_data["node"]["ls"]["osd"][host]:
+            self.logger.debug(
+                "Migrating Ceph OSD daemon '{0}@{1:d}'".format(host, osd_id)
+            )
+
+            result = self.ssh.command(
+                host,
+                "sudo systemctl disable --now ceph-osd@{0:d}.service".format(osd_id),
+            )
+
+            if result.failed:
+                raise ModuleException(
+                    "Disabling original Ceph OSD daemon '{0}@{1:d}' failed: {2}".format(
+                        host, osd_id, result.stderr
+                    )
+                )
+
+            self.logger.debug(
+                "Waiting for disabled original Ceph OSD daemon '{0}@{1:d}' to disconnect".format(
+                    host, osd_id
+                )
+            )
+
+            while True:
+                osd_status = self.ceph.mon_command("osd info", id=osd_id)
+
+                if osd_status["up"] == 0:  # type: ignore
+                    break
+
+                sleep(2)
+
+            self.logger.info(
+                "Disabled Ceph OSD daemon '{0}@{1:d}' and enabling Rook based Ceph OSD daemon".format(
+                    host, osd_id
+                )
+            )
+
+            self.logger.debug(
+                "Waiting for Rook based OSD daemon '{0}@{1:d}'".format(host, osd_id)
+            )
+
+            while True:
+                osd_status = self.ceph.mon_command("osd info", id=osd_id)
+
+                if osd_status["up"] != 0:  # type: ignore
+                    break
+
+                sleep(2)
+
+            self.logger.debug(
+                "Rook based OSD daemon '{0}@{1:d}' available".format(host, osd_id)
+            )
 
     @staticmethod
     def register_execution_state(
