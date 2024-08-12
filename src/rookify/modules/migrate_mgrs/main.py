@@ -81,9 +81,9 @@ class MigrateMgrsHandler(ModuleHandler):
             "MigrateMgrsHandler"
         ).migrated_mgrs = migrated_mgrs
 
-        mgr_count_expected = self.machine.get_execution_state(
-            "CreateRookClusterHandler"
-        ).mgr_count
+        mgr_count_expected = self.machine.get_execution_state_data(
+            "CreateRookClusterHandler", "mgr_count", default_value=3
+        )
 
         self.logger.debug(
             "Waiting for {0:d} Ceph mgr daemons to be available".format(
