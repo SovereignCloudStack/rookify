@@ -60,7 +60,7 @@ spec:
     # The port that RGW pods will listen on (https). An ssl certificate is required.
     # securePort: 443
     # The number of pods in the rgw deployment
-    instances: 1
+    instances: {{ rgw_count }}
     # The affinity rules to apply to the rgw deployment.
     placement:
       tolerations:
