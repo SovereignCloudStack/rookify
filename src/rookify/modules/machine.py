@@ -60,13 +60,16 @@ class Machine(_Machine):  # type: ignore
 
         try:
             while True:
-                self.next_state()
+                try:
+                    self.next_state()
+                except:
+                    raise
+                finally:
+                    if pickle_file is not None:
+                        state_data = self._get_state_tags_data(self.state)
 
-                if pickle_file is not None:
-                    state_data = self._get_state_tags_data(self.state)
-
-                    if len(state_data) > 0:
-                        states_data[self.state] = state_data
+                        if len(state_data) > 0:
+                            states_data[self.state] = state_data
         except MachineError:
             if self.state != "migrated":
                 raise
