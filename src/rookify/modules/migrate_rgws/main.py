@@ -118,7 +118,7 @@ class MigrateRgwsHandler(ModuleHandler):
 
         if is_migration_required:
             self.logger.debug(
-                "Waiting for Rook based rgw daemon '{0}'".format(rgw_host)
+                "Waiting for at least one Rook based rgw daemon '{0}'".format(rgw_host)
             )
 
             while True:
@@ -129,7 +129,7 @@ class MigrateRgwsHandler(ModuleHandler):
 
                 sleep(2)
 
-            self.logger.debug("Rook based rgw daemon '{0}' available")
+            self.logger.debug("Rook based rgw daemon '{0}' available".format(rgw_host))
 
     @staticmethod
     def register_execution_state(

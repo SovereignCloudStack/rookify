@@ -26,8 +26,10 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
             zone_name = rgw_daemon["metadata"]["zone_name"]
 
-            if zone_name not in zones:
-                zones[zone_name] = {}
+            if zone_name in zones:
+                zones[zone_name]["rgw_count"] = 1 + zones[zone_name]["rgw_count"]
+            else:
+                zones[zone_name] = {"osd_pools": {}, "rgw_count": 1}
 
         osd_pools = self.ceph.get_osd_pool_configurations_from_osd_dump(
             state_data["osd"]["dump"]
@@ -38,13 +40,13 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
             for osd_pool_name, osd_pool_configuration in osd_pools.items():
                 if osd_pool_name.startswith("{0}.rgw.".format(zone_name)):
-                    zone[osd_pool_name] = osd_pool_configuration
+                    zone["osd_pools"][osd_pool_name] = osd_pool_configuration
 
             metadata_name = "{0}.rgw.meta".format(zone_name)
 
             if (
-                metadata_name not in zone
-                or "{0}.rgw.buckets.data".format(zone_name) not in zone
+                metadata_name not in zone["osd_pools"]
+                or "{0}.rgw.buckets.data".format(zone_name) not in zone["osd_pools"]
             ):
                 raise ModuleException(
                     "Failed to identify required pools for RGW zone '{0}'".format(
@@ -52,7 +54,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
                     )
                 )
 
-            if zone[metadata_name].get("erasure_code_profile", "") != "":
+            if zone["osd_pools"][metadata_name].get("erasure_code_profile", "") != "":
                 raise ModuleException(
                     "Ceph RGW metadata OSD pools must use replication for Rook"
                 )
@@ -62,12 +64,10 @@ class MigrateRgwPoolsHandler(ModuleHandler):
     def execute(self) -> None:
         zones = self.machine.get_preflight_state("MigrateRgwPoolsHandler").zones
 
-        for zone_name, zone_osd_pools_configuration in zones.items():
-            self._migrate_zone(zone_name, zone_osd_pools_configuration)
+        for zone_name, zone_data in zones.items():
+            self._migrate_zone(zone_name, zone_data)
 
-    def _migrate_zone(
-        self, zone_name: str, zone_osd_pools_configuration: Dict[str, Any]
-    ) -> None:
+    def _migrate_zone(self, zone_name: str, zone_data: Dict[str, Any]) -> None:
         migrated_zones = self.machine.get_execution_state_data(
             "MigrateRgwPoolsHandler", "migrated_zones", default_value=[]
         )
@@ -80,11 +80,11 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
         self.logger.debug("Migrating Ceph RGW zone '{0}'".format(zone_name))
 
-        pool_metadata_osd_configuration = zone_osd_pools_configuration[
-            "{0}.rgw.meta".format(zone_name)
-        ]
+        osd_pools = zone_data["osd_pools"]
 
-        pool_data_osd_configuration = zone_osd_pools_configuration[
+        pool_metadata_osd_configuration = osd_pools["{0}.rgw.meta".format(zone_name)]
+
+        pool_data_osd_configuration = osd_pools[
             "{0}.rgw.buckets.data".format(zone_name)
         ]
 
@@ -94,6 +94,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "metadata_size": pool_metadata_osd_configuration["size"],
             "data_pool_size": pool_data_osd_configuration["size"],
             "rgw_placement_label": self.k8s.rgw_placement_label,
+            "rgw_count": zone_data["rgw_count"],
         }
 
         if pool_data_osd_configuration.get("erasure_code_profile", "") != "":
@@ -117,9 +118,9 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "MigrateRgwPoolsHandler"
         ).migrated_zones = migrated_zones
 
-        for zone_osd_pool_name in zone_osd_pools_configuration:
-            if zone_osd_pool_name not in migrated_pools:
-                migrated_pools.append(zone_osd_pool_name)
+        for osd_pool_name in osd_pools:
+            if osd_pool_name not in migrated_pools:
+                migrated_pools.append(osd_pool_name)
 
         self.machine.get_execution_state(
             "MigrateRgwPoolsHandler"
