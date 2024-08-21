@@ -22,6 +22,13 @@ class MigrateMonsHandler(ModuleHandler):
     def execute(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
+        migrated_mons = self.machine.get_execution_state_data(
+            "MigrateMonsHandler", "migrated_mons", default_value=[]
+        )
+
+        if len(migrated_mons) >= len(state_data["mon"]["dump"]["mons"]):
+            return
+
         for mon in state_data["mon"]["dump"]["mons"]:
             self._migrate_mon(mon)
 
@@ -82,7 +89,7 @@ class MigrateMonsHandler(ModuleHandler):
                 "Failed to patch k8s node for Ceph mon daemon '{0}'".format(mon["name"])
             )
 
-        migrated_mons += mon["name"]
+        migrated_mons.append(mon["name"])
 
         self.machine.get_execution_state(
             "MigrateMonsHandler",
