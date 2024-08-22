@@ -42,7 +42,43 @@ docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readon
 ```
 
 ## Usage
-__TODO__
+
+### Copy and adapt configuration files
+
+Choose one of the config-examples found in the root of the workingdirectory and copy it to `config.yml`:
+
+```
+ls config.example.*
+# there is a specific example config for osism: config.example.yaml
+cp config.example.yml config.yaml
+```
+
+_Adapt the config.yml to your need_: especially enter the correct paths for ssh-keys, kubernetes configuration and ceph configuration (all these configuration files need to be provided!).
+Note:
+    - for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at `scripts/get_configs_from_testbed.sh` for an example).
+    - the helper scripts are merely there to help for testing with the OSISM testbed and might not suit your purposes.
+
+### Provide needed configuration files from target servers
+
+Copy the needed configuration-files from the servers that need to be migrated from ceph to rook.
+
+_Provide needed configuration files as written in the configuration file._ At least required are:
+- ./ceph/ceph.conf (typically found in `/etc/ceph/` on a testbednode)
+- ./ceph/ceph.admin.keyring (typically found in `/etc/ceph/` on a testbednode)
+- kubernetes config of user (e.g. found in `~/.kube/config`)
+- ssh key of testbed (typically found in `./terraform/.id.rsa` folder of the testbed repository)
+
+### Run Rookify
+
+Now decide on how to run rookify. Either run it from within a container or locally:
+
+```
+run-local-rookify
+# or
+run-rookify
+```
+
+### Check the other options
 
 Type `make` to get a list of available development specific commands.
 
