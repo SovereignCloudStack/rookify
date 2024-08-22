@@ -29,13 +29,18 @@ git clone https://github.com/SovereignCloudStack/rookify
 cd rookify
 ```
 
-3. To install the local development environment
+3. Check if your host has the correct "radoslib" library installed (if not: then install radoslib version 2.0.0):
+```bash
+make check-radoslib
+```
+
+4. To install the local development environment
 (_Note: This will install pre-commit in your local user context_):
 ```bash
 make setup
 ```
 
-4. To install the container-based environment
+5. To install the container-based environment
 ```bash
 make build-container
 docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readonly --workdir=/app/rookify/src rookify:latest
