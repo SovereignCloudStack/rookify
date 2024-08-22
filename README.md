@@ -48,20 +48,22 @@ docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readon
 
 ## Usage
 
+**NOTE**: for testing purposes the [OSISM Testbed](https://github.com/osism/testbed) is used. The `Makefile` and example configuratino (`config.example.osism.yaml`) have built in helper functions and examples for this test-setup.
+
 ### Copy and adapt configuration files
 
-Choose one of the config-examples found in the root of the workingdirectory and copy it to `config.yml`:
+Choose one of the configuration-examples found in the root of the working-directory and copy it to `config.yml`:
 
 ```
 ls config.example.*
-# there is a specific example config for osism: config.example.yaml
+# there is a specific example config for the osism testbed: config.example.osism.yaml
 cp config.example.yml config.yaml
 ```
 
 _Adapt the config.yml to your need_: especially enter the correct paths for ssh-keys, kubernetes configuration and ceph configuration (all these configuration files need to be provided!).
 Note:
-    - for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at `scripts/get_configs_from_testbed.sh` for an example).
-    - the helper scripts are merely there to help for testing with the OSISM testbed and might not suit your purposes.
+    - for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at [scripts/get_configs_from_testbed](scripts/get_configs_from_testbed.sh) for an example).
+    - the helper scripts are merely there to help for testing with the [OSISM testbed](https://github.com/osism/testbed) and might not suit your purposes.
 
 ### Provide needed configuration files from target servers
 
@@ -91,7 +93,12 @@ Type `make` to get a list of available development specific commands.
 
 ### OSISM Testbed
 
-- ssh-issues: make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF"
+**ssh-issues:**
+    - make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF"
+    - allow direnv (`direnv allow`) to use `.envrc` or copy and execute the command from the file: this switches off the ssh-agent, which sometimes has too many keys loaded
+
+**frozen state:**
+    - if the rookify process freezes, check the connection, check the vpn-connection (in testbed see `make vpn-*`)
 
 ## Support
 For issues, questions, or contributions, please open an issue or pull request in the GitHub repository. We welcome community feedback and contributions to enhance rookify.
