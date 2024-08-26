@@ -53,18 +53,18 @@ class Ceph:
 
         return osd_pools
 
-    def mon_command(self, command: str, **kwargs: str) -> Dict[str, Any] | List[Any]:
+    def mon_command(self, command: str, **kwargs: Any) -> Dict[str, Any] | List[Any]:
         cmd = {"prefix": command, "format": "json"}
         cmd.update(**kwargs)
         return self._json_command(self.__ceph.mon_command, json.dumps(cmd), b"")
 
-    def mgr_command(self, command: str, **kwargs: str) -> Dict[str, Any] | List[Any]:
+    def mgr_command(self, command: str, **kwargs: Any) -> Dict[str, Any] | List[Any]:
         cmd = {"prefix": command, "format": "json"}
         cmd.update(**kwargs)
         return self._json_command(self.__ceph.mgr_command, json.dumps(cmd), b"")
 
     def osd_command(
-        self, osd_id: int, command: str, **kwargs: str
+        self, osd_id: int, command: str, **kwargs: Any
     ) -> Dict[str, Any] | List[Any]:
         cmd = {"prefix": command, "format": "json"}
         cmd.update(**kwargs)
