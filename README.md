@@ -48,7 +48,7 @@ docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readon
 
 ## Usage
 
-**NOTE**: for testing purposes the [OSISM Testbed](https://github.com/osism/testbed) is used. The `Makefile` and example configuratino (`config.example.osism.yaml`) have built in helper functions and examples for this test-setup.
+**NOTE**: for testing purposes the [OSISM Testbed](https://github.com/osism/testbed) is used. The `Makefile` and example configuration (`config.example.osism.yaml`) have built in helper functions and examples for this test-setup.
 
 ### Copy and adapt configuration files
 
@@ -61,19 +61,20 @@ cp config.example.yml config.yaml
 ```
 
 _Adapt the config.yml to your need_: especially enter the correct paths for ssh-keys, kubernetes configuration and ceph configuration (all these configuration files need to be provided!).
-Note:
-    - for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at [scripts/get_configs_from_testbed](scripts/get_configs_from_testbed.sh) for an example).
-    - the helper scripts are merely there to help for testing with the [OSISM testbed](https://github.com/osism/testbed) and might not suit your purposes.
 
 ### Provide needed configuration files from target servers
 
 Copy the needed configuration-files from the servers that need to be migrated from ceph to rook.
 
-_Provide needed configuration files as written in the configuration file._ At least required are:
+_Provide needed configuration files as written in the config.yml._ At least required are:
 - ./ceph/ceph.conf (typically found in `/etc/ceph/` on a testbednode)
 - ./ceph/ceph.admin.keyring (typically found in `/etc/ceph/` on a testbednode)
 - kubernetes config of user (e.g. found in `~/.kube/config`)
-- ssh key of testbed (typically found in `./terraform/.id.rsa` folder of the testbed repository)
+- ssh key of the server (for the testbed they are typically found in `./terraform/.id.rsa` folder of the testbed-repository)
+
+Note:
+- for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at [osism/get_configs_from_testbed](osism/get_configs_from_testbed.sh) for an example).
+- the helper scripts are merely there to help for testing with the [OSISM testbed](https://github.com/osism/testbed) and might not suit your purposes.
 
 ### Run Rookify
 
@@ -85,23 +86,23 @@ run-local-rookify
 run-rookify
 ```
 
-### Check the other options
+Then sitback and wait. Check the [troubleshooting](#troubleshooting) and [support](#support) sections if any issues occure.
 
-Type `make` to get a list of available development specific commands.
+For other options you can also check the makefile: Type `make` to get a list of available commands.
 
-## Troubleshooting
-
-### OSISM Testbed
+#### Troubleshooting
 
 **ssh-issues:**
-    - make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF"
-    - allow direnv (`direnv allow`) to use `.envrc` or copy and execute the command from the file: this switches off the ssh-agent, which sometimes has too many keys loaded
+- make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF". E.g. call `ssh-keygen -p -N "" -f ssh.key` to convert and reformat the keyfile to the expected format.
+- allow direnv (`direnv allow`) to use `.envrc` or copy and execute the command from the file: this switches off the ssh-agent, which sometimes has too many keys loaded
 
 **frozen state:**
-    - if the rookify process freezes, check the connection, check the vpn-connection (in testbed see `make vpn-*`)
+- if the rookify process freezes, check your connections. In the OSISM testbed especially check the vpn-connection (in testbedrepoisitory try `make vpn-*`)
 
 ## Support
+
 For issues, questions, or contributions, please open an issue or pull request in the GitHub repository. We welcome community feedback and contributions to enhance rookify.
+
 
 ## License
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
