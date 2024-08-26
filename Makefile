@@ -19,9 +19,13 @@ export ROOKIFY_VERSION?=0.0.0.dev1
 
 .PHONY: help
 help: ## Display this help message
-	@echo -e '${COLOUR_RED}Usage: make <command>${COLOUR_END}'
+	@echo -e '\n${COLOUR_BLUE}ROOKIFY MAKEFILE${COLOUR_BLUE}'
+	@echo -e '\n${COLOUR_RED}Usage: make <command>${COLOUR_END}'
 	@cat $(MAKEFILE_LIST) | grep '^[a-zA-Z]'  | \
 	    awk -F ':.*?## ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
+	@echo -e '${COLOUR_RED}OSISM helperscript usage: make <command>${COLOUR_END}'
+	@cat $(MAKEFILE_LIST) | grep '^[a-zA-Z]'  | \
+	    awk -F ':.*?#osism# ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
 
 .PHONY: setup
 setup: setup-pre-commit check-radoslib setup-venv ## Setup the pre-commit environment and then the venv environment
@@ -49,11 +53,11 @@ update-requirements: ## Update the requirements.txt with newer versions of pip p
 export RADOSLIB_VERSION:=2.0.0
 check-radoslib: ## Checks if radoslib is installed and if it contains the right version
 	# Get needed paths and information from locally installed librados
-	./scripts/check_local_rados_lib_installation.sh ${RADOSLIB_VERSION}
+	./osism/check_local_rados_lib_installation.sh ${RADOSLIB_VERSION}
 
 .PHONY: build-local-rookify
 build-local-rookify: ## This builds rookify into .venv/bin/rookify
-	./scripts/build_local_rookify.sh
+	source .venv/bin/activate && pip install -e .
 
 .PHONY: build-container
 build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev1
@@ -72,7 +76,7 @@ run-rookify: ## Runs rookify in the container
 
 .PHONY: get-testbed-configs-for-rookify-testing
 get-testbed-configs-for-rookify-testing: ## Gets the needed config (like .kube, /etc/ceph and so on) from the testbed
-	bash ./scripts/get_configs_from_testbed.sh
+	bash ./osism/get_configs_from_testbed.sh
 
 .PHONY: run-tests-locally
 run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
@@ -97,3 +101,14 @@ down: ## Remove the containers as setup by docker-compose.yml
 .PHONY: up
 up: ## Sets up the container as specified in docker-compose.yml and opens a bash terminal
 	${CONTAINERCMD} compose up -d
+
+##
+# Add osism specific scripts below here (so they appear below helper header)
+##
+.PHONY: reset-k3s
+reset-k3s: #osism# Reset the K3s environment on the OSISM testbed
+	./osism/reset_k3s.sh
+
+.PHONY: get-config
+get-config: #osism# Gets configuration files from the OSISM testbed
+	./osism/get_configs_from_testbed.sh
