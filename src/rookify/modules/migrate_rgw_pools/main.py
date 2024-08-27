@@ -16,6 +16,9 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "MigrateRgwPoolsHandler", "zones", default_value={}
         )
 
+        if len(zones) > 0:
+            return
+
         service_data = self.ceph.mon_command("service dump")
 
         rgw_daemons = service_data["services"].get("rgw", {}).get("daemons", {})  # type: ignore
