@@ -55,7 +55,7 @@ spec:
   # The metadata service (mds) configuration
   metadataServer:
     # The number of active MDS instances
-    activeCount: 1
+    activeCount: {{ mds_instances }}
     # Whether each active MDS instance will have an active standby with a warm metadata cache for faster failover.
     # If false, standbys will be available, but will not have a warm cache.
     activeStandby: true
@@ -74,7 +74,7 @@ spec:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
-                - key: {{ rgw_placement_label }}
+                - key: {{ mds_placement_label }}
                   operator: In
                   values:
                     - "true"

@@ -22,66 +22,94 @@ class MigrateMdsHandler(ModuleHandler):
 
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        for node, mds_daemons in state_data["node"]["ls"]["mds"].items():
+        for mds_host, mds_daemons in state_data["node"]["ls"]["mds"].items():
             if len(mds_daemons) > 1:
                 raise ModuleException(
-                    "There are more than 1 Ceph mds daemons running on node {0}".format(
-                        node
+                    "There are more than 1 Ceph MDS daemons running on host {0}".format(
+                        mds_host
                     )
                 )
 
     def execute(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        for node in state_data["node"]["ls"]["mds"].keys():
-            self._migrate_mds(node)
-
-    def _migrate_mds(self, mds_host: str) -> None:
         migrated_mds = self.machine.get_execution_state_data(
             "MigrateMdsHandler", "migrated_mds", default_value=[]
         )
-        if mds_host in migrated_mds:
-            return
-
-        self.logger.debug("Migrating Ceph mds daemon '{0}'".format(mds_host))
 
         migrated_mds_pools = self.machine.get_execution_state_data(
             "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
         )
         is_migration_required = len(migrated_mds_pools) > 0
 
-        if is_migration_required:
-            result = self.ssh.command(
-                mds_host, "sudo systemctl disable --now ceph-mds.target"
+        mds_hosts = list(state_data["node"]["ls"]["mds"].keys())
+
+        # Rook may upgrade MDS and require all standby daemons to be inactive. Handle that while migration.
+        has_mds_standby_daemons = len(mds_hosts) > 1
+
+        for mds_host in mds_hosts:
+            if mds_host in migrated_mds:
+                continue
+
+            self.logger.debug("Migrating Ceph MDS daemon '{0}'".format(mds_host))
+
+            if (
+                is_migration_required
+                and has_mds_standby_daemons
+                and mds_host not in (mds_hosts[0], mds_hosts[1])
+            ):
+                self._disable_mds(mds_host)
+
+        for mds_host in mds_hosts:
+            if mds_host in migrated_mds:
+                continue
+
+            if is_migration_required and (
+                mds_host == mds_hosts[0]
+                or (has_mds_standby_daemons and mds_host == mds_hosts[1])
+            ):
+                self._disable_mds(mds_host)
+
+            self._set_mds_label(mds_host)
+
+            migrated_mds.append(mds_host)
+
+            self.machine.get_execution_state(
+                "MigrateMdsHandler"
+            ).migrated_mds = migrated_mds
+
+            if is_migration_required:
+                self._enable_rook_based_mds(mds_host)
+
+    def _disable_mds(self, mds_host: str) -> None:
+        result = self.ssh.command(
+            mds_host, "sudo systemctl disable --now ceph-mds.target"
+        )
+
+        if result.failed:
+            raise ModuleException(
+                "Disabling original Ceph MDS daemon at host {0} failed: {1}".format(
+                    mds_host, result.stderr
+                )
             )
 
-            if result.failed:
-                raise ModuleException(
-                    "Disabling original Ceph mds daemon at host {0} failed: {1}".format(
-                        mds_host, result.stderr
-                    )
-                )
-
-            self.logger.debug(
-                "Waiting for disabled original Ceph mds daemon '{0}' to disconnect".format(
-                    mds_host
-                )
+        self.logger.debug(
+            "Waiting for disabled original Ceph MDS daemon '{0}' to disconnect".format(
+                mds_host
             )
+        )
 
-            while True:
-                result = self.ceph.mon_command("node ls")
+        while True:
+            result = self.ceph.mon_command("node ls")
 
-                if mds_host not in result["mds"]:
-                    break
+            if mds_host not in result["mds"]:
+                break
 
-                sleep(2)
+            sleep(2)
 
-            self.logger.info(
-                "Disabled Ceph mds daemon '{0}' and enabling Rook based Ceph mds daemon '{0}'".format(
-                    mds_host
-                )
-            )
+        self.logger.info("Disabled Ceph MDS daemon '{0}'".format(mds_host))
 
+    def _set_mds_label(self, mds_host: str) -> None:
         node_patch = {"metadata": {"labels": {self.k8s.mds_placement_label: "true"}}}
 
         if (
@@ -89,29 +117,23 @@ class MigrateMdsHandler(ModuleHandler):
             not in self.k8s.core_v1_api.patch_node(mds_host, node_patch).metadata.labels
         ):
             raise ModuleException(
-                "Failed to patch k8s node for Ceph mds daemon '{0}'".format(mds_host)
+                "Failed to patch k8s node for Ceph MDS daemon '{0}'".format(mds_host)
             )
 
-        migrated_mds.append(mds_host)
+    def _enable_rook_based_mds(self, mds_host: str) -> None:
+        self.logger.debug(
+            "Enabling and waiting for Rook based MDS daemon '{0}'".format(mds_host)
+        )
 
-        self.machine.get_execution_state(
-            "MigrateMdsHandler"
-        ).migrated_mds = migrated_mds
+        while True:
+            result = self.ceph.mon_command("node ls")
 
-        if is_migration_required:
-            self.logger.debug(
-                "Waiting for Rook based mds daemon '{0}'".format(mds_host)
-            )
+            if mds_host in result["mds"]:  # type: ignore
+                break
 
-            while True:
-                result = self.ceph.mon_command("node ls")
+            sleep(2)
 
-                if mds_host in result["mds"]:
-                    break
-
-                sleep(2)
-
-            self.logger.debug("Rook based mds daemon '{0}' available")
+        self.logger.debug("Rook based MDS daemon '{0}' available".format(mds_host))
 
     @staticmethod
     def register_execution_state(
