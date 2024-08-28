@@ -82,6 +82,8 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "MigrateMdsPoolsHandler", "migrated_pools", default_value=[]
         )
 
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
         self.logger.debug("Migrating Ceph MDS pool '{0}'".format(pool["name"]))
         osd_pool_configurations = pool["osd_pool_configurations"]
 
@@ -90,6 +92,7 @@ class MigrateMdsPoolsHandler(ModuleHandler):
         filesystem_definition_values = {
             "cluster_namespace": self._config["rook"]["cluster"]["namespace"],
             "name": pool["name"],
+            "mds_instances": len(state_data["node"]["ls"]["mds"]),
             "mds_size": pool_metadata_osd_configuration["size"],
             "mds_placement_label": self.k8s.mds_placement_label,
         }
