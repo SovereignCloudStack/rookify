@@ -42,6 +42,10 @@ class MigrateOSDsHandler(ModuleHandler):
                 if osd_id not in osd_devices[osd_host]:
                     osd_devices[osd_host][osd_id] = osd_device_path
 
+            self.logger.debug(
+                "Analyzed {0:d} Ceph OSD(s) on host '{1}'".format(len(osds), osd_host)
+            )
+
         return osd_devices
 
     def _get_nodes_osd_devices(self, osd_ids: List[str]) -> List[Dict[str, Any]]:
@@ -93,7 +97,7 @@ class MigrateOSDsHandler(ModuleHandler):
             "MigrateOSDsHandler", "migrated_osd_ids", default_value=[]
         )
 
-        self.logger.info("Migrating Ceph OSD host '{0}'".format(host))
+        self.logger.info("Migrating ceph-osd host '{0}'".format(host))
 
         node_patch = {"metadata": {"labels": {self.k8s.osd_placement_label: "true"}}}
 
@@ -102,15 +106,15 @@ class MigrateOSDsHandler(ModuleHandler):
             not in self.k8s.core_v1_api.patch_node(host, node_patch).metadata.labels
         ):
             raise ModuleException(
-                "Failed to patch k8s node for Ceph OSD host '{0}'".format(host)
+                "Failed to patch k8s for ceph-osd node '{0}'".format(host)
             )
 
         for osd_id in osd_ids:
             if osd_id in migrated_osd_ids:
                 return
 
-            self.logger.info(
-                "Migrating Ceph OSD daemon '{0}@{1:d}'".format(host, osd_id)
+            self.logger.debug(
+                "Migrating ceph-osd daemon '{0}@{1:d}'".format(host, osd_id)
             )
 
             result = self.ssh.command(
@@ -120,13 +124,13 @@ class MigrateOSDsHandler(ModuleHandler):
 
             if result.failed:
                 raise ModuleException(
-                    "Disabling original Ceph OSD daemon '{0}@{1:d}' failed: {2}".format(
+                    "Disabling original ceph-osd daemon '{0}@{1:d}' failed: {2}".format(
                         host, osd_id, result.stderr
                     )
                 )
 
             self.logger.debug(
-                "Waiting for disabled original Ceph OSD daemon '{0}@{1:d}' to disconnect".format(
+                "Waiting for disabled original ceph-osd daemon '{0}@{1:d}' to disconnect".format(
                     host, osd_id
                 )
             )
@@ -140,10 +144,10 @@ class MigrateOSDsHandler(ModuleHandler):
                 sleep(2)
 
             self.logger.info(
-                "Disabled Ceph OSD daemon '{0}@{1:d}'".format(host, osd_id)
+                "Disabled ceph-osd daemon '{0}@{1:d}'".format(host, osd_id)
             )
 
-        self.logger.info("Enabling Rook based Ceph OSD host '{0}'".format(host))
+        self.logger.info("Enabling Rook based ceph-osd node '{0}'".format(host))
 
         nodes_osd_devices = self._get_nodes_osd_devices(migrated_osd_ids + osd_ids)
 
@@ -170,7 +174,9 @@ class MigrateOSDsHandler(ModuleHandler):
 
         for osd_id in osd_ids:
             self.logger.debug(
-                "Waiting for Rook based OSD daemon '{0}@{1:d}'".format(host, osd_id)
+                "Waiting for Rook based ceph-osd daemon '{0}@{1:d}'".format(
+                    host, osd_id
+                )
             )
 
             while True:
@@ -181,8 +187,8 @@ class MigrateOSDsHandler(ModuleHandler):
 
                 sleep(2)
 
-            self.logger.debug(
-                "Rook based OSD daemon '{0}@{1:d}' available".format(host, osd_id)
+            self.logger.info(
+                "Rook based ceph-osd daemon '{0}@{1:d}' available".format(host, osd_id)
             )
 
     @staticmethod

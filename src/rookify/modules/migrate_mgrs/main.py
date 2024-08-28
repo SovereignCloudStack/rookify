@@ -32,7 +32,7 @@ class MigrateMgrsHandler(ModuleHandler):
         if mgr_host in migrated_mgrs:
             return
 
-        self.logger.debug("Migrating Ceph mgr daemon '{0}'".format(mgr_host))
+        self.logger.info("Migrating ceph-mgr daemon at host'{0}'".format(mgr_host))
 
         result = self.ssh.command(
             mgr_host, "sudo systemctl disable --now ceph-mgr.target"
@@ -40,13 +40,13 @@ class MigrateMgrsHandler(ModuleHandler):
 
         if result.failed:
             raise ModuleException(
-                "Disabling original Ceph mgr daemon at host {0} failed: {1}".format(
+                "Disabling original ceph-mgr daemon at host {0} failed: {1}".format(
                     mgr_host, result.stderr
                 )
             )
 
         self.logger.debug(
-            "Waiting for disabled original Ceph mgr daemon '{0}' to disconnect".format(
+            "Waiting for disabled original ceph-mgr daemon '{0}' to disconnect".format(
                 mgr_host
             )
         )
@@ -60,7 +60,7 @@ class MigrateMgrsHandler(ModuleHandler):
             sleep(2)
 
         self.logger.info(
-            "Disabled Ceph mgr daemon '{0}' and enabling Rook based Ceph mgr daemon '{0}'".format(
+            "Disabled ceph-mgr daemon '{0}' and enabling Rook based daemon".format(
                 mgr_host
             )
         )
@@ -72,7 +72,7 @@ class MigrateMgrsHandler(ModuleHandler):
             not in self.k8s.core_v1_api.patch_node(mgr_host, node_patch).metadata.labels
         ):
             raise ModuleException(
-                "Failed to patch k8s node for Ceph mgr daemon '{0}'".format(mgr_host)
+                "Failed to patch k8s for ceph-mgr daemon node '{0}'".format(mgr_host)
             )
 
         migrated_mgrs.append(mgr_host)
@@ -86,7 +86,7 @@ class MigrateMgrsHandler(ModuleHandler):
         )
 
         self.logger.debug(
-            "Waiting for {0:d} Ceph mgr daemons to be available".format(
+            "Waiting for {0:d} ceph-mgr daemons to be available".format(
                 mgr_count_expected
             )
         )
@@ -98,8 +98,8 @@ class MigrateMgrsHandler(ModuleHandler):
 
             sleep(2)
 
-        self.logger.debug(
-            "{0:d} Ceph mgr daemons are available".format(mgr_count_expected)
+        self.logger.info(
+            "{0:d} ceph-mgr daemons are available".format(mgr_count_expected)
         )
 
     @staticmethod

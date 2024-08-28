@@ -49,7 +49,7 @@ class MigrateOSDPoolsHandler(ModuleHandler):
         if pool["pool_name"] in migrated_pools:
             return
 
-        self.logger.debug("Migrating Ceph OSD pool '{0}'".format(pool["pool_name"]))
+        self.logger.info("Migrating ceph-osd pool '{0}'".format(pool["pool_name"]))
 
         pool_definition_values = {
             "cluster_namespace": self._config["rook"]["cluster"]["namespace"],
@@ -75,7 +75,7 @@ class MigrateOSDPoolsHandler(ModuleHandler):
             "MigrateOSDPoolsHandler"
         ).migrated_pools = migrated_pools
 
-        self.logger.info("Migrated Ceph OSD pool '{0}'".format(pool["pool_name"]))
+        self.logger.info("Migrated ceph-osd pool '{0}'".format(pool["pool_name"]))
 
     @staticmethod
     def register_execution_state(

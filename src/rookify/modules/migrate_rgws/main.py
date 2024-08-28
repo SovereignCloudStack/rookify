@@ -21,7 +21,7 @@ class MigrateRgwsHandler(ModuleHandler):
         for rgw_daemon in rgw_daemons.values():
             if "metadata" not in rgw_daemon or "hostname" not in rgw_daemon["metadata"]:
                 raise ModuleException(
-                    "Unexpected Ceph rgw daemon metadata: {0}".format(rgw_daemon)
+                    "Unexpected ceph-rgw daemon metadata: {0}".format(rgw_daemon)
                 )
             if rgw_daemon["metadata"]["hostname"] not in rgw_daemon_hosts:
                 rgw_daemon_hosts.append(rgw_daemon["metadata"]["hostname"])
@@ -43,7 +43,7 @@ class MigrateRgwsHandler(ModuleHandler):
         for rgw_daemon_host in rgw_daemon_hosts:
             if rgw_daemon_host not in self._config["ssh"]["hosts"]:
                 raise ModuleException(
-                    "Unexpected Ceph rgw daemon found (no SSH config): {0}".format(
+                    "Unexpected ceph-rgw daemon found (no SSH config): {0}".format(
                         rgw_daemon_host
                     )
                 )
@@ -61,7 +61,7 @@ class MigrateRgwsHandler(ModuleHandler):
         if rgw_host in migrated_rgws:
             return
 
-        self.logger.debug("Migrating Ceph rgw daemon '{0}'".format(rgw_host))
+        self.logger.info("Migrating ceph-rgw daemon at host '{0}'".format(rgw_host))
 
         migrated_zones = self.machine.get_execution_state_data(
             "MigrateRgwPoolsHandler", "migrated_zones", default_value=[]
@@ -75,13 +75,13 @@ class MigrateRgwsHandler(ModuleHandler):
 
             if result.failed:
                 raise ModuleException(
-                    "Disabling original Ceph rgw daemon at host {0} failed: {1}".format(
+                    "Disabling original ceph-rgw host {0} failed: {1}".format(
                         rgw_host, result.stderr
                     )
                 )
 
             self.logger.debug(
-                "Waiting for disabled original Ceph rgw daemon '{0}' to disconnect".format(
+                "Waiting for disabled original ceph-rgw host '{0}' to disconnect".format(
                     rgw_host
                 )
             )
@@ -94,11 +94,9 @@ class MigrateRgwsHandler(ModuleHandler):
 
                 sleep(2)
 
-            self.logger.info(
-                "Disabled Ceph rgw daemon '{0}' and enabling Rook based Ceph rgw daemon '{0}'".format(
-                    rgw_host
-                )
-            )
+            self.logger.info("Disabled ceph-rgw host '{0}'".format(rgw_host))
+
+        self.logger.debug("Enabling Rook based ceph-rgw node '{0}'".format(rgw_host))
 
         node_patch = {"metadata": {"labels": {self.k8s.rgw_placement_label: "true"}}}
 
@@ -107,7 +105,7 @@ class MigrateRgwsHandler(ModuleHandler):
             not in self.k8s.core_v1_api.patch_node(rgw_host, node_patch).metadata.labels
         ):
             raise ModuleException(
-                "Failed to patch k8s node for Ceph rgw daemon '{0}'".format(rgw_host)
+                "Failed to patch k8s node for ceph-rgw node '{0}'".format(rgw_host)
             )
 
         migrated_rgws.append(rgw_host)
@@ -118,7 +116,9 @@ class MigrateRgwsHandler(ModuleHandler):
 
         if is_migration_required:
             self.logger.debug(
-                "Waiting for at least one Rook based rgw daemon '{0}'".format(rgw_host)
+                "Waiting for at least one Rook based RGW daemon for node '{0}'".format(
+                    rgw_host
+                )
             )
 
             while True:
@@ -129,7 +129,9 @@ class MigrateRgwsHandler(ModuleHandler):
 
                 sleep(2)
 
-            self.logger.debug("Rook based rgw daemon '{0}' available".format(rgw_host))
+            self.logger.info(
+                "Rook based RGW daemon for node '{0}' available".format(rgw_host)
+            )
 
     @staticmethod
     def register_execution_state(
