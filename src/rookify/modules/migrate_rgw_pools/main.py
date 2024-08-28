@@ -59,7 +59,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
             if zone["osd_pools"][metadata_name].get("erasure_code_profile", "") != "":
                 raise ModuleException(
-                    "Ceph RGW metadata OSD pools must use replication for Rook"
+                    "ceph-rgw metadata OSD pools must use replication for Rook"
                 )
 
         self.machine.get_preflight_state("MigrateRgwPoolsHandler").zones = zones
@@ -81,7 +81,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "MigrateRgwPoolsHandler", "migrated_pools", default_value=[]
         )
 
-        self.logger.debug("Migrating Ceph RGW zone '{0}'".format(zone_name))
+        self.logger.info("Migrating ceph-rgw zone '{0}'".format(zone_name))
 
         osd_pools = zone_data["osd_pools"]
 
@@ -129,7 +129,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "MigrateRgwPoolsHandler"
         ).migrated_pools = migrated_pools
 
-        self.logger.info("Migrated Ceph RGW zone '{0}'".format(zone_name))
+        self.logger.info("Migrated ceph-rgw zone '{0}'".format(zone_name))
 
     @staticmethod
     def register_execution_state(

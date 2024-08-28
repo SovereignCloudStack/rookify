@@ -25,7 +25,7 @@ class MigrateMdsHandler(ModuleHandler):
         for mds_host, mds_daemons in state_data["node"]["ls"]["mds"].items():
             if len(mds_daemons) > 1:
                 raise ModuleException(
-                    "There are more than 1 Ceph MDS daemons running on host {0}".format(
+                    "There are more than 1 ceph-mds daemons running on host {0}".format(
                         mds_host
                     )
                 )
@@ -51,7 +51,7 @@ class MigrateMdsHandler(ModuleHandler):
             if mds_host in migrated_mds:
                 continue
 
-            self.logger.debug("Migrating Ceph MDS daemon '{0}'".format(mds_host))
+            self.logger.info("Migrating ceph-mds daemon at host '{0}'".format(mds_host))
 
             if (
                 is_migration_required
@@ -88,13 +88,13 @@ class MigrateMdsHandler(ModuleHandler):
 
         if result.failed:
             raise ModuleException(
-                "Disabling original Ceph MDS daemon at host {0} failed: {1}".format(
+                "Disabling original ceph-mds daemon at host {0} failed: {1}".format(
                     mds_host, result.stderr
                 )
             )
 
         self.logger.debug(
-            "Waiting for disabled original Ceph MDS daemon '{0}' to disconnect".format(
+            "Waiting for disabled original ceph-mds daemon at host '{0}' to disconnect".format(
                 mds_host
             )
         )
@@ -107,7 +107,7 @@ class MigrateMdsHandler(ModuleHandler):
 
             sleep(2)
 
-        self.logger.info("Disabled Ceph MDS daemon '{0}'".format(mds_host))
+        self.logger.info("Disabled ceph-mds daemon at host '{0}'".format(mds_host))
 
     def _set_mds_label(self, mds_host: str) -> None:
         node_patch = {"metadata": {"labels": {self.k8s.mds_placement_label: "true"}}}
@@ -117,12 +117,14 @@ class MigrateMdsHandler(ModuleHandler):
             not in self.k8s.core_v1_api.patch_node(mds_host, node_patch).metadata.labels
         ):
             raise ModuleException(
-                "Failed to patch k8s node for Ceph MDS daemon '{0}'".format(mds_host)
+                "Failed to patch k8s for ceph-mds daemon node '{0}'".format(mds_host)
             )
 
     def _enable_rook_based_mds(self, mds_host: str) -> None:
         self.logger.debug(
-            "Enabling and waiting for Rook based MDS daemon '{0}'".format(mds_host)
+            "Enabling and waiting for Rook based ceph-mds daemon node '{0}'".format(
+                mds_host
+            )
         )
 
         while True:
@@ -133,7 +135,9 @@ class MigrateMdsHandler(ModuleHandler):
 
             sleep(2)
 
-        self.logger.debug("Rook based MDS daemon '{0}' available".format(mds_host))
+        self.logger.info(
+            "Rook based ceph-mds daemon node '{0}' available".format(mds_host)
+        )
 
     @staticmethod
     def register_execution_state(

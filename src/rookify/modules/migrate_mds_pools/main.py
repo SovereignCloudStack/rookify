@@ -22,7 +22,7 @@ class MigrateMdsPoolsHandler(ModuleHandler):
         for mds_fs_data in state_data["fs"]["ls"]:
             if not mds_fs_data["metadata_pool"].endswith("-metadata"):
                 self.logger.warn(
-                    "MDS filesystem '{0}' uses an incompatible Ceph pool metadata name '{1}' and can not be migrated to Rook automatically".format(
+                    "ceph-mds filesystem '{0}' uses an incompatible pool metadata name '{1}' and can not be migrated to Rook automatically".format(
                         mds_fs_data["name"], mds_fs_data["metadata_pool"]
                     )
                 )
@@ -84,7 +84,7 @@ class MigrateMdsPoolsHandler(ModuleHandler):
 
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        self.logger.debug("Migrating Ceph MDS pool '{0}'".format(pool["name"]))
+        self.logger.info("Migrating ceph-mds pool '{0}'".format(pool["name"]))
         osd_pool_configurations = pool["osd_pool_configurations"]
 
         pool_metadata_osd_configuration = osd_pool_configurations[pool["metadata"]]
@@ -142,7 +142,7 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "MigrateMdsPoolsHandler"
         ).migrated_pools = migrated_pools
 
-        self.logger.info("Migrated Ceph MDS pool '{0}'".format(pool["name"]))
+        self.logger.info("Migrated ceph-mds pool '{0}'".format(pool["name"]))
 
     @staticmethod
     def register_execution_state(

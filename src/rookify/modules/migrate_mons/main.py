@@ -39,7 +39,7 @@ class MigrateMonsHandler(ModuleHandler):
         if mon["name"] in migrated_mons:
             return
 
-        self.logger.debug("Migrating Ceph mon daemon '{0}'".format(mon["name"]))
+        self.logger.info("Migrating ceph-mon daemon '{0}'".format(mon["name"]))
 
         result = self.ssh.command(
             mon["name"], "sudo systemctl disable --now ceph-mon.target"
@@ -47,13 +47,13 @@ class MigrateMonsHandler(ModuleHandler):
 
         if result.failed:
             raise ModuleException(
-                "Disabling original Ceph mon daemon at host {0} failed: {1}".format(
+                "Disabling original ceph-mon daemon {0} failed: {1}".format(
                     mon["name"], result.stderr
                 )
             )
 
         self.logger.debug(
-            "Waiting for disabled original Ceph mon daemon '{0}' to disconnect".format(
+            "Waiting for disabled original ceph-mon daemon '{0}' to disconnect".format(
                 mon["name"]
             )
         )
@@ -69,12 +69,12 @@ class MigrateMonsHandler(ModuleHandler):
 
             sleep(2)
 
-        self.logger.info("Disabled Ceph mon daemon '{0}'".format(mon["name"]))
+        self.logger.info("Disabled ceph-mon daemon '{0}'".format(mon["name"]))
 
         self.ceph.mon_command("mon remove", name=mon["name"])
 
-        self.logger.info(
-            "Enabling Rook based Ceph mon daemon '{0}'".format(mon["name"])
+        self.logger.debug(
+            "Enabling Rook based ceph-mon daemon at node '{0}'".format(mon["name"])
         )
 
         node_patch = {"metadata": {"labels": {self.k8s.mon_placement_label: "true"}}}
@@ -86,7 +86,9 @@ class MigrateMonsHandler(ModuleHandler):
             ).metadata.labels
         ):
             raise ModuleException(
-                "Failed to patch k8s node for Ceph mon daemon '{0}'".format(mon["name"])
+                "Failed to patch k8s for ceph-mon daemon at node '{0}'".format(
+                    mon["name"]
+                )
             )
 
         migrated_mons.append(mon["name"])
@@ -100,7 +102,7 @@ class MigrateMonsHandler(ModuleHandler):
         )
 
         self.logger.debug(
-            "Waiting for a quorum of {0:d} Ceph mon daemons".format(mon_count_expected)
+            "Waiting for a quorum of {0:d} ceph-mon daemons".format(mon_count_expected)
         )
 
         while True:
@@ -110,8 +112,8 @@ class MigrateMonsHandler(ModuleHandler):
 
             sleep(2)
 
-        self.logger.debug(
-            "Quorum of {0:d} Ceph mon daemons successful".format(mon_count_expected)
+        self.logger.info(
+            "Quorum of {0:d} ceph-mon daemons successful".format(mon_count_expected)
         )
 
     @staticmethod
