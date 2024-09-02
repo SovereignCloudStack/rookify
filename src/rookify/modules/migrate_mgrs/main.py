@@ -93,7 +93,7 @@ class MigrateMgrsHandler(ModuleHandler):
 
         while True:
             result = self.ceph.mon_command("node ls")
-            if len(result["mgr"]) >= 3:
+            if len(result["mgr"]) >= mgr_count_expected:
                 break
 
             sleep(2)
