@@ -45,7 +45,7 @@ class CreateRookClusterHandler(ModuleHandler):
             mgr_count = 0
 
             for node, mgrs in node_ls_data["mgr"].items():
-                if len(mons) > 1:
+                if len(mgrs) > 1:
                     raise ModuleException(
                         f"There are more than 1 mgr running on node {node}"
                     )
