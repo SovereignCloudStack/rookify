@@ -14,30 +14,16 @@ class CreateClusterHandler(ModuleHandler):
         "create_configmap",
     ]
 
-    @property
-    def __mon_placement_label(self) -> str:
-        return (
-            str(self._config["rook"]["cluster"]["mon_placement_label"])
-            if "mon_placement_label" in self._config["rook"]["cluster"]
-            else f"placement-{self._config["rook"]["cluster"]["name"]}-mon"
-        )
-
-    @property
-    def __mgr_placement_label(self) -> str:
-        return (
-            str(self._config["rook"]["cluster"]["mgr_placement_label"])
-            if "mgr_placement_label" in self._config["rook"]["cluster"]
-            else f"placement-{self._config["rook"]["cluster"]["name"]}-mgr"
-        )
-
     def __create_cluster_definition(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         try:
             node_ls_data = state_data["node"]["ls"]
+            rook_config = self._config["rook"]
 
             # Get monitor count
             mon_count = 0
+
             for node, mons in node_ls_data["mon"].items():
                 mon_count += 1
                 if len(mons) > 1:
@@ -47,6 +33,7 @@ class CreateClusterHandler(ModuleHandler):
 
             # Get manager count
             mgr_count = 0
+
             for node, mgrs in node_ls_data["mgr"].items():
                 mgr_count += 1
                 if len(mons) > 1:
@@ -56,23 +43,44 @@ class CreateClusterHandler(ModuleHandler):
 
             self.logger.debug(
                 "Rook cluster definition values: {0} {1} with mon label {2} and mgr label {3}".format(
-                    self._config["rook"]["cluster"]["namespace"],
-                    self._config["rook"]["cluster"]["name"],
-                    self.__mon_placement_label,
-                    self.__mgr_placement_label,
+                    rook_config["cluster"]["namespace"],
+                    rook_config["cluster"]["name"],
+                    self.k8s.mon_placement_label,
+                    self.k8s.mgr_placement_label,
                 )
             )
 
+            cluster_definition_values = {
+                "cluster_name": rook_config["cluster"]["name"],
+                "cluster_namespace": rook_config["cluster"]["namespace"],
+                "ceph_image": rook_config["ceph"]["image"],
+                "mon_count": mon_count,
+                "mgr_count": mgr_count,
+                "mon_placement_label": self.k8s.mon_placement_label,
+                "mgr_placement_label": self.k8s.mgr_placement_label,
+            }
+
+            if len(rook_config["ceph"].get("public_network", "")) > 0:
+                cluster_definition_values["public_network"] = rook_config["ceph"][
+                    "public_network"
+                ]
+            else:
+                self.logger.warn(
+                    "Rook Ceph cluster will be configured without a public network and determine it automatically during runtime"
+                )
+
+            if len(rook_config["ceph"].get("cluster_network", "")) > 0:
+                cluster_definition_values["cluster_network"] = rook_config["ceph"][
+                    "cluster_network"
+                ]
+            else:
+                self.logger.info(
+                    "Rook Ceph cluster will be configured without a cluster network"
+                )
+
             # Render cluster config from template
             cluster_definition = self.load_template(
-                "cluster.yaml.j2",
-                cluster_name=self._config["rook"]["cluster"]["name"],
-                cluster_namespace=self._config["rook"]["cluster"]["namespace"],
-                ceph_image=self._config["rook"]["ceph"]["image"],
-                mon_count=mon_count,
-                mgr_count=mgr_count,
-                mon_placement_label=self.__mon_placement_label,
-                mgr_placement_label=self.__mgr_placement_label,
+                "cluster.yaml.j2", **cluster_definition_values
             )
 
             self.machine.get_preflight_state(
@@ -84,21 +92,24 @@ class CreateClusterHandler(ModuleHandler):
     def __check_k8s_prerequisites(self) -> None:
         # We have to check, if our placement labels are disabled or unset
         nodes = self.k8s.core_v1_api.list_node().items
+
         for node in nodes:
             node_labels = node.metadata.labels
+
             if (
-                self.__mon_placement_label in node_labels
-                and node_labels[self.__mon_placement_label] == "enabled"
+                self.k8s.mon_placement_label in node_labels
+                and node_labels[self.k8s.mon_placement_label] == "enabled"
             ):
                 raise ModuleException(
-                    f"Label {self.__mon_placement_label} is set on node {node.metadata.name}"
+                    f"Label {self.k8s.mon_placement_label} is set on node {node.metadata.name}"
                 )
+
             if (
-                self.__mgr_placement_label in node_labels
-                and node_labels[self.__mgr_placement_label] == "enabled"
+                self.k8s.mgr_placement_label in node_labels
+                and node_labels[self.k8s.mgr_placement_label] == "enabled"
             ):
                 raise ModuleException(
-                    f"Label {self.__mon_placement_label} is set on node {node.metadata.name}"
+                    f"Label {self.k8s.mon_placement_label} is set on node {node.metadata.name}"
                 )
 
     def preflight(self) -> None:
