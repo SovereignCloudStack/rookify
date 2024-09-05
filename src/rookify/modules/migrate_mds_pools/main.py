@@ -39,9 +39,8 @@ class MigrateMdsPoolsHandler(ModuleHandler):
                     if pool_data_osd_name not in migrated_pools:
                         migrated_pools.append(pool_data_osd_name)
 
-                self.machine.get_execution_state(
-                    "MigrateMdsPoolsHandler"
-                ).migrated_pools = migrated_pools
+                state = self.machine.get_execution_state("MigrateMdsPoolsHandler")
+                if state is not None: state.migrated_pools = migrated_pools
 
                 continue
 

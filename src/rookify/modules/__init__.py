@@ -30,7 +30,12 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
     :return: returns tuple of preflight_modules, modules
     """
 
-    module = importlib.import_module("rookify.modules.{0}".format(module_name))
+    if "." in module_name:
+        absolute_module_name = module_name
+    else:
+        absolute_module_name = "rookify.modules.{0}".format(module_name)
+
+    module = importlib.import_module(absolute_module_name)
     additional_modules = []
 
     if not hasattr(module, "ModuleHandler") or not callable(

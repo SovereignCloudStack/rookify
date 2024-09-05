@@ -97,7 +97,7 @@ class MigrateMonsHandler(ModuleHandler):
             "MigrateMonsHandler",
         ).migrated_mons = migrated_mons
 
-        mon_count_expected = self.machine.get_execution_state_data(
+        mon_count_expected = self.machine.get_preflight_state_data(
             "CreateRookClusterHandler", "mon_count", default_value=3
         )
 
