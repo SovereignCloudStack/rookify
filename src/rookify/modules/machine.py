@@ -92,7 +92,12 @@ class Machine(_Machine):  # type: ignore
         return data
 
     def get_execution_state(self, name: str) -> Any:
-        return self.get_state(self.__class__.STATE_NAME_EXECUTION_PREFIX + name)
+        state_name = self.__class__.STATE_NAME_EXECUTION_PREFIX + name
+
+        if state_name not in self.states:
+            return None
+
+        return self.get_state(state_name)
 
     def get_execution_state_data(
         self, name: str, tag: str, default_value: Any = None
@@ -100,7 +105,12 @@ class Machine(_Machine):  # type: ignore
         return getattr(self.get_execution_state(name), tag, default_value)
 
     def get_preflight_state(self, name: str) -> Any:
-        return self.get_state(self.__class__.STATE_NAME_PREFLIGHT_PREFIX + name)
+        state_name = self.__class__.STATE_NAME_PREFLIGHT_PREFIX + name
+
+        if state_name not in self.states:
+            return None
+
+        return self.get_state(state_name)
 
     def get_preflight_state_data(
         self, name: str, tag: str, default_value: Any = None
