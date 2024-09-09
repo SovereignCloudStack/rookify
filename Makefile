@@ -28,17 +28,16 @@ help: ## Display this help message
 	    awk -F ':.*?## ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
 
 .PHONY: setup
-setup: setup-pre-commit check-radoslib setup-venv ## Setup the pre-commit environment and then the venv environment
+setup: check-radoslib setup-venv setup-pre-commit ## Setup the pre-commit environment and then the venv environment
 
 .PHONY: setup-pre-commit
 setup-pre-commit:
-	pip install --user pre-commit && pre-commit install
+	./.venv/bin/pip install --user pre-commit && ./.venv/bin/python3.12 -m pre_commit install
 
 .PHONY: setup-venv
 setup-venv:
-	python -m venv --system-site-packages ./.venv && \
-	source ./.venv/bin/activate && \
-	pip install -r requirements.txt
+	python3 -m venv --system-site-packages ./.venv && \
+	./.venv/bin/pip install -r requirements.txt
 
 .PHONY: run-precommit
 run-precommit: ## Run pre-commit to check if all files running through
@@ -68,7 +67,7 @@ check-radoslib: ## Checks if radoslib is installed and if it contains the right 
 run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
 	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
 	source ./.venv/bin/activate && \
-	cd src && python -m rookify
+	cd src && python3 -m rookify
 
 .PHONY: run-rookify
 run-rookify: ## Runs rookify in the container
