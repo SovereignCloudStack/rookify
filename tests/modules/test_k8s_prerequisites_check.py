@@ -15,6 +15,8 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
     def _request_callback(
         self, method: str, *args: List[Any], **kwargs: Dict[Any, Any]
     ) -> Any:
+        if method == "apps_v1_api.list_deployment_for_all_namespaces":
+            return MockResponse(["apple", "banana", "cherry"])
         if method == "core_v1_api.list_namespace":
             return self._mock_list_namespace()
 
@@ -58,3 +60,9 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
         # Call the preflight method to run the test
         with self.assertRaises(ModuleException):
             handler_instance.preflight()
+
+
+# Create a Mock respons object
+class MockResponse:
+    def __init__(self, items: List[str]) -> None:
+        self.items = items
