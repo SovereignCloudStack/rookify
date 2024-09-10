@@ -2,7 +2,7 @@
 
 import json
 import rados
-from typing import Any, Dict, List
+from typing import Any, Dict
 from .exception import ModuleException
 
 
@@ -19,7 +19,7 @@ class Ceph:
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__ceph, name)
 
-    def _json_command(self, handler: Any, *args: Any) -> Dict[str, Any] | List[Any]:
+    def _json_command(self, handler: Any, *args: Any) -> Any:
         result = handler(*args)
         if result[0] != 0:
             raise ModuleException(f"Ceph did return an error: {result}")
@@ -53,19 +53,17 @@ class Ceph:
 
         return osd_pools
 
-    def mon_command(self, command: str, **kwargs: Any) -> Dict[str, Any] | List[Any]:
+    def mon_command(self, command: str, **kwargs: Any) -> Any:
         cmd = {"prefix": command, "format": "json"}
         cmd.update(**kwargs)
         return self._json_command(self.__ceph.mon_command, json.dumps(cmd), b"")
 
-    def mgr_command(self, command: str, **kwargs: Any) -> Dict[str, Any] | List[Any]:
+    def mgr_command(self, command: str, **kwargs: Any) -> Any:
         cmd = {"prefix": command, "format": "json"}
         cmd.update(**kwargs)
         return self._json_command(self.__ceph.mgr_command, json.dumps(cmd), b"")
 
-    def osd_command(
-        self, osd_id: int, command: str, **kwargs: Any
-    ) -> Dict[str, Any] | List[Any]:
+    def osd_command(self, osd_id: int, command: str, **kwargs: Any) -> Any:
         cmd = {"prefix": command, "format": "json"}
         cmd.update(**kwargs)
         return self._json_command(self.__ceph.osd_command, osd_id, json.dumps(cmd), b"")

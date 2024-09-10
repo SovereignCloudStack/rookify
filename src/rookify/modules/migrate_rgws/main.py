@@ -13,7 +13,7 @@ class MigrateRgwsHandler(ModuleHandler):
     def _get_rgw_daemon_hosts(self) -> List[str]:
         ceph_status = self.ceph.mon_command("status")
 
-        rgw_daemons = ceph_status["servicemap"]["services"]["rgw"]["daemons"]  # type: ignore
+        rgw_daemons = ceph_status["servicemap"]["services"]["rgw"]["daemons"]
         rgw_daemon_hosts = []
         if "summary" in rgw_daemons:
             del rgw_daemons["summary"]
