@@ -130,7 +130,7 @@ class MigrateMdsHandler(ModuleHandler):
         while True:
             result = self.ceph.mon_command("node ls")
 
-            if mds_host in result["mds"]:  # type: ignore
+            if mds_host in result["mds"]:
                 break
 
             sleep(2)

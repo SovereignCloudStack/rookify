@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Dict, Tuple
+from typing import Any, Tuple
 from unittest import TestCase
 
 from .mock_ceph import MockCeph
@@ -11,7 +11,7 @@ class TestMockCeph(TestCase):
         self.ceph = MockCeph({}, self._command_callback)
 
     def _command_callback(
-        self, command: str, inbuf: bytes, **kwargs: Dict[Any, Any]
+        self, command: str, inbuf: bytes, **kwargs: Any
     ) -> Tuple[int, bytes, str]:
         if command == "test":
             return 0, b'["ok"]', ""

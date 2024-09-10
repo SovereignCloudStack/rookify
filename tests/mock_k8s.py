@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from collections.abc import Callable
-from typing import Any, Dict, List
+from typing import Any
 
 
 class MockK8s(object):
@@ -12,7 +12,7 @@ class MockK8s(object):
         self._callback_handler = _callable
         self._attr_name = name
 
-    def __call__(self, *args: List[Any], **kwargs: Dict[Any, Any]) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return self._callback_handler(self._attr_name, *args, **kwargs)
 
     def __getattr__(self, name: str) -> Any:
