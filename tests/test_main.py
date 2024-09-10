@@ -15,34 +15,48 @@ import rookify.yaml
 # Test the arugment parser
 def test_parse_args_dry_run() -> None:
     args = parse_args(["--dry-run"])
-    expected = Namespace(dry_run_mode=True, read_pickle=None)
+    expected = Namespace(dry_run_mode=True, read_pickle=None, show_progress=None)
     assert args == expected
 
 
 def test_parse_args_read_pickle() -> None:
     args = parse_args(["--read-pickle"])
-    expected = Namespace(dry_run_mode=False, read_pickle="all")
+    expected = Namespace(dry_run_mode=False, read_pickle="all", show_progress=None)
     assert args == expected
 
 
 def test_parse_args_both_flags() -> None:
     args = parse_args(["--dry-run", "--read-pickle"])
-    expected = Namespace(dry_run_mode=True, read_pickle="all")
+    expected = Namespace(dry_run_mode=True, read_pickle="all", show_progress=None)
+    assert args == expected
+
+
+def test_parse_args_show_progress() -> None:
+    args = parse_args(["--show-progress"])
+    expected = Namespace(dry_run_mode=False, read_pickle=None, show_progress="all")
+    assert args == expected
+
+
+# check: should it be possible to add all arguments?
+def test_parse_args_both_dry_run_show_progress() -> None:
+    args = parse_args(["--dry-run", "--read-pickle", "--show-progress"])
+    expected = Namespace(dry_run_mode=True, read_pickle="all", show_progress="all")
+    assert args == expected
+
+
+def test_parse_args_all_dry_run_show_progress_read_pickle() -> None:
+    args = parse_args(["--dry-run", "--show-progress"])
+    expected = Namespace(dry_run_mode=True, read_pickle=None, show_progress="all")
     assert args == expected
 
 
 def test_parse_args_no_flags() -> None:
     args = parse_args([])
-    expected = Namespace(dry_run_mode=False, read_pickle=None)
+    expected = Namespace(dry_run_mode=False, read_pickle=None, show_progress=None)
     assert args == expected
 
 
-# def test_parse_args_show_progress() -> None:
-#     args = parse_args([])
-#     expected = Namespace(dry_run_mode=True, show_progress=None)
-#     assert args == expected
-
-# Test the --read-pickle option
+# Test the --read-pickle and --show-progress options
 
 
 @pytest.fixture  # type: ignore

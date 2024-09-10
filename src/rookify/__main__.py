@@ -28,6 +28,17 @@ def parse_args(args: list[str]) -> Namespace:
         ) -> None:
             setattr(namespace, self.dest, values if values is not None else "all")
 
+    # Custom ShowProgressAction to set 'all' if nothing is specified for --show-progress
+    class ShowProgressAction(argparse.Action):
+        def __call__(
+            self,
+            parser: ArgumentParser,
+            namespace: Namespace,
+            values: Optional[Any],
+            option_string: Optional[str] = None,
+        ) -> None:
+            setattr(namespace, self.dest, values if values is not None else "all")
+
     arg_parser.add_argument(
         "--read-pickle",
         nargs="?",
@@ -35,6 +46,16 @@ def parse_args(args: list[str]) -> Namespace:
         dest="read_pickle",
         metavar="<section>",
         help="Show the content of the pickle file. Default argument is 'all', you can also specify a section you want to look at.",
+        required=False,
+    )
+
+    arg_parser.add_argument(
+        "--show-progress",
+        nargs="?",
+        action=ShowProgressAction,
+        dest="show_progress",
+        metavar="<module>",
+        help="Show progress of the modules. Default argument is 'all', you can also specify a module you want to get the progress status from.",
         required=False,
     )
     return arg_parser.parse_args(args)
