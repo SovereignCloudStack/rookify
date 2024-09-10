@@ -52,6 +52,7 @@ class Machine(_Machine):  # type: ignore
     def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
         states_data = {}
 
+        # Read pickle file if it exists, to continue from the stored state
         if pickle_file is not None and pickle_file.tell() > 0:
             pickle_file.seek(0)
 
