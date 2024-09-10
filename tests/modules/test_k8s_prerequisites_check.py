@@ -10,16 +10,14 @@ from ..mock_k8s_prerequisite_check import MockK8sPrerequisitesCheckHandler
 # Note: currently this test works with pytest but not with unittest, which is not able to import needed classes
 class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
     def setUp(self) -> None:
-        # Mock configuration
         self.config = {"rook": {"cluster": {"namespace": "test-namespace"}}}
-        # No response option
-        self.empty_response = False
+        self.empty_deployment_list = False
 
     def _request_callback(
         self, method: str, *args: List[Any], **kwargs: Dict[Any, Any]
     ) -> Any:
         if method == "apps_v1_api.list_deployment_for_all_namespaces":
-            if self.empty_response is True:
+            if self.empty_deployment_list is True:
                 return V1DeploymentList([])
             return V1DeploymentList(["apple", "banana", "cherry"])
         if method == "core_v1_api.list_namespace":
@@ -43,8 +41,8 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
         handler_instance.preflight()
 
     def test_list_deployment_for_all_namespaces_fails(self) -> None:
-        # Set no response
-        self.empty_response = True
+        # Check the case where the deployment list is empty
+        self.empty_deployment_list = True
 
         # Instantiate K8sPrerequisitesCheckHandler with the mock ModuleHandler
         handler_instance = MockK8sPrerequisitesCheckHandler(
