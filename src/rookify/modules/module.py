@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import abc
 import structlog
 from typing import Any, Dict, Optional
 from ..logger import get_logger
@@ -59,14 +58,12 @@ class ModuleHandler(object):
             self._ssh = SSH(self._config["ssh"])
         return self._ssh
 
-    @abc.abstractmethod
     def preflight(self) -> None:
         """
         Run the modules preflight check
         """
         pass
 
-    @abc.abstractmethod
     def execute(self) -> None:
         """
         Executes the modules tasks
