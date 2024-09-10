@@ -27,6 +27,7 @@ LABEL org.opencontainers.image.source="https://github.com/SovereignCloudStack/ro
 
 ARG ROOKIFY_VERSION=0.0.0.dev1
 ENV ROOKIFY_VERSION=$ROOKIFY_VERSION
+ENV PYTHONPATH="${PYTHONPATH}:/app/rookify/src"
 
 WORKDIR /app/rookify
 
