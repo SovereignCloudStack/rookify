@@ -18,8 +18,19 @@ else
 	CONTAINERCMD=podman
 endif
 
+# Checking if python exists
+ifneq (, $(shell command -v python))
+    $(info Python is installed as 'python')
+    PYTHON := $(shell command -v python)
+else ifneq (, $(shell command -v python3))
+    $(info Python3 is installed as 'python3')
+    PYTHON := $(shell command -v python3)
+else
+    $(error Neither python nor python3 is installed)
+endif
+
 ## Export default rookify version
-export ROOKIFY_VERSION ?= "0.0.0.dev1"
+export ROOKIFY_VERSION?=0.0.0.dev1
 
 .PHONY: help
 help: ## Display this help message
@@ -32,11 +43,11 @@ setup: check-radoslib setup-venv setup-pre-commit ## Setup the pre-commit enviro
 
 .PHONY: setup-pre-commit
 setup-pre-commit:
-	./.venv/bin/pip install --user pre-commit && ./.venv/bin/python3.12 -m pre_commit install
+	./.venv/bin/pip install --user pre-commit && ./.venv/bin/python -m pre_commit install
 
 .PHONY: setup-venv
 setup-venv:
-	python3 -m venv --system-site-packages ./.venv && \
+	${PYTHON} -m venv --system-site-packages ./.venv && \
 	./.venv/bin/pip install -r requirements.txt
 
 .PHONY: run-precommit
@@ -65,9 +76,7 @@ check-radoslib: ## Checks if radoslib is installed and if it contains the right 
 
 .PHONY: run-local-rookify
 run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
-	$(eval PYTHONPATH="${PYTHONPATH}:$(pwd)/src")
-	source ./.venv/bin/activate && \
-	cd src && python3 -m rookify
+	source ./.venv/bin/activate && pip install -e . && rookify
 
 .PHONY: run-rookify
 run-rookify: ## Runs rookify in the container
