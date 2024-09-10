@@ -15,29 +15,34 @@ import rookify.yaml
 # Test the arugment parser
 def test_parse_args_dry_run() -> None:
     args = parse_args(["--dry-run"])
-    expected = Namespace(dry_run_mode=True, show_progress=None)
+    expected = Namespace(dry_run_mode=True, read_pickle=None)
     assert args == expected
 
 
-def test_parse_args_show_progress() -> None:
-    args = parse_args(["--show"])
-    expected = Namespace(dry_run_mode=False, show_progress="all")
+def test_parse_args_read_pickle() -> None:
+    args = parse_args(["--read-pickle"])
+    expected = Namespace(dry_run_mode=False, read_pickle="all")
     assert args == expected
 
 
 def test_parse_args_both_flags() -> None:
-    args = parse_args(["--dry-run", "--show"])
-    expected = Namespace(dry_run_mode=True, show_progress="all")
+    args = parse_args(["--dry-run", "--read-pickle"])
+    expected = Namespace(dry_run_mode=True, read_pickle="all")
     assert args == expected
 
 
 def test_parse_args_no_flags() -> None:
     args = parse_args([])
-    expected = Namespace(dry_run_mode=False, show_progress=None)
+    expected = Namespace(dry_run_mode=False, read_pickle=None)
     assert args == expected
 
 
-# Test the --show option
+# def test_parse_args_show_progress() -> None:
+#     args = parse_args([])
+#     expected = Namespace(dry_run_mode=True, show_progress=None)
+#     assert args == expected
+
+# Test the --read-pickle option
 
 
 @pytest.fixture  # type: ignore
@@ -71,7 +76,7 @@ def mock_load_pickler(monkeypatch: MonkeyPatch) -> MagicMock:
     return mock
 
 
-def test_main_show_progress(
+def test_main_read_pickle(
     mock_load_config: Callable[[Optional[Any]], MagicMock],
     mock_load_pickler: MonkeyPatch,
     monkeypatch: MonkeyPatch,
@@ -81,7 +86,7 @@ def test_main_show_progress(
     mock_load_config("mock.pickle")
 
     # Mock sys.argv to simulate command-line arguments
-    monkeypatch.setattr(sys, "argv", ["main_script.py", "--show", "--dry-run"])
+    monkeypatch.setattr(sys, "argv", ["main_script.py", "--read-pickle", "--dry-run"])
 
     # Run main()
     main()
@@ -107,7 +112,7 @@ def test_main_no_pickle_file(
     mock_load_config(None)
 
     # Mock sys.argv to simulate command-line arguments
-    monkeypatch.setattr(sys, "argv", ["main_script.py", "--show", "--dry-run"])
+    monkeypatch.setattr(sys, "argv", ["main_script.py", "--read-pickle", "--dry-run"])
 
     # Run main()
     main()
