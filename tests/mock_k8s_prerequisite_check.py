@@ -10,6 +10,3 @@ class MockK8sPrerequisitesCheckHandler(K8sPrerequisitesCheckHandler):
     def __init__(self, request_callback: Any, *args: Any, **kwargs: Any) -> None:
         K8sPrerequisitesCheckHandler.__init__(self, *args, **kwargs)
         self._k8s = MockK8s(request_callback)  # type: ignore
-
-    def execute(self) -> None:
-        K8sPrerequisitesCheckHandler.execute(self)

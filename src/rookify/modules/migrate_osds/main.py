@@ -26,7 +26,7 @@ class MigrateOSDsHandler(ModuleHandler):
 
                 result = self.ssh.command(
                     osd_host,
-                    "sudo pvdisplay -c /dev/{0}".format(osd_data["devices"]),  # type:ignore
+                    "sudo pvdisplay -c /dev/{0}".format(osd_data["devices"]),
                 )
 
                 if result.failed:
@@ -138,7 +138,7 @@ class MigrateOSDsHandler(ModuleHandler):
             while True:
                 osd_status = self.ceph.mon_command("osd info", id=osd_id)
 
-                if osd_status["up"] == 0:  # type: ignore
+                if osd_status["up"] == 0:
                     break
 
                 sleep(2)
@@ -182,7 +182,7 @@ class MigrateOSDsHandler(ModuleHandler):
             while True:
                 osd_status = self.ceph.mon_command("osd info", id=osd_id)
 
-                if osd_status["up"] != 0:  # type: ignore
+                if osd_status["up"] != 0:
                     break
 
                 sleep(2)

@@ -2,9 +2,15 @@ import unittest
 from unittest.mock import Mock
 
 from rookify.modules.exception import ModuleException
-from kubernetes.client import V1Namespace, V1ObjectMeta, V1NamespaceList
-from typing import Any, Dict, List
+from typing import Any
 from ..mock_k8s_prerequisite_check import MockK8sPrerequisitesCheckHandler
+
+from kubernetes.client import (
+    V1DeploymentList,
+    V1Namespace,
+    V1ObjectMeta,
+    V1NamespaceList,
+)
 
 
 # Note: currently this test works with pytest but not with unittest, which is not able to import needed classes
@@ -13,24 +19,21 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
         self.config = {"rook": {"cluster": {"namespace": "test-namespace"}}}
         self.empty_deployment_list = False
 
-    def _request_callback(
-        self, method: str, *args: List[Any], **kwargs: Dict[Any, Any]
-    ) -> Any:
+    def _request_callback(self, method: str, *args: Any, **kwargs: Any) -> Any:
         if method == "apps_v1_api.list_deployment_for_all_namespaces":
             if self.empty_deployment_list is True:
-                return V1DeploymentList([])
-            return V1DeploymentList(["apple", "banana", "cherry"])
-        if method == "core_v1_api.list_namespace":
-            return self._mock_v1namespacelist()
+                return V1DeploymentList(items=[])
 
-    def _mock_v1namespacelist(self) -> Any:
-        # Create a list of Kubernetes V1Namespace objects
-        namespaces = [
-            V1Namespace(metadata=V1ObjectMeta(name="default")),
-            V1Namespace(metadata=V1ObjectMeta(name="kube-system")),
-            V1Namespace(metadata=V1ObjectMeta(name="test-namespace")),
-        ]
-        return V1NamespaceList(items=namespaces)
+            return V1DeploymentList(items=["apple", "banana", "cherry"])
+        elif method == "core_v1_api.list_namespace":
+            # Create a list of Kubernetes V1Namespace objects
+            namespaces = [
+                V1Namespace(metadata=V1ObjectMeta(name="default")),
+                V1Namespace(metadata=V1ObjectMeta(name="kube-system")),
+                V1Namespace(metadata=V1ObjectMeta(name="test-namespace")),
+            ]
+
+            return V1NamespaceList(items=namespaces)
 
     def test_namespaces(self) -> None:
         # Instantiate K8sPrerequisitesCheckHandler with the mock ModuleHandler
@@ -64,9 +67,3 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
         # Call the preflight method to run the test
         with self.assertRaises(ModuleException):
             handler_instance.preflight()
-
-
-# Create a Mock respons for the V1DeploymentList object
-class V1DeploymentList:
-    def __init__(self, items: List[str]) -> None:
-        self.items = items

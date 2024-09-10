@@ -106,11 +106,11 @@ class CreateRookResourcesHandler(ModuleHandler):
             mon="allow *",
             mgr="allow *",
             mds="allow *",
-        )  # type: ignore
+        )
 
         mon_auth: Dict[str, Any] = self.ceph.mon_command(
             "auth get-or-create-key", entity="mon.", mon="allow *"
-        )  # type: ignore
+        )
 
         metadata = kubernetes.client.V1ObjectMeta(name="rook-ceph-mon")
 

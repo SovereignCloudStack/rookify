@@ -21,7 +21,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
         service_data = self.ceph.mon_command("service dump")
 
-        rgw_daemons = service_data["services"].get("rgw", {}).get("daemons", {})  # type: ignore
+        rgw_daemons = service_data["services"].get("rgw", {}).get("daemons", {})
 
         for rgw_daemon in rgw_daemons.values():
             if not isinstance(rgw_daemon, dict):
