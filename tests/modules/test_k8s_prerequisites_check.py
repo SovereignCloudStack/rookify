@@ -19,8 +19,8 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
     ) -> Any:
         if method == "apps_v1_api.list_deployment_for_all_namespaces":
             if self.empty_response is True:
-                return MockResponse([])
-            return MockResponse(["apple", "banana", "cherry"])
+                return V1DeploymentList([])
+            return V1DeploymentList(["apple", "banana", "cherry"])
         if method == "core_v1_api.list_namespace":
             return self._mock_list_namespace()
 
@@ -79,7 +79,7 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
             handler_instance.preflight()
 
 
-# Create a Mock respons object
-class MockResponse:
+# Create a Mock respons for the V1DeploymentList object
+class V1DeploymentList:
     def __init__(self, items: List[str]) -> None:
         self.items = items
