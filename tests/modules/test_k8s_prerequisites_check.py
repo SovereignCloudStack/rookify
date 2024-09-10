@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock
 
 from rookify.modules.exception import ModuleException
+from kubernetes.client import V1Namespace, V1ObjectMeta, V1NamespaceList
 from typing import Any, Dict, List
 from ..mock_k8s_prerequisite_check import MockK8sPrerequisitesCheckHandler
 
@@ -22,28 +23,16 @@ class TestK8sPrerequisitesCheckHandler(unittest.TestCase):
                 return V1DeploymentList([])
             return V1DeploymentList(["apple", "banana", "cherry"])
         if method == "core_v1_api.list_namespace":
-            return self._mock_list_namespace()
+            return self._mock_v1namespacelist()
 
-    def _mock_list_namespace(self) -> Any:
-        class Metadata:
-            def __init__(self, name: str):
-                self.name = name
-
-        class Namespace:
-            def __init__(self, name: str):
-                self.metadata = Metadata(name)
-
-        class NamespaceList:
-            def __init__(self, items: List[Namespace]):
-                self.items = items
-
-        return NamespaceList(
-            [
-                Namespace("default"),
-                Namespace("kube-system"),
-                Namespace("test-namespace"),
-            ]
-        )
+    def _mock_v1namespacelist(self) -> Any:
+        # Create a list of Kubernetes V1Namespace objects
+        namespaces = [
+            V1Namespace(metadata=V1ObjectMeta(name="default")),
+            V1Namespace(metadata=V1ObjectMeta(name="kube-system")),
+            V1Namespace(metadata=V1ObjectMeta(name="test-namespace")),
+        ]
+        return V1NamespaceList(items=namespaces)
 
     def test_namespaces(self) -> None:
         # Instantiate K8sPrerequisitesCheckHandler with the mock ModuleHandler
