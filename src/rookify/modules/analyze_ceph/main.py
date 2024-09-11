@@ -6,6 +6,10 @@ from ..module import ModuleHandler
 
 
 class AnalyzeCephHandler(ModuleHandler):
+    def status(self) -> Any:
+        # state = self.machine.get_preflight_state("AnalyzeCephHandler")
+        self.logger.info("AnalyzeCephHander has allready been run")
+
     def preflight(self) -> Any:
         commands = ["mon dump", "osd dump", "device ls", "fs ls", "node ls"]
 

@@ -4,15 +4,16 @@ import json
 from pickle import Unpickler
 import sys
 import argparse
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from typing import Any, Dict, Optional
 from .modules import load_modules
 from .modules.machine import Machine
 from .logger import configure_logging, get_logger
 from .yaml import load_config
+from structlog.typing import BindableLogger
 
 
-def parse_args(args: list[str]) -> Namespace:
+def parse_args(args: list[str]) -> argparse.Namespace:
     # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
     arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
@@ -22,7 +23,7 @@ def parse_args(args: list[str]) -> Namespace:
         def __call__(
             self,
             parser: ArgumentParser,
-            namespace: Namespace,
+            namespace: argparse.Namespace,
             values: Optional[Any],
             option_string: Optional[str] = None,
         ) -> None:
@@ -33,7 +34,7 @@ def parse_args(args: list[str]) -> Namespace:
         def __call__(
             self,
             parser: ArgumentParser,
-            namespace: Namespace,
+            namespace: argparse.Namespace,
             values: Optional[Any],
             option_string: Optional[str] = None,
         ) -> None:
@@ -77,6 +78,26 @@ def sort_pickle_file(unsorted_states_data: Dict[str, Any]) -> Dict[str, Any]:
     return sorted_data_by_keys
 
 
+def read_pickle_file(
+    args: argparse.Namespace, pickle_file_name: str, log: BindableLogger
+) -> None:
+    states_data = load_pickler(pickle_file_name)
+    sorted_states_data = sort_pickle_file(states_data)
+
+    # Check if a specific section should be listed
+    if args.read_pickle != "all":
+        if args.read_pickle not in sorted_states_data.keys():
+            log.error(f"The section {args.read_pickle} does not exist")
+        else:
+            sorted_states_data = sorted_states_data[args.read_pickle]
+
+    log.info(
+        'Current state as retrieved from pickle-file: \n "{0}": {1}'.format(
+            args.read_pickle, json.dumps(sorted_states_data, indent=4)
+        )
+    )
+
+
 def main() -> None:
     args = parse_args(sys.argv[1:])
 
@@ -108,26 +129,35 @@ def main() -> None:
     else:
         log.info(f"Pickle file set: {pickle_file_name}")
 
-    # If read_pickle is not None and pickle_file_name is not None, show the current progress of the migration
-    if args.read_pickle is not None:
-        if pickle_file_name is None:
-            return
-        states_data = load_pickler(pickle_file_name)
-        sorted_states_data = sort_pickle_file(states_data)
-
-        # Check if a specific section should be listed
-        if args.read_pickle != "all":
-            if args.read_pickle not in sorted_states_data.keys():
-                get_logger().error(f"The section {args.read_pickle} does not exist")
-                return
-            else:
-                sorted_states_data = sorted_states_data[args.read_pickle]
-
-        get_logger().info(
-            'Current state as retrieved from pickle-file: \n "{0}": {1}'.format(
-                args.read_pickle, json.dumps(sorted_states_data, indent=4)
-            )
+    # If read_pickle is run and there is a picklefile, show the picklefiles contents.
+    # NOTE: preflight mode (--dry-run) has no effect here, because no module actions are required.
+    if args.read_pickle is not None and pickle_file_name is not None:
+        read_pickle_file(args, pickle_file_name, log)
+        return
+    elif args.read_pickle is not None and pickle_file_name is None:
+        log.info(
+            "No pickle file configured to read from. Check if the pickle file exists and is configured in config.yaml"
         )
+        return
+
+    # If show_progress is run and there is a picklefile, show progress status based on picklefile contents
+    # NOTE: this is always run in preflight-mode (migration shoudl not be executed)
+    if args.show_progress is not None and pickle_file_name is not None:
+        # Check if a specific mode should be targeted
+        if args.show_progress != "all":
+            print("TEST")
+            print(args.show_progress)
+
+        # TODO: implement module and method loading to let module check state itself
+        return
+
+    # TODO: should progress be checkable if no pickle file is present? Should rookify check the status by analyzing the source and traget machines state?
+    elif args.show_progress is not None and pickle_file_name is None:
+        log.info(
+            "Currently rookify can only check the state of progress by analyzing the pickle file states."
+        )
+        return
+
     # Else run the rook migration
     else:
         log.debug("Executing Rookify")

@@ -11,6 +11,13 @@ from argparse import Namespace
 from rookify.__main__ import parse_args, main, sort_pickle_file
 import rookify.yaml
 
+#
+# These tests test the src/rookify/__main__.py
+#
+# Run all tests: .venv/bin/python -m pytest tests/
+# Run one test with output: .venv/bin/python -m pytest tests/ -k name_of_test -s
+#
+
 
 # Test the arugment parser
 def test_parse_args_dry_run() -> None:
@@ -34,6 +41,14 @@ def test_parse_args_both_flags() -> None:
 def test_parse_args_show_progress() -> None:
     args = parse_args(["--show-progress"])
     expected = Namespace(dry_run_mode=False, read_pickle=None, show_progress="all")
+    assert args == expected
+
+
+def test_parse_args_show_progress_with_module() -> None:
+    args = parse_args(["--show-progress", "ceph-analyze"])
+    expected = Namespace(
+        dry_run_mode=False, read_pickle=None, show_progress="ceph-analyze"
+    )
     assert args == expected
 
 
@@ -209,3 +224,21 @@ def getUnsortedData() -> Any:
     }
 
     return unsorted_states_data
+
+
+def test_ceph_analyze_progress(
+    mock_load_config: Callable[[Optional[Any]], MagicMock],
+    mock_load_pickler: MonkeyPatch,
+    monkeypatch: MonkeyPatch,
+    log: pytest_structlog.StructuredLogCapture,
+) -> None:
+    # Load example config with mock.pickle as pickle file
+    mock_load_config("mock.pickle")
+
+    # Mock sys.argv to simulate command-line arguments
+    monkeypatch.setattr(
+        sys, "argv", ["main_script.py", "--dry-run", "--show-progress", "analyze_ceph"]
+    )
+
+    # Run main()
+    main()
