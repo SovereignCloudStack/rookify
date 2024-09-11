@@ -11,12 +11,20 @@ from .modules.machine import Machine
 from .logger import configure_logging, get_logger
 from .yaml import load_config
 from structlog.typing import BindableLogger
+from pathlib import Path
 
 
 def parse_args(args: list[str]) -> argparse.Namespace:
     # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
+
+    # --dry-run option
     arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
+
+    # --list-modules option
+    arg_parser.add_argument(
+        "--list-modules", action="store_true", help="List all modules"
+    )
 
     # Custom ReadAction to set 'all' if nothing is specified for --read-pickle
     class ReadAction(argparse.Action):
@@ -69,6 +77,16 @@ def load_pickler(pickle_file_name: str) -> Any:
         return states_data
 
 
+def get_all_modules() -> list[str]:
+    base_path = Path(__file__).resolve().parent
+    module_path = Path(base_path) / "modules"
+    module_names = []
+    for item in module_path.iterdir():
+        if item.is_dir() and item.name != "__pycache__":
+            module_names.append(item.name)
+    return module_names
+
+
 def sort_pickle_file(unsorted_states_data: Dict[str, Any]) -> Dict[str, Any]:
     # sort the pickle-file alfabetically
     iterable_dict = iter(unsorted_states_data)
@@ -98,8 +116,33 @@ def read_pickle_file(
     )
 
 
+def show_progress_from_pickle_file(
+    args: argparse.Namespace, pickle_file_name: str, log: BindableLogger
+) -> None:
+    # states_data = load_pickler(pickle_file_name)
+    modules = get_all_modules()
+
+    # Check if a specific module should be targeted
+    # TODO: allow for multiple modules
+    if args.show_progress != "all":
+        module = args.show_progress
+        if args.show_progress not in modules:
+            log.error(f"The module {module} does not exist")
+    log.info(
+        'Progress of : \n "{0}": {1}'.format(args.show_progress, "some....progess....")
+    )
+
+
 def main() -> None:
     args = parse_args(sys.argv[1:])
+
+    # Handle --list-modules
+    if args.list_modules:
+        modules = get_all_modules()
+        print("Available modules:\n")
+        for module in modules:
+            print(f"- {module}")
+        return
 
     # Load configuration file
     try:
@@ -143,12 +186,7 @@ def main() -> None:
     # If show_progress is run and there is a picklefile, show progress status based on picklefile contents
     # NOTE: this is always run in preflight-mode (migration shoudl not be executed)
     if args.show_progress is not None and pickle_file_name is not None:
-        # Check if a specific mode should be targeted
-        if args.show_progress != "all":
-            print("TEST")
-            print(args.show_progress)
-
-        # TODO: implement module and method loading to let module check state itself
+        show_progress_from_pickle_file(args, pickle_file_name, log)
         return
 
     # TODO: should progress be checkable if no pickle file is present? Should rookify check the status by analyzing the source and traget machines state?
