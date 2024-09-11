@@ -1,12 +1,12 @@
 import sys
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, List, Tuple
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 import yaml
 from unittest.mock import MagicMock
 import pytest_structlog
 
-from argparse import Namespace
+import argparse
 
 from rookify.__main__ import parse_args, main, sort_pickle_file
 import rookify.yaml
@@ -20,75 +20,32 @@ import rookify.yaml
 
 
 # Test the arugment parser
-def test_parse_args_dry_run() -> None:
-    args = parse_args(["--dry-run"])
-    expected = Namespace(
-        dry_run_mode=True, list_modules=False, read_pickle=None, show_progress=None
-    )
-    assert args == expected
+
+TestCase = Tuple[List[str], argparse.Namespace]
+
+# fmt: off
+test_cases: List[TestCase] = [
+    (["--dry-run"], argparse.Namespace(dry_run_mode=True, list_modules=False, read_pickle=None, show_progress=None)),
+    (["--read-pickle"], argparse.Namespace(dry_run_mode=False, list_modules=False, read_pickle="all", show_progress=None)),
+    (["--show-progress"], argparse.Namespace(dry_run_mode=False, list_modules=False, read_pickle=None, show_progress="all")),
+    (["--show-progress", "ceph-analyze"], argparse.Namespace(dry_run_mode=False, list_modules=False, read_pickle=None, show_progress="ceph-analyze")),
+    (["--dry-run", "--read-pickle"], argparse.Namespace(dry_run_mode=True, list_modules=False, read_pickle="all", show_progress=None)),
+    (["--dry-run", "--show-progress"], argparse.Namespace(dry_run_mode=True, list_modules=False, read_pickle=None, show_progress="all")),
+    (["--dry-run", "--show-progress", "--read-pickle"], argparse.Namespace(dry_run_mode=True, list_modules=False, read_pickle="all", show_progress="all")),
+    ([], argparse.Namespace(dry_run_mode=False, list_modules=False, read_pickle=None, show_progress=None)),
+]
+# fmt: on
 
 
-def test_parse_args_read_pickle() -> None:
-    args = parse_args(["--read-pickle"])
-    expected = Namespace(
-        dry_run_mode=False, list_modules=False, read_pickle="all", show_progress=None
-    )
-    assert args == expected
-
-
-def test_parse_args_both_flags() -> None:
-    args = parse_args(["--dry-run", "--read-pickle"])
-    expected = Namespace(
-        dry_run_mode=True, list_modules=False, read_pickle="all", show_progress=None
-    )
-    assert args == expected
-
-
-def test_parse_args_show_progress() -> None:
-    args = parse_args(["--show-progress"])
-    expected = Namespace(
-        dry_run_mode=False, list_modules=False, read_pickle=None, show_progress="all"
-    )
-    assert args == expected
-
-
-def test_parse_args_show_progress_with_module() -> None:
-    args = parse_args(["--show-progress", "ceph-analyze"])
-    expected = Namespace(
-        dry_run_mode=False,
-        list_modules=False,
-        read_pickle=None,
-        show_progress="ceph-analyze",
-    )
-    assert args == expected
-
-
-# check: should it be possible to add all arguments?
-def test_parse_args_both_dry_run_show_progress() -> None:
-    args = parse_args(["--dry-run", "--read-pickle", "--show-progress"])
-    expected = Namespace(
-        dry_run_mode=True, list_modules=False, read_pickle="all", show_progress="all"
-    )
-    assert args == expected
-
-
-def test_parse_args_all_dry_run_show_progress_read_pickle() -> None:
-    args = parse_args(["--dry-run", "--show-progress"])
-    expected = Namespace(
-        dry_run_mode=True, list_modules=False, read_pickle=None, show_progress="all"
-    )
-    assert args == expected
-
-
-def test_parse_args_no_flags() -> None:
-    args = parse_args([])
-    expected = Namespace(
-        dry_run_mode=False, list_modules=False, read_pickle=None, show_progress=None
-    )
-    assert args == expected
-
-
-# Test the --read-pickle and --show-progress options
+@pytest.mark.parametrize(
+    "args_list, expected_namespace",
+    test_cases,
+)  # type: ignore
+def test_parse_args(
+    args_list: List[str], expected_namespace: argparse.Namespace
+) -> None:
+    args = parse_args(args_list)
+    assert args == expected_namespace
 
 
 @pytest.fixture  # type: ignore
