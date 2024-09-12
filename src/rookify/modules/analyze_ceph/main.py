@@ -55,7 +55,9 @@ class AnalyzeCephHandler(ModuleHandler):
             self.logger.info("AnalyzeCephHandler has already been run.")
             self.logger.info("Current state data: %s", state.data)
         else:
-            self.logger.info("Progress: Not all commands have been run yet.")
+            self.logger.info(
+                "AnalyzeCephHandler Progress: Not all commands have been run yet."
+            )
 
     @staticmethod
     def register_preflight_state(

@@ -210,7 +210,7 @@ logger_test_cases: List[TestCaseLogger] = [
     (["--dry-run", "--show-progress", "analyze_ceph"], "Show progress of the analyze_ceph module", "info"),
     (["--show-progress"], "Show progress of all modules", "info"),
     (["--dry-run", "--show-progress"], "Show progress of all modules", "info"),
-    (["--show-progress"], "Analyze ceph has been run", "info")
+    (["--show-progress"], "AnalyzeCephHandler Progress: Not all commands have been run yet.", "info")
 ]
 # fmt: on
 

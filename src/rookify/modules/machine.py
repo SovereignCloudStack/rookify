@@ -26,7 +26,9 @@ class Machine(_Machine):  # type: ignore
     def add_preflight_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
         self._preflight_states.append(self.__class__.state_cls(name, **kwargs))
 
-    def execute(self, dry_run_mode: bool = False) -> None:
+    def execute(
+        self, dry_run_mode: bool = False, show_progress: Optional[bool] = False
+    ) -> None:
         states = self._preflight_states
         if not dry_run_mode:
             states = states + self._execution_states

@@ -116,9 +116,9 @@ def read_pickle_file(
     )
 
 
-def show_progress_from_pickle_file(
+def show_progress_from_state(
     args: argparse.Namespace, pickle_file_name: str, log: BindableLogger
-) -> None:
+) -> bool:
     # states_data = load_pickler(pickle_file_name)
     modules = get_all_modules()
 
@@ -127,9 +127,12 @@ def show_progress_from_pickle_file(
         module = args.show_progress
         if args.show_progress not in modules:
             log.error(f"The module {module} does not exist")
+            return False
         log.info("Show progress of the {0} module".format(args.show_progress))
+        return True
     else:
         log.info("Show progress of {0} modules".format(args.show_progress))
+        return True
 
 
 def main() -> None:
@@ -182,24 +185,18 @@ def main() -> None:
         )
         return
 
-    # If show_progress is run and there is a picklefile, show progress status based on picklefile contents
-    # NOTE: this is always run in preflight-mode (migration shoudl not be executed)
-    if args.show_progress is not None and pickle_file_name is not None:
-        show_progress_from_pickle_file(args, pickle_file_name, log)
-        return
-
-    # TODO: should progress be checkable if no pickle file is present? Should rookify check the status by analyzing the source and traget machines state?
-    elif args.show_progress is not None and pickle_file_name is None:
-        log.info(
-            "Currently rookify can only check the state of progress by analyzing the pickle file states."
-        )
-        return
-
-    # Else run the rook migration
     else:
-        log.debug("Executing Rookify")
-
         machine = Machine(config["general"].get("machine_pickle_file"))
-        load_modules(machine, config)
 
-        machine.execute(dry_run_mode=args.dry_run_mode)
+        if args.show_progress is not None:
+            if show_progress_from_state(args, pickle_file_name, log) is True:
+                load_modules(machine, config, show_progress=True)
+                # NOTE: this is always run in preflight-mode (migration should not be executed)
+                machine.execute(dry_run_mode=True)
+                return
+            else:
+                return
+        else:
+            load_modules(machine, config)
+            log.debug("Executing Rookify")
+            machine.execute(dry_run_mode=args.dry_run_mode)

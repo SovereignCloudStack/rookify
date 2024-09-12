@@ -60,6 +60,13 @@ class ModuleHandler:
         return self.__ssh
 
     @abc.abstractmethod
+    def status(self) -> None:
+        """
+        Run the modules status check
+        """
+        pass
+
+    @abc.abstractmethod
     def preflight(self) -> None:
         """
         Run the modules preflight check
@@ -87,7 +94,12 @@ class ModuleHandler:
         return template
 
     @classmethod
-    def register_states(cls, machine: Machine, config: Dict[str, Any]) -> None:
+    def register_states(
+        cls,
+        machine: Machine,
+        config: Dict[str, Any],
+        show_progress: Optional[bool] = False,
+    ) -> None:
         """
         Register states for transitions
         """
@@ -116,7 +128,10 @@ class ModuleHandler:
             )
         else:
             if preflight_state_name is not None:
-                cls.register_preflight_state(machine, preflight_state_name, handler)
+                if show_progress is True:
+                    cls.register_status_state(machine, preflight_state_name, handler)
+                else:
+                    cls.register_preflight_state(machine, preflight_state_name, handler)
 
             if execution_state_name is not None:
                 cls.register_execution_state(machine, execution_state_name, handler)
@@ -130,6 +145,16 @@ class ModuleHandler:
         """
 
         machine.add_preflight_state(state_name, on_enter=handler.preflight, **kwargs)
+
+    @staticmethod
+    def register_status_state(
+        machine: Machine, state_name: str, handler: Any, **kwargs: Any
+    ) -> None:
+        """
+        Register state for transitions
+        """
+
+        machine.add_preflight_state(state_name, on_enter=handler.status, **kwargs)
 
     @staticmethod
     def register_execution_state(

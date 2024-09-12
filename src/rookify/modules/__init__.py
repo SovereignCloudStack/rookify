@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from ..logger import get_logger
 from .machine import Machine
 
@@ -22,7 +22,12 @@ class ModuleLoadException(Exception):
         self.message = message
 
 
-def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> None:
+def _load_module(
+    machine: Machine,
+    config: Dict[str, Any],
+    module_name: str,
+    show_progress: Optional[bool] = False,
+) -> None:
     """
     Dynamically loads a module from the 'rookify.modules' package.
 
@@ -43,12 +48,14 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
         additional_modules = module.ModuleHandler.REQUIRES
 
     for module_name in additional_modules:
-        _load_module(machine, config, module_name)
+        _load_module(machine, config, module_name, show_progress)
 
-    module.ModuleHandler.register_states(machine, config)
+    module.ModuleHandler.register_states(machine, config, show_progress)
 
 
-def load_modules(machine: Machine, config: Dict[str, Any]) -> None:
+def load_modules(
+    machine: Machine, config: Dict[str, Any], show_progress: Optional[bool] = False
+) -> None:
     """
     Dynamically loads modules from the 'modules' package.
 
@@ -61,7 +68,7 @@ def load_modules(machine: Machine, config: Dict[str, Any]) -> None:
     for entry in importlib.resources.files("rookify.modules").iterdir():
         if entry.is_dir() and entry.name in config["migration_modules"]:
             migration_modules.remove(entry.name)
-            _load_module(machine, config, entry.name)
+            _load_module(machine, config, entry.name, show_progress)
 
     if len(migration_modules) > 0 or len(config["migration_modules"]) < 1:
         logger = get_logger()
