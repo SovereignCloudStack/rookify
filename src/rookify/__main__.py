@@ -123,14 +123,13 @@ def show_progress_from_pickle_file(
     modules = get_all_modules()
 
     # Check if a specific module should be targeted
-    # TODO: allow for multiple modules
     if args.show_progress != "all":
         module = args.show_progress
         if args.show_progress not in modules:
             log.error(f"The module {module} does not exist")
-    log.info(
-        'Progress of : \n "{0}": {1}'.format(args.show_progress, "some....progess....")
-    )
+        log.info("Show progress of the {0} module".format(args.show_progress))
+    else:
+        log.info("Show progress of {0} modules".format(args.show_progress))
 
 
 def main() -> None:

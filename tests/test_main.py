@@ -21,6 +21,7 @@ import rookify.yaml
 
 # Test the arugment parser
 
+# Custom type for argument parser tests
 TestCase = Tuple[List[str], argparse.Namespace]
 
 # fmt: off
@@ -200,19 +201,40 @@ def getUnsortedData() -> Any:
     return unsorted_states_data
 
 
-def test_ceph_analyze_progress(
+# Custom Type for Logger of CLI
+TestCaseLogger = Tuple[List[str], str, str]
+
+# fmt: off
+logger_test_cases: List[TestCaseLogger] = [
+    (["--show-progress", "analyze_ceph"], "Show progress of the analyze_ceph module", "info"),
+    (["--dry-run", "--show-progress", "analyze_ceph"], "Show progress of the analyze_ceph module", "info"),
+    (["--show-progress"], "Show progress of all modules", "info"),
+    (["--dry-run", "--show-progress"], "Show progress of all modules", "info")
+]
+# fmt: on
+
+
+@pytest.mark.parametrize(
+    "args_list, expected_log_message, expected_level",
+    logger_test_cases,
+)  # type: ignore
+def test_show_progress(
     mock_load_config: Callable[[Optional[Any]], MagicMock],
-    mock_load_pickler: MonkeyPatch,
     monkeypatch: MonkeyPatch,
     log: pytest_structlog.StructuredLogCapture,
+    args_list: List[str],
+    expected_log_message: str,
+    expected_level: str,
 ) -> None:
     # Load example config with mock.pickle as pickle file
     mock_load_config("mock.pickle")
 
     # Mock sys.argv to simulate command-line arguments
-    monkeypatch.setattr(
-        sys, "argv", ["main_script.py", "--dry-run", "--show-progress", "analyze_ceph"]
-    )
+    args_list.insert(0, "main_script.py")
+    monkeypatch.setattr(sys, "argv", args_list)
 
     # Run main()
     main()
+
+    # Assertions
+    assert log.has(expected_log_message, level=expected_level)
