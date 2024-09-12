@@ -209,7 +209,8 @@ logger_test_cases: List[TestCaseLogger] = [
     (["--show-progress", "analyze_ceph"], "Show progress of the analyze_ceph module", "info"),
     (["--dry-run", "--show-progress", "analyze_ceph"], "Show progress of the analyze_ceph module", "info"),
     (["--show-progress"], "Show progress of all modules", "info"),
-    (["--dry-run", "--show-progress"], "Show progress of all modules", "info")
+    (["--dry-run", "--show-progress"], "Show progress of all modules", "info"),
+    (["--show-progress"], "Analyze ceph has been run", "info")
 ]
 # fmt: on
 
@@ -218,7 +219,7 @@ logger_test_cases: List[TestCaseLogger] = [
     "args_list, expected_log_message, expected_level",
     logger_test_cases,
 )  # type: ignore
-def test_show_progress(
+def test_show_progress_logs(
     mock_load_config: Callable[[Optional[Any]], MagicMock],
     monkeypatch: MonkeyPatch,
     log: pytest_structlog.StructuredLogCapture,
