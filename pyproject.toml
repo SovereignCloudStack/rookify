@@ -26,4 +26,4 @@ classifiers = [
 Homepage = "https://scs.community"
 
 [tool.pytest.ini_options]
-pythonpath = [ "src" ]
+pythonpath = [ "src", "mock_src" ]

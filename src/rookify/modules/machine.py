@@ -20,10 +20,10 @@ class Machine(_Machine):  # type: ignore
 
         _Machine.__init__(self, states=["uninitialized"], initial="uninitialized")
 
-    def add_execution_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
+    def add_execution_state(self, name: str, **kwargs: Any) -> None:
         self._execution_states.append(self.__class__.state_cls(name, **kwargs))
 
-    def add_preflight_state(self, name: str, **kwargs: Dict[str, Any]) -> None:
+    def add_preflight_state(self, name: str, **kwargs: Any) -> None:
         self._preflight_states.append(self.__class__.state_cls(name, **kwargs))
 
     def execute(

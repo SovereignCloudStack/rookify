@@ -75,10 +75,7 @@ build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.
 
 .PHONY: run-local-rookify
 run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
-	if [ ! -f ./.venv/bin/rookify ]; then \
-		${MAKE} build-local-rookify; \
-	fi; \
-	.venv/bin/rookify
+	source ./.venv/bin/activate && pip install -e . && rookify
 
 .PHONY: run-rookify
 run-rookify: ## Runs rookify in the container

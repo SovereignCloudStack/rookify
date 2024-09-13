@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import abc
 import structlog
 from typing import Any, Dict, Optional
 from ..logger import get_logger
@@ -12,7 +11,7 @@ from .ssh import SSH
 from .template import Template
 
 
-class ModuleHandler:
+class ModuleHandler(object):
     """
     ModuleHandler is an abstract class that modules have to extend.
     """
@@ -28,16 +27,16 @@ class ModuleHandler:
         self._config = config
         self._machine = machine
 
-        self.__ceph: Optional[Ceph] = None
-        self.__k8s: Optional[K8s] = None
-        self.__ssh: Optional[SSH] = None
-        self.__logger = get_logger()
+        self._ceph: Optional[Ceph] = None
+        self._k8s: Optional[K8s] = None
+        self._ssh: Optional[SSH] = None
+        self._logger = get_logger()
 
     @property
     def ceph(self) -> Ceph:
-        if self.__ceph is None:
-            self.__ceph = Ceph(self._config["ceph"])
-        return self.__ceph
+        if self._ceph is None:
+            self._ceph = Ceph(self._config["ceph"])
+        return self._ceph
 
     @property
     def machine(self) -> Machine:
@@ -45,35 +44,26 @@ class ModuleHandler:
 
     @property
     def k8s(self) -> K8s:
-        if self.__k8s is None:
-            self.__k8s = K8s(self._config)
-        return self.__k8s
+        if self._k8s is None:
+            self._k8s = K8s(self._config)
+        return self._k8s
 
     @property
     def logger(self) -> structlog.getLogger:
-        return self.__logger
+        return self._logger
 
     @property
     def ssh(self) -> SSH:
-        if self.__ssh is None:
-            self.__ssh = SSH(self._config["ssh"])
-        return self.__ssh
+        if self._ssh is None:
+            self._ssh = SSH(self._config["ssh"])
+        return self._ssh
 
-    @abc.abstractmethod
-    def status(self) -> None:
-        """
-        Run the modules status check
-        """
-        pass
-
-    @abc.abstractmethod
     def preflight(self) -> None:
         """
         Run the modules preflight check
         """
         pass
 
-    @abc.abstractmethod
     def execute(self) -> None:
         """
         Executes the modules tasks
