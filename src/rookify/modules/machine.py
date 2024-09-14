@@ -26,22 +26,14 @@ class Machine(_Machine):  # type: ignore
     def add_preflight_state(self, name: str, **kwargs: Any) -> None:
         self._preflight_states.append(self.__class__.state_cls(name, **kwargs))
 
-    def execute(
-        self, dry_run_mode: bool = False, show_progress: Optional[bool] = False
-    ) -> None:
+    def execute(self, dry_run_mode: bool = False) -> None:
         states = self._preflight_states
         if not dry_run_mode:
             states = states + self._execution_states
 
+        self._register_states(states)
+
         logger = get_logger()
-
-        for state in states:
-            if state.name not in self.states:
-                logger.debug("Registering state '{0}'".format(state.name))
-                self.add_state(state)
-
-        self.add_state("migrated")
-        self.add_ordered_transitions(loop=False)
 
         if self._machine_pickle_file is None:
             logger.info("Execution started without machine pickle file")
@@ -54,12 +46,8 @@ class Machine(_Machine):  # type: ignore
     def _execute(self, pickle_file: Optional[IO[Any]] = None) -> None:
         states_data = {}
 
-        # Read pickle file if it exists, to continue from the stored state
-        if pickle_file is not None and pickle_file.tell() > 0:
-            pickle_file.seek(0)
-
-            states_data = Unpickler(pickle_file).load()
-            self._restore_state_data(states_data)
+        if pickle_file is not None:
+            self._restore_state_data(pickle_file)
 
         try:
             while True:
@@ -110,7 +98,39 @@ class Machine(_Machine):  # type: ignore
     ) -> Any:
         return getattr(self.get_preflight_state(name), tag, default_value)
 
-    def _restore_state_data(self, data: Dict[str, Any]) -> None:
+    def register_states(self) -> None:
+        self._register_states(self._preflight_states + self._execution_states)
+
+        if self._machine_pickle_file is not None:
+            with open(self._machine_pickle_file, "rb") as file:
+                file.seek(1)
+                self._restore_state_data(file)
+
+    def _register_states(self, states: List[State]) -> None:
+        logger = get_logger()
+
+        for state in states:
+            if state.name not in self.states:
+                logger.debug("Registering state '{0}'".format(state.name))
+                self.add_state(state)
+
+        self.add_state("migrated")
+        self.add_ordered_transitions(loop=False)
+
+    """
+Read pickle file if it exists, to continue from the stored state. It is
+required that the position of the pointer of the pickle file given is not
+at the start.
+    """
+
+    def _restore_state_data(self, pickle_file: IO[Any]) -> None:
+        if pickle_file.tell() == 0:
+            return None
+
+        pickle_file.seek(0)
+
+        data = Unpickler(pickle_file).load()
+
         for state_name in data:
             try:
                 state = self.get_state(state_name)

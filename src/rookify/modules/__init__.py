@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List
 from ..logger import get_logger
 from .machine import Machine
 
@@ -22,11 +22,18 @@ class ModuleLoadException(Exception):
         self.message = message
 
 
+_modules_loaded: List[Any] = []
+
+
+def get_modules() -> List[Any]:
+    global _modules_loaded
+    return _modules_loaded.copy()
+
+
 def _load_module(
     machine: Machine,
     config: Dict[str, Any],
     module_name: str,
-    show_progress: Optional[bool] = False,
 ) -> None:
     """
     Dynamically loads a module from the 'rookify.modules' package.
@@ -35,8 +42,10 @@ def _load_module(
     :return: returns tuple of preflight_modules, modules
     """
 
+    global _modules_loaded
+
     module = importlib.import_module("rookify.modules.{0}".format(module_name))
-    additional_modules = []
+    additional_module_names = []
 
     if not hasattr(module, "ModuleHandler") or not callable(
         getattr(module.ModuleHandler, "register_states")
@@ -45,17 +54,17 @@ def _load_module(
 
     if hasattr(module.ModuleHandler, "REQUIRES"):
         assert isinstance(module.ModuleHandler.REQUIRES, list)
-        additional_modules = module.ModuleHandler.REQUIRES
+        additional_module_names = module.ModuleHandler.REQUIRES
 
-    for module_name in additional_modules:
-        _load_module(machine, config, module_name, show_progress)
+    for additional_module_name in additional_module_names:
+        _load_module(machine, config, additional_module_name)
 
-    module.ModuleHandler.register_states(machine, config, show_progress)
+    if module not in _modules_loaded:
+        _modules_loaded.append(module)
+    module.ModuleHandler.register_states(machine, config)
 
 
-def load_modules(
-    machine: Machine, config: Dict[str, Any], show_progress: Optional[bool] = False
-) -> None:
+def load_modules(machine: Machine, config: Dict[str, Any]) -> None:
     """
     Dynamically loads modules from the 'modules' package.
 
@@ -68,7 +77,7 @@ def load_modules(
     for entry in importlib.resources.files("rookify.modules").iterdir():
         if entry.is_dir() and entry.name in config["migration_modules"]:
             migration_modules.remove(entry.name)
-            _load_module(machine, config, entry.name, show_progress)
+            _load_module(machine, config, entry.name)
 
     if len(migration_modules) > 0 or len(config["migration_modules"]) < 1:
         logger = get_logger()
