@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from collections import OrderedDict
+from typing import Any, Dict, Optional
 from ..machine import Machine
 from ..module import ModuleHandler
 
@@ -39,25 +40,33 @@ class AnalyzeCephHandler(ModuleHandler):
 
         self.logger.info("AnalyzeCephHandler ran successfully.")
 
-    def status(self) -> Any:
-        commands = ["mon dump", "osd dump", "device ls", "fs ls", "node ls"]
+    def get_readable_key_value_state(self) -> Dict[str, str]:
         state = self.machine.get_preflight_state("AnalyzeCephHandler")
 
-        # Check if all expected commands have been run
-        all_commands_found = True
-        for command in commands:
-            if not self._process_command(state.data, command):
-                all_commands_found = False
-                break
+        kv_state_data = OrderedDict()
 
-        # Log the status
-        if all_commands_found:
-            self.logger.info("AnalyzeCephHandler has already been run.")
-            self.logger.info("Current state data: %s", state.data)
+        if "mon" not in state.data or "dump" not in state.data["mon"]:
+            kv_state_data["ceph mon dump"] = "Not analyzed yet"
         else:
-            self.logger.info(
-                "AnalyzeCephHandler Progress: Not all commands have been run yet."
+            kv_state_data["ceph mon dump"] = self._get_readable_json_dump(
+                state.data["mon"]["dump"]
             )
+
+        if "osd" not in state.data or "dump" not in state.data["osd"]:
+            kv_state_data["ceph osd dump"] = "Not analyzed yet"
+        else:
+            kv_state_data["ceph osd dump"] = self._get_readable_json_dump(
+                state.data["osd"]["dump"]
+            )
+
+        if "device" not in state.data or "ls" not in state.data["device"]:
+            kv_state_data["OSD devices"] = "Not analyzed yet"
+        else:
+            kv_state_data["OSD devices"] = self._get_readable_json_dump(
+                state.data["device"]["ls"]
+            )
+
+        return kv_state_data
 
     @staticmethod
     def register_preflight_state(
