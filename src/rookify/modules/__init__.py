@@ -44,7 +44,16 @@ def _load_module(
 
     global _modules_loaded
 
-    module = importlib.import_module("rookify.modules.{0}".format(module_name))
+    if "." in module_name:
+        absolute_module_name = module_name
+    else:
+        absolute_module_name = "rookify.modules.{0}".format(module_name)
+
+    try:
+        module = importlib.import_module(absolute_module_name)
+    except ModuleNotFoundError as e:
+        raise ModuleLoadException(module_name, str(e))
+
     additional_module_names = []
 
     if not hasattr(module, "ModuleHandler") or not callable(
@@ -61,6 +70,7 @@ def _load_module(
 
     if module not in _modules_loaded:
         _modules_loaded.append(module)
+
     module.ModuleHandler.register_states(machine, config)
 
 
@@ -78,6 +88,11 @@ def load_modules(machine: Machine, config: Dict[str, Any]) -> None:
         if entry.is_dir() and entry.name in config["migration_modules"]:
             migration_modules.remove(entry.name)
             _load_module(machine, config, entry.name)
+
+    for migration_module in migration_modules.copy():
+        if "." in migration_module:
+            migration_modules.remove(migration_module)
+            _load_module(machine, config, migration_module)
 
     if len(migration_modules) > 0 or len(config["migration_modules"]) < 1:
         logger = get_logger()
