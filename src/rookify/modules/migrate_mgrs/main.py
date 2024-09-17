@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
-from typing import Any
+from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
 from ..module import ModuleHandler
@@ -22,8 +22,17 @@ class MigrateMgrsHandler(ModuleHandler):
     def execute(self) -> None:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        for node, _ in state_data["node"]["ls"]["mgr"].items():
+        for node in state_data["node"]["ls"]["mgr"].keys():
             self._migrate_mgr(node)
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        return {
+            "ceph mgr daemons": self._get_readable_json_dump(
+                list(state_data["node"]["ls"]["mgr"].keys())
+            )
+        }
 
     def _migrate_mgr(self, mgr_host: str) -> None:
         migrated_mgrs = self.machine.get_execution_state_data(
