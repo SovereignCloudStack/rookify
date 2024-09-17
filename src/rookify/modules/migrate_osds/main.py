@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
 from time import sleep
 from typing import Any, Dict, List
 from ..exception import ModuleException
@@ -84,13 +85,41 @@ class MigrateOSDsHandler(ModuleHandler):
 
     def execute(self) -> None:
         osd_host_devices = self.machine.get_preflight_state_data(
-            "MigrateOSDsHandler", "osd_host_devices", default_value=[]
+            "MigrateOSDsHandler", "osd_host_devices", default_value={}
         )
 
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         for host in osd_host_devices.keys():
             self.migrate_osds(host, state_data["node"]["ls"]["osd"][host])
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        osd_host_devices = self.machine.get_preflight_state_data(
+            "MigrateOSDsHandler", "osd_host_devices", default_value={}
+        )
+
+        kv_state_data = OrderedDict()
+
+        for host in state_data["node"]["ls"]["osd"].keys():
+            if host in osd_host_devices:
+                osd_device_list = []
+
+                for osd_id, device_path in osd_host_devices[host].items():
+                    osd_device_list.append(
+                        {"OSD ID": osd_id, "Device path": device_path}
+                    )
+
+                kv_state_data["ceph OSD node {0} devices".format(host)] = (
+                    self._get_readable_json_dump(osd_device_list)
+                )
+            else:
+                kv_state_data["ceph OSD node {0} devices".format(host)] = (
+                    "Not analyzed yet"
+                )
+
+        return kv_state_data
 
     def migrate_osds(self, host: str, osd_ids: List[int]) -> None:
         migrated_osd_ids = self.machine.get_execution_state_data(
