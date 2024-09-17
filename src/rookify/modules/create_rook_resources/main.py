@@ -2,6 +2,7 @@
 
 import kubernetes
 import json
+from collections import OrderedDict
 from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
@@ -134,6 +135,33 @@ class CreateRookResourcesHandler(ModuleHandler):
         self.machine.get_execution_state(
             "CreateRookResourcesHandler"
         ).secret = secret.to_dict()
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        kv_state_data = OrderedDict()
+
+        configmap = self.machine.get_preflight_state_data(
+            "CreateRookResourcesHandler", "configmap"
+        )
+
+        if configmap is None:
+            kv_state_data["rook-ceph-mon-endpoints"] = "Not created yet"
+        else:
+            kv_state_data["rook-ceph-mon-endpoints"] = self._get_readable_json_dump(
+                configmap
+            )
+
+        secret = self.machine.get_execution_state_data(
+            "CreateRookResourcesHandler", "secret"
+        )
+
+        if secret is None:
+            kv_state_data["rook-ceph-mon-endpoints has been created"] = "False"
+            kv_state_data["rook-ceph-mon"] = "Not created yet"
+        else:
+            kv_state_data["rook-ceph-mon-endpoints has been created"] = "True"
+            kv_state_data["rook-ceph-mon"] = self._get_readable_json_dump(secret)
+
+        return kv_state_data
 
     @staticmethod
     def register_execution_state(
