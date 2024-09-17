@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from pickle import Unpickler
 import sys
 import argparse
 from argparse import ArgumentParser
@@ -10,13 +9,6 @@ from .modules.machine import Machine
 from .modules.module import ModuleHandler
 from .logger import configure_logging, get_logger
 from .yaml import load_config
-
-
-def load_pickler(pickle_file_name: str) -> Any:
-    with open(pickle_file_name, "ab+") as pickle_file:
-        pickle_file.seek(0)
-        states_data = Unpickler(pickle_file).load()
-        return states_data
 
 
 def parse_args(args: list[str]) -> argparse.Namespace:
