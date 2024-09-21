@@ -62,7 +62,7 @@ class ModuleHandler(object):
         return self._ssh
 
     def _get_readable_json_dump(self, data: Any) -> Any:
-        return json.dumps(data, sort_keys=True, indent="\t")
+        return json.dumps(data, default=repr, sort_keys=True, indent="\t")
 
     def get_readable_key_value_state(self) -> Optional[Dict[str, str]]:
         """
