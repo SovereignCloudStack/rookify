@@ -8,11 +8,15 @@ from ..module import ModuleHandler
 
 
 class MigrateOSDsHandler(ModuleHandler):
-    REQUIRES = ["migrate_mons"]
+    REQUIRES = ["analyze_ceph", "migrate_mons"]
 
     def _get_devices_of_hosts(self) -> Dict[str, Dict[str, str]]:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
         osd_devices: Dict[str, Dict[str, str]] = {}
+        osd_metadata = {
+            str(osd_data["id"]): osd_data for osd_data in state_data["osd_metadata"]
+        }
 
         for osd_host, osds in state_data["node"]["ls"]["osd"].items():
             osd_devices[osd_host] = {}
@@ -22,7 +26,12 @@ class MigrateOSDsHandler(ModuleHandler):
             From there we try to get the encrypted volume partition UUID for later use in Rook.
             """
             for osd_id in osds:
-                osd_data = self.ceph.mon_command("osd metadata", id=osd_id)
+                if osd_id not in osd_metadata:
+                    raise ModuleException(
+                        "Found Ceph OSD ID {0} without metadata".format(osd_id)
+                    )
+
+                osd_data = osd_metadata[osd_id]
 
                 result = self.ssh.command(
                     osd_host,

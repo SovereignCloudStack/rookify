@@ -26,7 +26,7 @@ class MigrateOSDPoolsHandler(ModuleHandler):
         migrated_pools = migrated_mds_pools + migrated_rgw_pools
 
         osd_pool_configurations = self.ceph.get_osd_pool_configurations_from_osd_dump(
-            state_data["osd"]["dump"]
+            state_data["report"]["osdmap"]
         )
 
         pools = []

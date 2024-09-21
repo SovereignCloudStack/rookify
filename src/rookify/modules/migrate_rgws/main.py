@@ -8,12 +8,12 @@ from ..module import ModuleHandler
 
 
 class MigrateRgwsHandler(ModuleHandler):
-    REQUIRES = ["migrate_rgw_pools"]
+    REQUIRES = ["analyze_ceph", "migrate_rgw_pools"]
 
     def _get_rgw_daemon_hosts(self) -> List[str]:
-        ceph_status = self.ceph.mon_command("status")
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        rgw_daemons = ceph_status["servicemap"]["services"]["rgw"]["daemons"]
+        rgw_daemons = state_data["servicemap"]["services"]["rgw"]["daemons"]
         rgw_daemon_hosts = []
         if "summary" in rgw_daemons:
             del rgw_daemons["summary"]

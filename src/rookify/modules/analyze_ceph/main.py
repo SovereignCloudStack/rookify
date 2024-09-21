@@ -6,10 +6,13 @@ from ..module import ModuleHandler
 
 
 class AnalyzeCephHandler(ModuleHandler):
-    def preflight(self) -> Any:
-        commands = ["mon dump", "osd dump", "device ls", "fs ls", "node ls"]
-
+    def preflight(self) -> None:
         state = self.machine.get_preflight_state("AnalyzeCephHandler")
+
+        if getattr(state, "data", None) is not None:
+            return
+
+        commands = ["fs ls", "node ls", "report"]
         state.data = {}
 
         for command in commands:

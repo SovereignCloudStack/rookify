@@ -7,7 +7,7 @@ from ..module import ModuleHandler
 
 
 class CephXAuthHandler(ModuleHandler):
-    def preflight(self) -> Any:
+    def preflight(self) -> None:
         if not self.is_cephx_set(self.ceph.conf_get("auth_cluster_required")):
             raise ModuleException(
                 "Ceph config value auth_cluster_required does not contain cephx"
