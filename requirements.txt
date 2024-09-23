@@ -33,3 +33,4 @@ yamale==5.1.0
 websocket-client==1.7.0
 wrapt==1.16.0
 pytest==8.0.2
+pytest-structlog==1.1

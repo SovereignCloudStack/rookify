@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
-from typing import Any, List
+from typing import Any, Dict, List
 from ..exception import ModuleException
 from ..machine import Machine
 from ..module import ModuleHandler
@@ -132,6 +132,11 @@ class MigrateRgwsHandler(ModuleHandler):
             self.logger.info(
                 "Rook based RGW daemon for node '{0}' available".format(rgw_host)
             )
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        return {
+            "ceph RGW hosts": self._get_readable_json_dump(self._get_rgw_daemon_hosts())
+        }
 
     @staticmethod
     def register_execution_state(

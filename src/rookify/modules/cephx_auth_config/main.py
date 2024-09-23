@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any
+from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
 from ..module import ModuleHandler
@@ -29,6 +29,12 @@ class CephXAuthHandler(ModuleHandler):
 
     def is_cephx_set(self, values: str) -> Any:
         return "cephx" in [value.strip() for value in values.split(",")]
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        is_verified = self.machine.get_preflight_state_data(
+            "CephXAuthHandler", "verified", default_value=False
+        )
+        return {"cephx auth is verified": str(is_verified)}
 
     @staticmethod
     def register_preflight_state(

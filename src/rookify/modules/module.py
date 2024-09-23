@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import abc
+import json
 import os
 import structlog
 from typing import Any, Dict, Optional
 from ..logger import get_logger
+from . import get_modules
 from .ceph import Ceph
 from .k8s import K8s
 from .machine import Machine
@@ -58,6 +61,17 @@ class ModuleHandler(object):
             self._ssh = SSH(self._config["ssh"])
         return self._ssh
 
+    def _get_readable_json_dump(self, data: Any) -> Any:
+        return json.dumps(data, default=repr, sort_keys=True, indent="\t")
+
+    def get_readable_key_value_state(self) -> Optional[Dict[str, str]]:
+        """
+        Run the modules status check
+        """
+
+        return None
+
+    @abc.abstractmethod
     def preflight(self) -> None:
         """
         Run the modules preflight check
@@ -84,7 +98,12 @@ class ModuleHandler(object):
         return template
 
     @classmethod
-    def register_states(cls, machine: Machine, config: Dict[str, Any]) -> None:
+    def register_states(
+        cls,
+        machine: Machine,
+        config: Dict[str, Any],
+        show_progress: Optional[bool] = False,
+    ) -> None:
         """
         Register states for transitions
         """
@@ -137,3 +156,20 @@ class ModuleHandler(object):
         """
 
         machine.add_execution_state(state_name, on_enter=handler.execute, **kwargs)
+
+    @staticmethod
+    def show_states(machine: Machine, config: Dict[str, Any]) -> None:
+        machine.register_states()
+        modules = get_modules()
+
+        for module in modules:
+            module_handler = module.ModuleHandler(machine, config)
+
+            if hasattr(module_handler, "get_readable_key_value_state"):
+                state_data = module_handler.get_readable_key_value_state()
+
+                if state_data is None:
+                    continue
+
+                for state_key, state_value in state_data.items():
+                    print("{0}: {1}".format(state_key, state_value))

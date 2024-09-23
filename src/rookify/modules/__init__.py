@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-from typing import Any, Dict
+from typing import Any, Dict, List
 from ..logger import get_logger
 from .machine import Machine
 
@@ -22,13 +22,27 @@ class ModuleLoadException(Exception):
         self.message = message
 
 
-def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> None:
+_modules_loaded: List[Any] = []
+
+
+def get_modules() -> List[Any]:
+    global _modules_loaded
+    return _modules_loaded.copy()
+
+
+def _load_module(
+    machine: Machine,
+    config: Dict[str, Any],
+    module_name: str,
+) -> None:
     """
     Dynamically loads a module from the 'rookify.modules' package.
 
     :param module_names: The module names to load
     :return: returns tuple of preflight_modules, modules
     """
+
+    global _modules_loaded
 
     if "." in module_name:
         absolute_module_name = module_name
@@ -40,7 +54,7 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
     except ModuleNotFoundError as e:
         raise ModuleLoadException(module_name, str(e))
 
-    additional_modules = []
+    additional_module_names = []
 
     if not hasattr(module, "ModuleHandler") or not callable(
         getattr(module.ModuleHandler, "register_states")
@@ -49,10 +63,13 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
 
     if hasattr(module.ModuleHandler, "REQUIRES"):
         assert isinstance(module.ModuleHandler.REQUIRES, list)
-        additional_modules = module.ModuleHandler.REQUIRES
+        additional_module_names = module.ModuleHandler.REQUIRES
 
-    for module_name in additional_modules:
-        _load_module(machine, config, module_name)
+    for additional_module_name in additional_module_names:
+        _load_module(machine, config, additional_module_name)
+
+    if module not in _modules_loaded:
+        _modules_loaded.append(module)
 
     module.ModuleHandler.register_states(machine, config)
 
