@@ -19,6 +19,7 @@ Rookify is designed to facilitate a smooth and efficient transition for existing
 - _local development enivornment_ requires radoslib version 2.0.0 installed
 
 ## Installation
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/SovereignCloudStack/rookify
@@ -43,20 +44,19 @@ make setup
 5. To install the container-based environment
 ```bash
 make build-container
-docker run -ti --mount type=bind,source="$(pwd)",target=/app/rookify/src/,readonly --workdir=/app/rookify/src rookify:latest
 ```
 
 ## Usage
 
-**NOTE**: for testing purposes the [OSISM Testbed](https://github.com/osism/testbed) is used. The `Makefile` and example configuration (`config.example.osism.yaml`) have built in helper functions and examples for this test-setup.
+**NOTE**: for testing purposes the [OSISM Testbed](https://github.com/osism/testbed) is used. The `Makefile` and example configuration (`config.example.osism.yaml`) have built in helper functions and examples for this test setup.
 
 ### Copy and adapt configuration files
 
-Choose one of the configuration-examples found in the root of the working-directory and copy it to `config.yml`:
+Choose one of the configuration-examples found in the root of the working directory and copy it to `config.yml`:
 
 ```
 ls config.example.*
-# there is a specific example config for the osism testbed: config.example.osism.yaml
+# there is a specific example config for the OSISM testbed: config.example.osism.yaml
 cp config.example.yml config.yaml
 ```
 
@@ -73,7 +73,7 @@ _Provide needed configuration files as written in the config.yml._ At least requ
 - ssh key of the server (for the testbed they are typically found in `./terraform/.id.rsa` folder of the testbed-repository)
 
 Note:
-- for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at [osism/get_configs_from_testbed](osism/get_configs_from_testbed.sh) for an example).
+- for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at [scripts/osism/get_configs_from_testbed](osism/get_configs_from_testbed.sh) for an example).
 - the helper scripts are merely there to help for testing with the [OSISM testbed](https://github.com/osism/testbed) and might not suit your purposes.
 
 ### Run Rookify
@@ -86,9 +86,20 @@ run-local-rookify
 run-rookify
 ```
 
-Then sitback and wait. Check the [troubleshooting](#troubleshooting) and [support](#support) sections if any issues occure.
+Then sit back and wait. Check the [troubleshooting](#troubleshooting) and [support](#support) sections if any issues occur.
 
 For other options you can also check the makefile: Type `make` to get a list of available commands.
+
+### Check status of migration
+
+Use `rookify --show-states` argument to let each module check for its state in the migration
+
+```bash
+.venv/bin/rookify --show-states
+ceph mon dump: Not analyzed yet
+ceph osd dump: Not analyzed yet
+OSD devices: Not analyzed yet
+```
 
 #### Troubleshooting
 
@@ -97,7 +108,7 @@ For other options you can also check the makefile: Type `make` to get a list of 
 - allow direnv (`direnv allow`) to use `.envrc` or copy and execute the command from the file: this switches off the ssh-agent, which sometimes has too many keys loaded
 
 **frozen state:**
-- if the rookify process freezes, check your connections. In the OSISM testbed especially check the vpn-connection (in testbedrepoisitory try `make vpn-*`)
+- if the rookify process freezes, check your connections. In the OSISM testbed especially check the vpn-connection (in testbed repository try `make vpn-*`)
 
 ## Support
 
