@@ -78,7 +78,9 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "MigrateRgwPoolsHandler", "migrated_pools", default_value=[]
         )
 
-        zones = self.machine.get_preflight_state("MigrateRgwPoolsHandler").zones
+        zones = self.machine.get_preflight_state_data(
+            "MigrateRgwPoolsHandler", "zones", default_value={}
+        )
 
         kv_state_data = OrderedDict()
 

@@ -54,25 +54,25 @@ class AnalyzeCephHandler(ModuleHandler):
 
         kv_state_data = OrderedDict()
 
-        if "mon" not in state.data or "dump" not in state.data["mon"]:
-            kv_state_data["ceph mon dump"] = "Not analyzed yet"
+        if "report" not in state.data:
+            kv_state_data["Ceph report"] = "Not analyzed yet"
         else:
-            kv_state_data["ceph mon dump"] = self._get_readable_json_dump(
-                state.data["mon"]["dump"]
+            kv_state_data["Ceph report"] = self._get_readable_json_dump(
+                state.data["report"]
             )
 
-        if "osd" not in state.data or "dump" not in state.data["osd"]:
-            kv_state_data["ceph osd dump"] = "Not analyzed yet"
+        if "node" not in state.data or "ls" not in state.data["node"]:
+            kv_state_data["Ceph node ls"] = "Not analyzed yet"
         else:
-            kv_state_data["ceph osd dump"] = self._get_readable_json_dump(
-                state.data["osd"]["dump"]
+            kv_state_data["Ceph node ls"] = self._get_readable_json_dump(
+                state.data["node"]["ls"]
             )
 
-        if "device" not in state.data or "ls" not in state.data["device"]:
-            kv_state_data["OSD devices"] = "Not analyzed yet"
+        if "fs" not in state.data or "ls" not in state.data["fs"]:
+            kv_state_data["Ceph fs ls"] = "Not analyzed yet"
         else:
-            kv_state_data["OSD devices"] = self._get_readable_json_dump(
-                state.data["device"]["ls"]
+            kv_state_data["Ceph fs ls"] = self._get_readable_json_dump(
+                state.data["fs"]["ls"]
             )
 
         return kv_state_data
