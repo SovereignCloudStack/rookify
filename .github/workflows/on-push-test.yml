@@ -1,0 +1,52 @@
+name: py:test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  codeql-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Set up Python
+      id: setup-python
+      uses: actions/setup-python@v3
+    - name: Get the Python path
+      id: get-python-path
+      run: echo "python-path=`which python`"
+    - name: Install dependencies
+      run: |-
+        pip install -r ./requirements.txt
+        pip install pylint --upgrade
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python
+        queries: security-extended
+    - name: Perform CodeQL analysis
+      env:
+        CODEQL_PYTHON: ${{ steps.get-python-path.outputs.python-path }}
+      uses: github/codeql-action/analyze@v3
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+
+    steps:
+    - name: Checkout commit
+      uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |-
+        pip install -r ./requirements.txt
+    - name: Execute tests
+      run: pytest

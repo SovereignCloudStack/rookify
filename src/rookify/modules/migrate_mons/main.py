@@ -32,6 +32,15 @@ class MigrateMonsHandler(ModuleHandler):
         for mon in state_data["mon"]["dump"]["mons"]:
             self._migrate_mon(mon)
 
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        return {
+            "ceph mon daemons": self._get_readable_json_dump(
+                state_data["mon"]["dump"]["mons"]
+            )
+        }
+
     def _migrate_mon(self, mon: Dict[str, Any]) -> None:
         migrated_mons = self.machine.get_execution_state_data(
             "MigrateMonsHandler", "migrated_mons", default_value=[]

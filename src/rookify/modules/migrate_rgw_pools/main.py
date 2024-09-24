@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
 from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
@@ -21,7 +22,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
         service_data = self.ceph.mon_command("service dump")
 
-        rgw_daemons = service_data["services"].get("rgw", {}).get("daemons", {})  # type: ignore
+        rgw_daemons = service_data["services"].get("rgw", {}).get("daemons", {})
 
         for rgw_daemon in rgw_daemons.values():
             if not isinstance(rgw_daemon, dict):
@@ -69,6 +70,25 @@ class MigrateRgwPoolsHandler(ModuleHandler):
 
         for zone_name, zone_data in zones.items():
             self._migrate_zone(zone_name, zone_data)
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        migrated_pools = self.machine.get_execution_state_data(
+            "MigrateRgwPoolsHandler", "migrated_pools", default_value=[]
+        )
+
+        zones = self.machine.get_preflight_state("MigrateRgwPoolsHandler").zones
+
+        kv_state_data = OrderedDict()
+
+        for zone_data in zones.values():
+            for osd_pool in zone_data["osd_pools"].values():
+                key_name = "ceph RGW pool {0}".format(osd_pool["pool_name"])
+                kv_state_data[key_name] = self._get_readable_json_dump(osd_pool)
+
+                key_name = "ceph RGW pool {0} is created".format(osd_pool["pool_name"])
+                kv_state_data[key_name] = osd_pool["pool_name"] in migrated_pools
+
+        return kv_state_data
 
     def _migrate_zone(self, zone_name: str, zone_data: Dict[str, Any]) -> None:
         migrated_zones = self.machine.get_execution_state_data(

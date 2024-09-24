@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any
+from collections import OrderedDict
+from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
 from ..module import ModuleHandler
@@ -154,6 +155,28 @@ class CreateRookClusterHandler(ModuleHandler):
             pass
 
         return None
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        kv_state_data = OrderedDict()
+
+        cluster_definition = self.machine.get_preflight_state_data(
+            "CreateRookClusterHandler", "cluster_definition"
+        )
+        cluster_name = self._config["rook"]["cluster"]["name"]
+
+        if cluster_definition is None:
+            kv_state_data[cluster_name] = "Not created yet"
+        else:
+            kv_state_data[cluster_name] = self._get_readable_json_dump(
+                cluster_definition
+            )
+
+        is_generated = self.machine.get_execution_state_data(
+            "CreateRookClusterHandler", "generated", default_value=False
+        )
+        kv_state_data["{0} is generated".format(cluster_name)] = str(is_generated)
+
+        return kv_state_data
 
     @staticmethod
     def register_execution_state(

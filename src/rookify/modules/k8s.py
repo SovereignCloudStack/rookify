@@ -43,7 +43,7 @@ class K8s:
         return (
             str(self._rook_config["cluster"]["mds_placement_label"])
             if "mds_placement_label" in self._rook_config["cluster"]
-            else f"placement-{self._rook_config["cluster"]["name"]}-mds"
+            else "placement-{0}-mds".format(self._rook_config["cluster"]["name"])
         )
 
     @property
@@ -51,7 +51,7 @@ class K8s:
         return (
             str(self._rook_config["cluster"]["mon_placement_label"])
             if "mon_placement_label" in self._rook_config["cluster"]
-            else f"placement-{self._rook_config["cluster"]["name"]}-mon"
+            else "placement-{0}-mon".format(self._rook_config["cluster"]["name"])
         )
 
     @property
@@ -59,7 +59,7 @@ class K8s:
         return (
             str(self._rook_config["cluster"]["mgr_placement_label"])
             if "mgr_placement_label" in self._rook_config["cluster"]
-            else f"placement-{self._rook_config["cluster"]["name"]}-mgr"
+            else "placement-{0}-mgr".format(self._rook_config["cluster"]["name"])
         )
 
     @property
@@ -67,7 +67,7 @@ class K8s:
         return (
             str(self._rook_config["cluster"]["osd_placement_label"])
             if "osd_placement_label" in self._rook_config["cluster"]
-            else f"placement-{self._rook_config["cluster"]["name"]}-osd"
+            else "placement-{0}-osd".format(self._rook_config["cluster"]["name"])
         )
 
     @property
@@ -75,7 +75,7 @@ class K8s:
         return (
             str(self._rook_config["cluster"]["rgw_placement_label"])
             if "rgw_placement_label" in self._rook_config["cluster"]
-            else f"placement-{self._rook_config["cluster"]["name"]}-rgw"
+            else "placement-{0}-rgw".format(self._rook_config["cluster"]["name"])
         )
 
     def check_nodes_for_initial_label_state(self, label: str) -> None:
