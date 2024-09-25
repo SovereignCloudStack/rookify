@@ -1,15 +1,19 @@
 ---
-sidebar_label: Ceph via Rook (technical preview)
+sidebar_label: Use Rookify: Migrate to Rook from Ceph Ansible (technical preview)
 ---
 
-# Ceph via Rook (technical preview)
+# Rookify: Migrate to Rook from Ceph Ansible (technical preview)
 
 :::warning
 
-This is a technical preview and not recommended for production use yet. This whole
-document has to be reworkded with more rook like handling. Do not take it for
-granted yet.
+This is a technical preview and not recommended for production use yet.
 
 :::
 
-## Where to find docs
+
+
+## Where to find other docs and information
+
+For deployment see:
+
+For configuration see:
