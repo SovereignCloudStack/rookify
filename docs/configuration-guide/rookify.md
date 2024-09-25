@@ -20,12 +20,16 @@ The primary configuration file for Rookify is `config.yaml`. The repository cont
 
 ### Parameters
 
+#### General
+
 ```yaml title="config.example.yaml"
 general:
   machine_pickle_file: data.pickle
 ```
 
 The general section allows for optional definition of a pickle file, which allows for saving the state of the migration as serialized objects on disk. The pickle filed can be named as pleased.
+
+#### Logging
 
 ```yaml title="config.example.yaml"
 logging:
@@ -37,6 +41,8 @@ logging:
 
 The `logging` section allows for specification of `structlog`. The `level` parameter can be set to all python [log-levels](https://docs.python.org/3/library/logging.html#logging-levels), i.e. `NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAl`, but it is recommended to use `INFO`.
 
+#### Ceph
+
 ```yaml title="config.example.yaml"
 
 ceph:
@@ -45,6 +51,8 @@ ceph:
 ```
 
 The `ceph` section specifies the `ceph.conf` and `ceph.client.admin.keyring` of the target systems (i.e. the system where Ceph-Ansible needs to be migrated to Rook).
+
+#### SSH
 
 ```yaml title="config.example.yaml"
 # fill in correct path to private key
@@ -63,6 +71,8 @@ ssh:
 ```
 
 The `ssh` section requires specification of the `private_key` and `hosts`. The `hosts` section specifies the hostnames or aliases (e.g. keys like `testbed-node-0`), their ip-addresses (e.g. if rookify connects to the target systems per VPN add ips starting with `192.186...`) and user for login. If you are using the OSISM testbed, make sure that the private key does not contain any `EOF` or other strings, i.e. make sure the keys are 'clean' to avoid connection errors.
+
+#### Kubernetes
 
 ```yaml title="config.example.yaml"
 
@@ -84,6 +94,25 @@ rook:
 The `rook` sections requires some information about the Rook installation on the target system. Concerning the `cluster` Rookify needs to know the cluster-name and cluster-namespace. Rookify also needs to know the ceph version used by Rookify, i.e. the image version of the ceph container.
 
 _Note_: Rookify does not install Rook for you. You need to provide a running Rook, i.e. a Rook Operator, on you target system.
+
+_Note_: For OSISM specific migrations, Rookify needs to have some additional information, i.e. the respective labels for the rook resources:
+
+```yaml title="config.example.osism.yaml"
+rook:
+  cluster:
+    name: osism-ceph
+    namespace: rook-ceph
+    mds_placement_label: node-role.osism.tech/rook-mds
+    mgr_placement_label: node-role.osism.tech/rook-mgr
+    mon_placement_label: node-role.osism.tech/rook-mon
+    osd_placement_label: node-role.osism.tech/rook-osd
+    rgw_placement_label: node-role.osism.tech/rook-rgw
+  ceph:
+    image: quay.io/ceph/ceph:v18.2.1
+```
+
+
+#### Migration_modules
 
 ```yaml title="config.example.yaml"
 migration_modules:
