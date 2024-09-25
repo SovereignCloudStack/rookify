@@ -15,15 +15,27 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
 
-    # --dry-run option
-    arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
+    arg_parser.add_argument("-d", "--dry-run", action="store_true", dest="dry_run_mode")
 
     arg_parser.add_argument(
+        "-s",
         "--show-states",
         action="store_true",
         dest="show_states",
         help="Show states of the modules.",
     )
+
+    arg_parser.add_argument(
+        "run",
+        nargs="?",
+        default=False,
+        help="Run the migration.",
+    )
+
+    # Show help if no arguments are provided
+    if not args:
+        arg_parser.print_help()
+        sys.exit(1)
 
     return arg_parser.parse_args(args)
 
@@ -59,7 +71,7 @@ def main() -> None:
 
     if args.show_states is True:
         ModuleHandler.show_states(machine, config)
-    else:
+    if args.run:
         machine.execute(dry_run_mode=args.dry_run_mode)
 
 
