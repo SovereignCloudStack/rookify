@@ -14,9 +14,9 @@ This is a technical preview and not recommended for production use yet.
 
 :::
 
-Rookify is now available in the SCS Reference Implementation (OSISM) and can be deployed as shown in the [paragraph below](## Using the SCS Reference Implementation).
+Rookify is now available in the SCS Reference Implementation (OSISM) and can be deployed as shown in the [paragraph below](#using-the-scs-reference-implementation-osism).
 
-In order to manually deploy Rookify you can take a look at the `README.md` file in the [rookify repository](https://github.com/SovereignCloudStack/rookify) or follow the [instructions here](## Manual Installation).
+In order to manually deploy Rookify you can take a look at the `README.md` file in the [rookify repository](https://github.com/SovereignCloudStack/rookify) or follow the [instructions here](#manual-installation).
 
 ## Using the SCS Reference Implementation (OSISM)
 
