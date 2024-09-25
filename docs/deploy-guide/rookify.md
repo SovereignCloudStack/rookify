@@ -10,24 +10,36 @@ import TabItem from '@theme/TabItem';
 
 :::warning
 
-This is a technical preview and not recommended for production use yet.
+Rookify is developed to migrate from Ceph-Ansible to Rook _in place_ and _without downtime_.
+Nevertheless, it is **strongly advised** to test Rookify in a controlled environment beforehand, such as the [OSISM testbed](https://github.com/osism/testbed). Additionally, ensure that all precautionary backups are taken, and any other necessary safety measures are in place.
 
 :::
 
 Rookify is now available in the SCS Reference Implementation (OSISM) and can be deployed as shown in the [paragraph below](#using-the-scs-reference-implementation-osism).
 
-In order to manually deploy Rookify you can take a look at the `README.md` file in the [rookify repository](https://github.com/SovereignCloudStack/rookify) or follow the [instructions here](#manual-installation).
+The [Rookify GitHub repository](https://github.com/SovereignCloudStack/rookify) includes a README.md that provides a condensed summary of the information covered here.
 
 ## Using the SCS Reference Implementation (OSISM)
 
-Rookify is now also available in OSISM and can be deployed with the following osism-commands based on the following ansible scripts.
-<!-- TODO -->
+:::info
+
+Rookify will be available in OSISM and will be deployable usin osism-commands based on ansible configurations.
+
+:::
+
+But is is not available yet ;)
 
 ## Manual Installation
 
 ### Download or Clone the Repository
 
-Clone or download Rookify from the [repository](https://github.com/SovereignCloudStack/rookify), then checkout the included options of the added `Makefile` by simply typing `make`.
+Clone or download Rookify from the [repository](https://github.com/SovereignCloudStack/rookify).
+
+:::tip
+
+Checkout the included options of the added `Makefile` by simply typing `make`.
+
+:::
 
 ## Install and Run Locally
 
@@ -45,7 +57,13 @@ make setup
 
 This command also checks if you have the required python library for `radoslib` installed. Make sure to have it installed on your linux distribution.
 
-To run rookify you can either run it directly from within the virtualenv or with help of the make file:
+:::tip
+
+Before running rookify, first check all options by using `rookify --help`
+
+:::
+
+To run rookify you can either run it directly from within pythons virtualenv or with help of the make file:
 
 ```bash
 # directly
@@ -68,3 +86,9 @@ make up
 This command uses `docker compose`, so make sure you have that installed as well.
 
 To run rookify you can either enter the container and run rookify from there or use `make run-rookify`.
+
+:::note
+
+Before running rookify, it can be usefull to check all options by using `rookify --help`
+
+:::

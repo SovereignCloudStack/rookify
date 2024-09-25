@@ -5,11 +5,14 @@ sidebar_position: 31
 
 # Configure Rookify: Migrate from Ceph Ansible to Rook (Technical Preview)
 
-The [Rookify GitHub repository](https://github.com/SovereignCloudStack/rookify) includes a README.md that provides a condensed summary of the information covered here.
+:::warning
 
 Rookify is developed to migrate from Ceph-Ansible to Rook _in place_ and _without downtime_.
-
 Nevertheless, it is **strongly advised** to test Rookify in a controlled environment beforehand, such as the [OSISM testbed](https://github.com/osism/testbed). Additionally, ensure that all precautionary backups are taken, and any other necessary safety measures are in place.
+
+:::
+
+The [Rookify GitHub repository](https://github.com/SovereignCloudStack/rookify) includes a README.md that provides a condensed summary of the information covered here.
 
 ## Config.yaml
 
