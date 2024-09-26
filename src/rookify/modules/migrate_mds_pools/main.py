@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
 from typing import Any, Dict
 from ..machine import Machine
 from ..module import ModuleHandler
@@ -70,6 +71,24 @@ class MigrateMdsPoolsHandler(ModuleHandler):
 
         for pool in pools.values():
             self._migrate_pool(pool)
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        migrated_mds_pools = self.machine.get_execution_state_data(
+            "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
+        )
+
+        pools = self.machine.get_preflight_state("MigrateMdsPoolsHandler").pools
+
+        kv_state_data = OrderedDict()
+
+        for pool in pools:
+            key_name = "ceph MDS pool {0}".format(pool["name"])
+            kv_state_data[key_name] = self._get_readable_json_dump(pool)
+
+            key_name = "ceph MDS pool {0} is created".format(pool["name"])
+            kv_state_data[key_name] = pool["name"] in migrated_mds_pools
+
+        return kv_state_data
 
     def _migrate_pool(self, pool: Dict[str, Any]) -> None:
         migrated_mds_pools = self.machine.get_execution_state_data(

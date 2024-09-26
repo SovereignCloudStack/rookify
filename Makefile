@@ -14,6 +14,17 @@ else
 	CONTAINERCMD=podman
 endif
 
+# Checking if python exists
+ifneq (, $(shell command -v python))
+    $(info Python is installed as 'python')
+    PYTHON := $(shell command -v python)
+else ifneq (, $(shell command -v python3))
+    $(info Python3 is installed as 'python3')
+    PYTHON := $(shell command -v python3)
+else
+    $(error Neither python nor python3 is installed)
+endif
+
 ## Export default rookify version
 export ROOKIFY_VERSION?=0.0.0.dev1
 
@@ -28,17 +39,16 @@ help: ## Display this help message
 	    awk -F ':.*?#osism# ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
 
 .PHONY: setup
-setup: setup-pre-commit check-radoslib setup-venv ## Setup the pre-commit environment and then the venv environment
+setup: check-radoslib setup-venv setup-pre-commit ## Setup the pre-commit environment and then the venv environment
 
 .PHONY: setup-pre-commit
 setup-pre-commit:
-	pip install --user pre-commit && pre-commit install
+	./.venv/bin/pip install --user pre-commit && ./.venv/bin/python -m pre_commit install
 
 .PHONY: setup-venv
 setup-venv:
-	python -m venv --system-site-packages ./.venv && \
-	source ./.venv/bin/activate && \
-	pip install -r requirements.txt
+	${PYTHON} -m venv --system-site-packages ./.venv && \
+	./.venv/bin/pip install -r requirements.txt
 
 .PHONY: run-precommit
 run-precommit: ## Run pre-commit to check if all files running through
@@ -53,7 +63,7 @@ update-requirements: ## Update the requirements.txt with newer versions of pip p
 export RADOSLIB_VERSION:=2.0.0
 check-radoslib: ## Checks if radoslib is installed and if it contains the right version
 	# Get needed paths and information from locally installed librados
-	./osism/check_local_rados_lib_installation.sh ${RADOSLIB_VERSION}
+	./scripts/check_local_rados_lib_installation.sh ${RADOSLIB_VERSION}
 
 .PHONY: build-local-rookify
 build-local-rookify: ## This builds rookify into .venv/bin/rookify
@@ -65,10 +75,7 @@ build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.
 
 .PHONY: run-local-rookify
 run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
-	if [ ! -f ./.venv/bin/rookify ]; then \
-		${MAKE} build-local-rookify; \
-	fi; \
-	.venv/bin/rookify
+	source ./.venv/bin/activate && pip install -e . && rookify
 
 .PHONY: run-rookify
 run-rookify: ## Runs rookify in the container
@@ -76,7 +83,7 @@ run-rookify: ## Runs rookify in the container
 
 .PHONY: get-testbed-configs-for-rookify-testing
 get-testbed-configs-for-rookify-testing: ## Gets the needed config (like .kube, /etc/ceph and so on) from the testbed
-	bash ./osism/get_configs_from_testbed.sh
+	bash ./scripts/get_configs_from_testbed.sh
 
 .PHONY: run-tests-locally
 run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
@@ -105,10 +112,7 @@ up: ## Sets up the container as specified in docker-compose.yml and opens a bash
 ##
 # Add osism specific scripts below here (so they appear below helper header)
 ##
-.PHONY: reset-k3s
-reset-k3s: #osism# Reset the K3s environment on the OSISM testbed
-	./osism/reset_k3s.sh
 
 .PHONY: get-config
 get-config: #osism# Gets configuration files from the OSISM testbed
-	./osism/get_configs_from_testbed.sh
+	./scripts/osism/get_osism_configs_from_testbed.sh

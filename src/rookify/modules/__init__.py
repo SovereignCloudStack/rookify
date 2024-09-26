@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-from typing import Any, Dict
+from typing import Any, Dict, List
 from ..logger import get_logger
 from .machine import Machine
 
@@ -22,7 +22,19 @@ class ModuleLoadException(Exception):
         self.message = message
 
 
-def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> None:
+_modules_loaded: List[Any] = []
+
+
+def get_modules() -> List[Any]:
+    global _modules_loaded
+    return _modules_loaded.copy()
+
+
+def _load_module(
+    machine: Machine,
+    config: Dict[str, Any],
+    module_name: str,
+) -> None:
     """
     Dynamically loads a module from the 'rookify.modules' package.
 
@@ -30,8 +42,19 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
     :return: returns tuple of preflight_modules, modules
     """
 
-    module = importlib.import_module("rookify.modules.{0}".format(module_name))
-    additional_modules = []
+    global _modules_loaded
+
+    if "." in module_name:
+        absolute_module_name = module_name
+    else:
+        absolute_module_name = "rookify.modules.{0}".format(module_name)
+
+    try:
+        module = importlib.import_module(absolute_module_name)
+    except ModuleNotFoundError as e:
+        raise ModuleLoadException(module_name, str(e))
+
+    additional_module_names = []
 
     if not hasattr(module, "ModuleHandler") or not callable(
         getattr(module.ModuleHandler, "register_states")
@@ -40,10 +63,13 @@ def _load_module(machine: Machine, config: Dict[str, Any], module_name: str) -> 
 
     if hasattr(module.ModuleHandler, "REQUIRES"):
         assert isinstance(module.ModuleHandler.REQUIRES, list)
-        additional_modules = module.ModuleHandler.REQUIRES
+        additional_module_names = module.ModuleHandler.REQUIRES
 
-    for module_name in additional_modules:
-        _load_module(machine, config, module_name)
+    for additional_module_name in additional_module_names:
+        _load_module(machine, config, additional_module_name)
+
+    if module not in _modules_loaded:
+        _modules_loaded.append(module)
 
     module.ModuleHandler.register_states(machine, config)
 
@@ -62,6 +88,11 @@ def load_modules(machine: Machine, config: Dict[str, Any]) -> None:
         if entry.is_dir() and entry.name in config["migration_modules"]:
             migration_modules.remove(entry.name)
             _load_module(machine, config, entry.name)
+
+    for migration_module in migration_modules.copy():
+        if "." in migration_module:
+            migration_modules.remove(migration_module)
+            _load_module(machine, config, migration_module)
 
     if len(migration_modules) > 0 or len(config["migration_modules"]) < 1:
         logger = get_logger()

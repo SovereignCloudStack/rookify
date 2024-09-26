@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
-from typing import Any
+from typing import Any, Dict
 from ..exception import ModuleException
 from ..machine import Machine
 from ..module import ModuleHandler
@@ -130,7 +130,7 @@ class MigrateMdsHandler(ModuleHandler):
         while True:
             result = self.ceph.mon_command("node ls")
 
-            if mds_host in result["mds"]:  # type: ignore
+            if mds_host in result["mds"]:
                 break
 
             sleep(2)
@@ -138,6 +138,15 @@ class MigrateMdsHandler(ModuleHandler):
         self.logger.info(
             "Rook based ceph-mds daemon node '{0}' available".format(mds_host)
         )
+
+    def get_readable_key_value_state(self) -> Dict[str, str]:
+        state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
+
+        return {
+            "ceph MDS daemons": self._get_readable_json_dump(
+                list(state_data["node"]["ls"]["mds"].keys())
+            )
+        }
 
     @staticmethod
     def register_execution_state(
