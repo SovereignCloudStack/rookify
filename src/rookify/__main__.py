@@ -26,18 +26,19 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     )
 
     arg_parser.add_argument(
-        "run",
-        nargs="?",
-        default=False,
+        "-m",
+        "--migrate",
+        action="store_true",
+        dest="execution_mode",
         help="Run the migration.",
     )
 
     # Show help if no arguments are provided
     if not args:
-        arg_parser.print_help()
-        sys.exit(1)
-
-    return arg_parser.parse_args(args)
+        print("No arguments provided.")
+        return arg_parser.parse_args(["--dry-run"])
+    else:
+        return arg_parser.parse_args(args)
 
 
 def main() -> None:
@@ -63,16 +64,19 @@ def main() -> None:
     # Get Logger
     log = get_logger()
 
-    log.info("Executing Rookify ...")
-
     machine = Machine(config["general"].get("machine_pickle_file"))
 
     load_modules(machine, config)
 
     if args.show_states is True:
+        log.info("Showing Rookify state ...")
         ModuleHandler.show_states(machine, config)
-    if args.run:
+    elif args.dry_run_mode is True:
+        log.info("Running Rookify in dry-run-mode ...")
         machine.execute(dry_run_mode=args.dry_run_mode)
+    elif args.execution_mode is True:
+        log.info("Executing Rookify ...")
+        machine.execute()
 
 
 if __name__ == "__main__":
