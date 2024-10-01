@@ -15,14 +15,12 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
 
-    arg_parser.add_argument("-d", "--dry-run", action="store_true", dest="dry_run_mode")
-
     arg_parser.add_argument(
-        "-s",
-        "--show-states",
+        "-d",
+        "--dry-run",
         action="store_true",
-        dest="show_states",
-        help="Show states of the modules.",
+        dest="dry_run_mode",
+        help="Preflight data analysis and migration validation.",
     )
 
     arg_parser.add_argument(
@@ -33,12 +31,18 @@ def parse_args(args: list[str]) -> argparse.Namespace:
         help="Run the migration.",
     )
 
-    # Show help if no arguments are provided
-    if not args:
-        print("No arguments provided.")
-        return arg_parser.parse_args(["--dry-run"])
-    else:
-        return arg_parser.parse_args(args)
+    arg_parser.add_argument(
+        "-s",
+        "--show-states",
+        action="store_true",
+        dest="show_states",
+        help="Show states of the modules.",
+    )
+
+    if len(args) < 1:
+        args = ["--dry-run"]
+
+    return arg_parser.parse_args(args)
 
 
 def main() -> None:
@@ -52,7 +56,7 @@ def main() -> None:
 
     # Configure logging
     try:
-        if args.show_states is True:
+        if args.show_states:
             configure_logging(
                 {"level": "ERROR", "format": {"renderer": "console", "time": "iso"}}
             )
@@ -68,13 +72,13 @@ def main() -> None:
 
     load_modules(machine, config)
 
-    if args.show_states is True:
-        log.info("Showing Rookify state ...")
+    if args.show_states:
+        log.debug("Showing Rookify state ...")
         ModuleHandler.show_states(machine, config)
-    elif args.dry_run_mode is True:
-        log.info("Running Rookify in dry-run-mode ...")
+    elif args.dry_run_mode:
+        log.info("Running Rookify in dry-run mode ...")
         machine.execute(dry_run_mode=args.dry_run_mode)
-    elif args.execution_mode is True:
+    else:
         log.info("Executing Rookify ...")
         machine.execute()
 
