@@ -17,10 +17,12 @@ TestCase = Tuple[List[str], argparse.Namespace]
 
 # fmt: off
 test_cases: List[TestCase] = [
-    (["--dry-run"], argparse.Namespace(dry_run_mode=True, show_states=False)),
-    (["--show-states"], argparse.Namespace(dry_run_mode=False, show_states=True)),
-    (["--dry-run", "--show-states"], argparse.Namespace(dry_run_mode=True, show_states=True)),
-    ([], argparse.Namespace(dry_run_mode=False, show_states=False)),
+    (["--migrate"], argparse.Namespace(dry_run_mode=False, show_states=False, execution_mode=True)),
+    (["--migrate", "--dry-run"], argparse.Namespace(dry_run_mode=True, show_states=False, execution_mode=True)),
+    (["--dry-run"], argparse.Namespace(dry_run_mode=True, show_states=False, execution_mode=False)),
+    (["--show-states"], argparse.Namespace(dry_run_mode=False, show_states=True, execution_mode=False)),
+    (["--dry-run", "--show-states"], argparse.Namespace(dry_run_mode=True, show_states=True, execution_mode=False)),
+    ([], argparse.Namespace(dry_run_mode=True, show_states=False, execution_mode=False)),
 ]
 # fmt: on
 
