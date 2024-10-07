@@ -14,7 +14,7 @@ Rookify is designed to facilitate a smooth and efficient transition for existing
 - A functioning Ceph cluster deployed via traditional methods.
   - __TODO:__ List supported methods
 - Access to a Kubernetes cluster with sufficient resources to host the migrated Ceph cluster.
-  - Kubernetes nodes should be rolled out at least on the OSD nodes
+    - Kubernetes nodes should be rolled out at least on the monitor nodes
 - Rook operator version 1.13 or higher installed in the Kubernetes cluster.
 - _local development enivornment_ requires radoslib version 2.0.0 installed
 
@@ -70,7 +70,7 @@ _Provide needed configuration files as written in the config.yml._ At least requ
 - ./ceph/ceph.conf (typically found in `/etc/ceph/` on a testbednode)
 - ./ceph/ceph.admin.keyring (typically found in `/etc/ceph/` on a testbednode)
 - kubernetes config of user (e.g. found in `~/.kube/config`)
-- ssh key of the server (for the testbed they are typically found in `./terraform/.id.rsa` folder of the testbed-repository)
+- ssh key of the server (found at `./terraform/.id.rsa` in the `testbed` directory)
 
 Note:
 - for the testbed there is a helper script to download the configs from the testbed. These helperscripts need correct `.ssh/config` entries to work (take a look at [scripts/osism/get_configs_from_testbed](osism/get_configs_from_testbed.sh) for an example).
