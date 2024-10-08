@@ -120,4 +120,4 @@ build-container: #container# Build container from Dockerfile only, add e.g. ROOK
 
 .PHONY: get-config
 get-config: #osism# Gets configuration files from the OSISM testbed
-	./scripts/osism/get_osism_configs_from_testbed.sh
+	./scripts/osism/get_configs_from_testbed.sh
