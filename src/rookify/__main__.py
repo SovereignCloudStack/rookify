@@ -15,15 +15,32 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     # Putting args-parser in seperate function to make this testable
     arg_parser = ArgumentParser("Rookify")
 
-    # --dry-run option
-    arg_parser.add_argument("--dry-run", action="store_true", dest="dry_run_mode")
+    arg_parser.add_argument(
+        "-d",
+        "--dry-run",
+        action="store_true",
+        dest="dry_run_mode",
+        help="Preflight data analysis and migration validation.",
+    )
 
     arg_parser.add_argument(
+        "-m",
+        "--migrate",
+        action="store_true",
+        dest="execution_mode",
+        help="Run the migration.",
+    )
+
+    arg_parser.add_argument(
+        "-s",
         "--show-states",
         action="store_true",
         dest="show_states",
         help="Show states of the modules.",
     )
+
+    if len(args) < 1:
+        args = ["--dry-run"]
 
     return arg_parser.parse_args(args)
 
@@ -39,7 +56,7 @@ def main() -> None:
 
     # Configure logging
     try:
-        if args.show_states is True:
+        if args.show_states:
             configure_logging(
                 {"level": "ERROR", "format": {"renderer": "console", "time": "iso"}}
             )
@@ -51,16 +68,19 @@ def main() -> None:
     # Get Logger
     log = get_logger()
 
-    log.info("Executing Rookify ...")
-
     machine = Machine(config["general"].get("machine_pickle_file"))
 
     load_modules(machine, config)
 
-    if args.show_states is True:
+    if args.show_states:
+        log.debug("Showing Rookify state ...")
         ModuleHandler.show_states(machine, config)
-    else:
+    elif args.dry_run_mode:
+        log.info("Running Rookify in dry-run mode ...")
         machine.execute(dry_run_mode=args.dry_run_mode)
+    else:
+        log.info("Executing Rookify ...")
+        machine.execute()
 
 
 if __name__ == "__main__":
