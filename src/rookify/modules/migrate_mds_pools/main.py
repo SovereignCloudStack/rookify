@@ -77,7 +77,9 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
         )
 
-        pools = self.machine.get_preflight_state("MigrateMdsPoolsHandler").pools
+        pools = self.machine.get_preflight_state_data(
+            "MigrateMdsPoolsHandler", "pools", default_value={}
+        )
 
         kv_state_data = OrderedDict()
 

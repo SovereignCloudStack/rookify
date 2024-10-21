@@ -33,7 +33,7 @@ class MigrateOSDPoolsHandler(ModuleHandler):
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         osd_pool_configurations = self.ceph.get_osd_pool_configurations_from_osd_dump(
-            state_data["osd"]["dump"]
+            state_data["report"]["osdmap"]
         )
 
         pools = []
