@@ -26,10 +26,10 @@ class MigrateMonsHandler(ModuleHandler):
             "MigrateMonsHandler", "migrated_mons", default_value=[]
         )
 
-        if len(migrated_mons) >= len(state_data["mon"]["dump"]["mons"]):
+        if len(migrated_mons) >= len(state_data["report"]["monmap"]["mons"]):
             return
 
-        for mon in state_data["mon"]["dump"]["mons"]:
+        for mon in state_data["report"]["monmap"]["mons"]:
             self._migrate_mon(mon)
 
     def get_readable_key_value_state(self) -> Dict[str, str]:
@@ -37,7 +37,7 @@ class MigrateMonsHandler(ModuleHandler):
 
         return {
             "ceph mon daemons": self._get_readable_json_dump(
-                state_data["mon"]["dump"]["mons"]
+                state_data["report"]["monmap"]["mons"]
             )
         }
 
@@ -106,7 +106,7 @@ class MigrateMonsHandler(ModuleHandler):
             "MigrateMonsHandler",
         ).migrated_mons = migrated_mons
 
-        mon_count_expected = self.machine.get_execution_state_data(
+        mon_count_expected = self.machine.get_preflight_state_data(
             "CreateRookClusterHandler", "mon_count", default_value=3
         )
 

@@ -7,36 +7,45 @@ from ..module import ModuleHandler
 
 
 class AnalyzeCephHandler(ModuleHandler):
-    def _process_command(
+    def _process_command_result(
         self, state_data: Any, command: str, value: Optional[Any] = None
     ) -> bool:
-        """Helper method to process commands by either setting or checking state data."""
-        parts = command.split(" ")
-        current_level = state_data  # the root of the data structure
+        """
+        Helper method to process commands by either setting or checking state data.
+        """
+
+        command_parts = command.split(" ")
+        state_structure_data = state_data  # the root of the data structure
 
         # Traverse the dictionary structure based on command parts
-        for idx, part in enumerate(parts):
-            if len(parts) == idx + 1:  # Last part of the command
-                if value is not None:
-                    current_level[part] = value
-                else:
-                    return part in current_level
+        for idx, key in enumerate(command_parts):
+            # Last part of the command
+            if len(command_parts) == idx + 1:
+                if value is None:
+                    return key in state_structure_data
+
+                state_structure_data[key] = value
             else:
-                if part not in current_level:
-                    current_level[part] = {}
-                current_level = current_level[part]
+                if key not in state_structure_data:
+                    state_structure_data[key] = {}
+
+                state_structure_data = state_structure_data[key]
 
         return True
 
     def preflight(self) -> Any:
-        commands = ["mon dump", "osd dump", "device ls", "fs ls", "node ls"]
         state = self.machine.get_preflight_state("AnalyzeCephHandler")
+
+        if getattr(state, "data", None) is not None:
+            return
+
+        commands = ["fs ls", "node ls", "report"]
         state.data = {}
 
         # Execute each command and store the result
         for command in commands:
             result = self.ceph.mon_command(command)
-            self._process_command(state.data, command, result)
+            self._process_command_result(state.data, command, result)
 
         self.logger.info("AnalyzeCephHandler ran successfully.")
 
@@ -45,25 +54,25 @@ class AnalyzeCephHandler(ModuleHandler):
 
         kv_state_data = OrderedDict()
 
-        if "mon" not in state.data or "dump" not in state.data["mon"]:
-            kv_state_data["ceph mon dump"] = "Not analyzed yet"
+        if "report" not in state.data:
+            kv_state_data["Ceph report"] = "Not analyzed yet"
         else:
-            kv_state_data["ceph mon dump"] = self._get_readable_json_dump(
-                state.data["mon"]["dump"]
+            kv_state_data["Ceph report"] = self._get_readable_json_dump(
+                state.data["report"]
             )
 
-        if "osd" not in state.data or "dump" not in state.data["osd"]:
-            kv_state_data["ceph osd dump"] = "Not analyzed yet"
+        if "node" not in state.data or "ls" not in state.data["node"]:
+            kv_state_data["Ceph node ls"] = "Not analyzed yet"
         else:
-            kv_state_data["ceph osd dump"] = self._get_readable_json_dump(
-                state.data["osd"]["dump"]
+            kv_state_data["Ceph node ls"] = self._get_readable_json_dump(
+                state.data["node"]["ls"]
             )
 
-        if "device" not in state.data or "ls" not in state.data["device"]:
-            kv_state_data["OSD devices"] = "Not analyzed yet"
+        if "fs" not in state.data or "ls" not in state.data["fs"]:
+            kv_state_data["Ceph fs ls"] = "Not analyzed yet"
         else:
-            kv_state_data["OSD devices"] = self._get_readable_json_dump(
-                state.data["device"]["ls"]
+            kv_state_data["Ceph fs ls"] = self._get_readable_json_dump(
+                state.data["fs"]["ls"]
             )
 
         return kv_state_data

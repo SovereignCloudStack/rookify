@@ -20,9 +20,11 @@ class MigrateRgwPoolsHandler(ModuleHandler):
         if len(zones) > 0:
             return
 
-        service_data = self.ceph.mon_command("service dump")
-
-        rgw_daemons = service_data["services"].get("rgw", {}).get("daemons", {})
+        rgw_daemons = (
+            state_data["report"]["servicemap"]["services"]
+            .get("rgw", {})
+            .get("daemons", {})
+        )
 
         for rgw_daemon in rgw_daemons.values():
             if not isinstance(rgw_daemon, dict):
@@ -36,7 +38,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
                 zones[zone_name] = {"osd_pools": {}, "rgw_count": 1}
 
         osd_pools = self.ceph.get_osd_pool_configurations_from_osd_dump(
-            state_data["osd"]["dump"]
+            state_data["report"]["osdmap"]
         )
 
         for zone_name in zones:
@@ -76,7 +78,9 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             "MigrateRgwPoolsHandler", "migrated_pools", default_value=[]
         )
 
-        zones = self.machine.get_preflight_state("MigrateRgwPoolsHandler").zones
+        zones = self.machine.get_preflight_state_data(
+            "MigrateRgwPoolsHandler", "zones", default_value={}
+        )
 
         kv_state_data = OrderedDict()
 
