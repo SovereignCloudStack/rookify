@@ -16,9 +16,11 @@ class CreateRookClusterHandler(ModuleHandler):
     ]
 
     def preflight(self) -> None:
-        if self.machine.get_execution_state_data(
-            "CreateRookClusterHandler", "generated", default_value=False
-        ):
+        cluster_definition = self.machine.get_preflight_state_data(
+            "CreateRookClusterHandler", "cluster_definition"
+        )
+
+        if cluster_definition is not None:
             return
 
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
@@ -64,13 +66,9 @@ class CreateRookClusterHandler(ModuleHandler):
             if mgr_count > 5:
                 mgr_count = rook_config["cluster"].get("max_mgr_count", 5)
 
-            self.machine.get_execution_state(
-                "CreateRookClusterHandler"
-            ).mgr_count = mgr_count
-
-            self.machine.get_execution_state(
-                "CreateRookClusterHandler"
-            ).mon_count = mon_count
+            state = self.machine.get_preflight_state("CreateRookClusterHandler")
+            state.mgr_count = mgr_count
+            state.mon_count = mon_count
 
             cluster_definition_values = {
                 "cluster_name": rook_config["cluster"]["name"],

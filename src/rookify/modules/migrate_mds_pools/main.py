@@ -40,9 +40,9 @@ class MigrateMdsPoolsHandler(ModuleHandler):
                     if pool_data_osd_name not in migrated_pools:
                         migrated_pools.append(pool_data_osd_name)
 
-                self.machine.get_execution_state(
-                    "MigrateMdsPoolsHandler"
-                ).migrated_pools = migrated_pools
+                state = self.machine.get_execution_state("MigrateMdsPoolsHandler")
+                if state is not None:
+                    state.migrated_pools = migrated_pools
 
                 continue
 
@@ -77,7 +77,9 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
         )
 
-        pools = self.machine.get_preflight_state("MigrateMdsPoolsHandler").pools
+        pools = self.machine.get_preflight_state_data(
+            "MigrateMdsPoolsHandler", "pools", default_value={}
+        )
 
         kv_state_data = OrderedDict()
 
