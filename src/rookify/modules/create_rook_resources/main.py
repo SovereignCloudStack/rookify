@@ -19,7 +19,7 @@ class CreateRookResourcesHandler(ModuleHandler):
         configmap_mon_list = ""
         mapping = {}
 
-        for mon in state_data["mon"]["dump"]["mons"]:
+        for mon in state_data["report"]["monmap"]["mons"]:
             if configmap_mon_list != "":
                 configmap_mon_list += ","
 
@@ -120,7 +120,7 @@ class CreateRookResourcesHandler(ModuleHandler):
         secret_data = {
             "admin-secret": admin_auth["key"],
             "cluster-name": self._config["rook"]["cluster"]["name"],
-            "fsid": state_data["mon"]["dump"]["fsid"],
+            "fsid": state_data["report"]["monmap"]["fsid"],
             "mon-secret": mon_auth["key"],
         }
 
