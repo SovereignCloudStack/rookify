@@ -1,0 +1,26 @@
+name: py:pre-release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+jobs:
+  create-pre-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout commit
+      uses: actions/checkout@v3
+    - name: Get the Git tag name
+      id: get-tag-name
+      run: echo "tag-name=${GITHUB_REF/refs\/tags\/v/}"
+    - name: Create Release
+      uses: actions/create-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.get-tag-name.outputs.tag-name }}
+        release_name: v${{ steps.get-tag-name.outputs.tag-name }}
+        body: |-
+          "Rookify" release v${{ steps.get-tag-name.outputs.tag-name }}
+        prerelease: true
