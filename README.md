@@ -46,12 +46,6 @@ __TODO__
 
 Type `make` to get a list of available development specific commands.
 
-## Troubleshooting
-
-### OSISM Testbed
-
-- ssh-issues: make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF"
-
 ## Support
 For issues, questions, or contributions, please open an issue or pull request in the GitHub repository. We welcome community feedback and contributions to enhance rookify.
 
