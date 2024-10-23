@@ -13,13 +13,19 @@ class MigrateRgwsHandler(ModuleHandler):
     def _get_rgw_daemon_hosts(self) -> List[str]:
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
-        rgw_daemons = state_data["report"]["servicemap"]["services"]["rgw"]["daemons"]
+        return self._get_rgw_daemon_hosts_of_map(
+            state_data["report"]["servicemap"]["services"]["rgw"]["daemons"]
+        )
+
+    def _get_rgw_daemon_hosts_of_map(
+        self, rgw_daemons_map: Dict[str, Any]
+    ) -> List[str]:
         rgw_daemon_hosts = []
 
-        if "summary" in rgw_daemons:
-            del rgw_daemons["summary"]
+        if "summary" in rgw_daemons_map:
+            del rgw_daemons_map["summary"]
 
-        for rgw_daemon in rgw_daemons.values():
+        for rgw_daemon in rgw_daemons_map.values():
             if "metadata" not in rgw_daemon or "hostname" not in rgw_daemon["metadata"]:
                 raise ModuleException(
                     "Unexpected ceph-rgw daemon metadata: {0}".format(rgw_daemon)
@@ -89,7 +95,11 @@ class MigrateRgwsHandler(ModuleHandler):
             )
 
             while True:
-                rgw_daemon_hosts = self._get_rgw_daemon_hosts()
+                ceph_status = self.ceph.mon_command("status")
+
+                rgw_daemon_hosts = self._get_rgw_daemon_hosts_of_map(
+                    ceph_status["servicemap"]["services"]["rgw"]["daemons"]
+                )
 
                 if rgw_host not in rgw_daemon_hosts:
                     break

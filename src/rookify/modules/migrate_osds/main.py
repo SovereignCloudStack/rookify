@@ -16,7 +16,8 @@ class MigrateOSDsHandler(ModuleHandler):
 
         osd_devices: Dict[str, Dict[str, str]] = {}
         osd_metadata = {
-            str(osd_data["id"]): osd_data for osd_data in state_data["osd_metadata"]
+            osd_data["id"]: osd_data
+            for osd_data in state_data["report"]["osd_metadata"]
         }
 
         for osd_host, osds in state_data["node"]["ls"]["osd"].items():

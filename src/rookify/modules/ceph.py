@@ -32,7 +32,7 @@ class Ceph:
 
         return data
 
-    def get_osd_pool_configurations_from_osd_dump(
+    def get_osd_pool_configurations_from_map(
         self, dump_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         osd_pools = {osd_pool["pool_name"]: osd_pool for osd_pool in dump_data["pools"]}
