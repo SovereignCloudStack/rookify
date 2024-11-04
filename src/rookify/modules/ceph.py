@@ -16,6 +16,13 @@ class Ceph:
         except rados.ObjectNotFound as err:
             raise ModuleException(f"Could not connect to ceph: {err}")
 
+        status_data = self.mon_command("status")
+
+        self._fsid = status_data["fsid"]
+        self._systemd_file_name_templates = config.get(
+            "systemd_file_name_templates", {}
+        )
+
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__ceph, name)
 
@@ -31,6 +38,42 @@ class Ceph:
             assert isinstance(data, dict) or isinstance(data, list)
 
         return data
+
+    def get_systemd_mds_file_name(self, host: str) -> str:
+        return self._get_systemd_template_file_name(
+            self._systemd_file_name_templates.get("mds", "ceph-mds.target"),
+            host,
+        )
+
+    def get_systemd_mgr_file_name(self, host: str) -> str:
+        return self._get_systemd_template_file_name(
+            self._systemd_file_name_templates.get("mgr", "ceph-mgr.target"),
+            host,
+        )
+
+    def get_systemd_mon_file_name(self, host: str) -> str:
+        return self._get_systemd_template_file_name(
+            self._systemd_file_name_templates.get("mon", "ceph-mon.target"),
+            host,
+        )
+
+    def get_systemd_osd_file_name(self, host: str, osd_id: int) -> str:
+        file_name_template: str = self._systemd_file_name_templates.get(
+            "osd", "ceph-osd@{0:d}.service".format(osd_id)
+        )
+
+        return file_name_template.format(fsid=self._fsid, host=host, osd_id=osd_id)
+
+    def get_systemd_rgw_file_name(self, host: str) -> str:
+        return self._get_systemd_template_file_name(
+            self._systemd_file_name_templates.get("mon", "ceph-radosgw.target"),
+            host,
+        )
+
+    def _get_systemd_template_file_name(
+        self, file_name_template: str, host: str
+    ) -> str:
+        return file_name_template.format(fsid=self._fsid, host=host)
 
     def get_osd_pool_configurations_from_map(
         self, dump_data: Dict[str, Any]
