@@ -83,7 +83,10 @@ class MigrateMdsHandler(ModuleHandler):
 
     def _disable_mds(self, mds_host: str) -> None:
         result = self.ssh.command(
-            mds_host, "sudo systemctl disable --now ceph-mds.target"
+            mds_host,
+            "sudo systemctl disable --now {0}".format(
+                self.ceph.get_systemd_mds_file_name(mds_host)
+            ),
         )
 
         if result.failed:

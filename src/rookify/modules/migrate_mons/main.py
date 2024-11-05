@@ -51,7 +51,10 @@ class MigrateMonsHandler(ModuleHandler):
         self.logger.info("Migrating ceph-mon daemon '{0}'".format(mon["name"]))
 
         result = self.ssh.command(
-            mon["name"], "sudo systemctl disable --now ceph-mon.target"
+            mon["name"],
+            "sudo systemctl disable --now {0}".format(
+                self.ceph.get_systemd_mon_file_name(mon["name"])
+            ),
         )
 
         if result.failed:
