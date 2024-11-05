@@ -98,7 +98,9 @@ class MigrateRgwsHandler(ModuleHandler):
                 ceph_status = self.ceph.mon_command("status")
 
                 rgw_daemon_hosts = self._get_rgw_daemon_hosts_of_map(
-                    ceph_status["servicemap"]["services"]["rgw"]["daemons"]
+                    ceph_status["servicemap"]["services"]
+                    .get("rgw", {})
+                    .get("daemons", {})
                 )
 
                 if rgw_host not in rgw_daemon_hosts:
