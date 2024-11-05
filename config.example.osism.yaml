@@ -42,7 +42,6 @@ rook:
 
 migration_modules:
 - example
-- create_rook_cluster
 - migrate_osds
 - migrate_osd_pools
 - migrate_mds

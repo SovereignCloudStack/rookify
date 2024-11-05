@@ -78,7 +78,10 @@ class MigrateRgwsHandler(ModuleHandler):
 
         if is_migration_required:
             result = self.ssh.command(
-                rgw_host, "sudo systemctl disable --now ceph-radosgw.target"
+                rgw_host,
+                "sudo systemctl disable --now {0}".format(
+                    self.ceph.get_systemd_rgw_file_name(rgw_host)
+                ),
             )
 
             if result.failed:

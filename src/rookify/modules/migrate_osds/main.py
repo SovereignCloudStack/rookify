@@ -158,7 +158,9 @@ class MigrateOSDsHandler(ModuleHandler):
 
             result = self.ssh.command(
                 host,
-                "sudo systemctl disable --now ceph-osd@{0:d}.service".format(osd_id),
+                "sudo systemctl disable --now {0}".format(
+                    self.ceph.get_systemd_osd_file_name(host, osd_id)
+                ),
             )
 
             if result.failed:
