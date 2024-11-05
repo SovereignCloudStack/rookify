@@ -42,10 +42,4 @@ rook:
 
 migration_modules:
 - example
-- create_rook_cluster
-- migrate_osds
-- migrate_osd_pools
-- migrate_mds
-- migrate_mds_pools
-- migrate_rgws
-- migrate_rgw_pools
+- osism_configuration

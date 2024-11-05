@@ -34,7 +34,10 @@ help: ## Display this help message
 	@echo -e '\n${COLOUR_RED}Usage: make <command>${COLOUR_END}'
 	@cat $(MAKEFILE_LIST) | grep '^[a-zA-Z]'  | \
 	    awk -F ':.*?## ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
-	@echo -e '${COLOUR_RED}OSISM helperscript usage: make <command>${COLOUR_END}'
+	@echo -e '${COLOUR_RED}Container related commands${COLOUR_END}'
+	@cat $(MAKEFILE_LIST) | grep '^[a-zA-Z]'  | \
+	    awk -F ':.*?#container# ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
+	@echo -e '${COLOUR_RED}OSISM helperscripts${COLOUR_END}'
 	@cat $(MAKEFILE_LIST) | grep '^[a-zA-Z]'  | \
 	    awk -F ':.*?#osism# ' 'NF==2 {printf "  %-26s%s\n\n", $$1, "${COLOUR_GREEN}"$$2"${COLOUR_END}"}'
 
@@ -66,53 +69,55 @@ check-radoslib: ## Checks if radoslib is installed and if it contains the right 
 	./scripts/check_local_rados_lib_installation.sh ${RADOSLIB_VERSION}
 
 .PHONY: build-local-rookify
-build-local-rookify: ## This builds rookify into .venv/bin/rookify
+build-local-rookify: setup ## This builds rookify into .venv/bin/rookify
 	source .venv/bin/activate && pip install -e .
 
-.PHONY: build-container
-build-container: ## Build container from Dockerfile, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev1
-	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) --target rookify -t rookify:latest -f Dockerfile .
-
 .PHONY: run-local-rookify
-run-local-rookify: ## Runs rookify in the local development environment (requires setup-venv)
-	source ./.venv/bin/activate && pip install -e . && rookify
-
-.PHONY: run-rookify
-run-rookify: ## Runs rookify in the container
-	docker exec -it rookify-dev /app/rookify/.venv/bin/rookify
-
-.PHONY: get-testbed-configs-for-rookify-testing
-get-testbed-configs-for-rookify-testing: ## Gets the needed config (like .kube, /etc/ceph and so on) from the testbed
-	bash ./scripts/get_configs_from_testbed.sh
+run-local-rookify: build-local-rookify ## Runs rookify in the local development environment (requires setup-venv)
+	./.venv/bin/rookify
 
 .PHONY: run-tests-locally
-run-tests-locally: ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
+run-tests-locally: setup-venv ## Runs the tests in the tests directory. NB: check that your local setup is connected through vpn to the testbed!
 	.venv/bin/python -m pytest
 
+##
+# Add container related commands here (so they appear below the container header)
+# Note: use #container# so command appear under header in menu
+##
+
 .PHONY: run-tests
-run-tests: up ## Runs the tests in the container
+run-tests: up #container# Runs the tests in the container
 	${CONTAINERCMD} exec -it rookify-dev bash -c "/app/rookify/.venv/bin/python -m pytest"
 
+.PHONY: run-rookify
+run-rookify: up #container# Runs rookify in the container
+	${CONTAINERCMD} exec -it rookify-dev /app/rookify/.venv/bin/rookify
+
 .PHONY: enter
-enter: ## Enter the container
+enter: up #container# Enter the container
 	${CONTAINERCMD} exec -it rookify-dev bash
 
 .PHONY: logs
-logs: ## Logs the container
+logs: #container# Logs the container
 	${CONTAINERCMD} logs -f rookify-dev
 
 .PHONY: down
-down: ## Remove the containers as setup by docker-compose.yml
+down: #container# Remove the containers as setup by docker-compose.yml
 	${CONTAINERCMD} compose down
 
 .PHONY: up
-up: ## Sets up the container as specified in docker-compose.yml and opens a bash terminal
+up: #container# Sets up the container as specified in docker-compose.yml and opens a bash terminal
 	${CONTAINERCMD} compose up -d
 
+.PHONY: build-container
+build-container: #container# Build container from Dockerfile only, add e.g. ROOKIFY_VERSION=0.0.1 to specify the version. Default value is 0.0.0.dev1
+	${CONTAINERCMD} build --build-arg ROOKIFY_VERSION=$(ROOKIFY_VERSION) --target rookify -t rookify:latest -f Dockerfile .
+
 ##
-# Add osism specific scripts below here (so they appear below helper header)
+# Add osism specific scripts below here
+# Note: use #osism# so command appear under header in menu
 ##
 
 .PHONY: get-config
 get-config: #osism# Gets configuration files from the OSISM testbed
-	./scripts/osism/get_osism_configs_from_testbed.sh
+	./scripts/osism/get_configs_from_testbed.sh
