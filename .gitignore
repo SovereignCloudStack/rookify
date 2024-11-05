@@ -88,6 +88,9 @@ cython_debug/
 # Project specific
 data.pickle
 config.yaml
+osism_configuration.yaml
+osism_images.yaml
+osism_secrets.yaml
 .ceph
 .k8s
 .ssh
