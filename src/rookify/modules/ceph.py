@@ -19,6 +19,7 @@ class Ceph:
         status_data = self.mon_command("status")
 
         self._fsid = status_data["fsid"]
+
         self._systemd_file_name_templates = config.get(
             "systemd_file_name_templates", {}
         )
