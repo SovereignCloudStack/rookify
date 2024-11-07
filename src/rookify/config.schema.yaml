@@ -10,6 +10,7 @@ logging:
 ceph:
   config: str()
   keyring: str()
+  systemd_file_name_templates: include("systemd_file_name_templates", required=False)
 
 ssh:
   private_key: str()
@@ -39,3 +40,10 @@ migration_modules: list(str())
 ssh_host:
     address: ip()
     user: str()
+---
+systemd_file_name_templates:
+    mds: str(required=False)
+    mgr: str(required=False)
+    mon: str(required=False)
+    osd: str(required=False)
+    rgw: str(required=False)

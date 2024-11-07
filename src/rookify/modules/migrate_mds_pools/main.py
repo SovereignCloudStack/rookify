@@ -16,8 +16,8 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "MigrateMdsPoolsHandler", "pools", default_value={}
         )
 
-        osd_pools = self.ceph.get_osd_pool_configurations_from_osd_dump(
-            state_data["osd"]["dump"]
+        osd_pools = self.ceph.get_osd_pool_configurations_from_map(
+            state_data["report"]["osdmap"]
         )
 
         for mds_fs_data in state_data["fs"]["ls"]:

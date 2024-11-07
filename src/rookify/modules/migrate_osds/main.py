@@ -16,7 +16,8 @@ class MigrateOSDsHandler(ModuleHandler):
 
         osd_devices: Dict[str, Dict[str, str]] = {}
         osd_metadata = {
-            str(osd_data["id"]): osd_data for osd_data in state_data["osd_metadata"]
+            osd_data["id"]: osd_data
+            for osd_data in state_data["report"]["osd_metadata"]
         }
 
         for osd_host, osds in state_data["node"]["ls"]["osd"].items():
@@ -157,7 +158,9 @@ class MigrateOSDsHandler(ModuleHandler):
 
             result = self.ssh.command(
                 host,
-                "sudo systemctl disable --now ceph-osd@{0:d}.service".format(osd_id),
+                "sudo systemctl disable --now {0}".format(
+                    self.ceph.get_systemd_osd_file_name(host, osd_id)
+                ),
             )
 
             if result.failed:

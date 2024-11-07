@@ -37,7 +37,7 @@ class MigrateRgwPoolsHandler(ModuleHandler):
             else:
                 zones[zone_name] = {"osd_pools": {}, "rgw_count": 1}
 
-        osd_pools = self.ceph.get_osd_pool_configurations_from_osd_dump(
+        osd_pools = self.ceph.get_osd_pool_configurations_from_map(
             state_data["report"]["osdmap"]
         )
 

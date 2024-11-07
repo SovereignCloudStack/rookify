@@ -36,7 +36,7 @@ class CreateRookResourcesHandler(ModuleHandler):
         configmap_data = {
             "data": configmap_mon_list,
             "mapping": json.dumps({"node": mapping}),
-            "maxMonId": "{0:d}".format(len(state_data["mon"]["dump"]["mons"])),
+            "maxMonId": "{0:d}".format(len(state_data["report"]["monmap"]["mons"])),
         }
 
         configmap = kubernetes.client.V1ConfigMap(
