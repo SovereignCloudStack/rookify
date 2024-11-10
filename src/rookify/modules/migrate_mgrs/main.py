@@ -44,7 +44,10 @@ class MigrateMgrsHandler(ModuleHandler):
         self.logger.info("Migrating ceph-mgr daemon at host'{0}'".format(mgr_host))
 
         result = self.ssh.command(
-            mgr_host, "sudo systemctl disable --now ceph-mgr.target"
+            mgr_host,
+            "sudo systemctl disable --now {0}".format(
+                self.ceph.get_systemd_mgr_file_name(mgr_host)
+            ),
         )
 
         if result.failed:

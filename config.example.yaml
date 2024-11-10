@@ -10,6 +10,12 @@ logging:
 ceph:
   config: ./.ceph/ceph.conf
   keyring: ./.ceph/ceph.client.admin.keyring
+  systemd_file_name_templates:
+    mds: "ceph-{fsid}@mds.{host}.service"
+    mgr: "ceph-{fsid}@mgr.{host}.service"
+    mon: "ceph-{fsid}@mon.{host}.service"
+    osd: "ceph-{fsid}@osd.{osd_id}.service"
+    rgw: "ceph-{fsid}@rgw.{host}.service"
 
 # fill in correct path to private key
 ssh:

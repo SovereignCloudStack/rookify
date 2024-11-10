@@ -1,0 +1,21 @@
+---
+rook_cluster_name: "{{ cluster_name }}"
+rook_ceph_cluster_helm_release_name: "{{ cluster_name }}"
+rook_ceph_cluster_helm_release_namespace: "{{ cluster_namespace }}"
+rook_ceph_image: "{{ ceph_repository }}"
+rook_ceph_image_tag: "{{ ceph_version }}"
+
+{% if public_network is defined %}
+rook_network_public: "{{ public_network }}"
+{% endif %}
+
+{% if cluster_network is defined %}
+rook_network_cluster: "{{ cluster_network }}"
+{% endif %}
+
+rook_storage_devicefilter: "^sd[b-c]"
+rook_storage_nodes: {{ osd_hosts_list }}
+
+rook_mon_count: {{ mon_count }}
+rook_mds_count: {{ mds_count }}
+rook_mgr_count: {{ mgr_count }}

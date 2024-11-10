@@ -103,17 +103,20 @@ OSD devices: Not analyzed yet
 
 #### Troubleshooting
 
-**ssh-issues:**
-- make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF". E.g. call `ssh-keygen -p -N "" -f ssh.key` to convert and reformat the keyfile to the expected format.
-- allow direnv (`direnv allow`) to use `.envrc` or copy and execute the command from the file: this switches off the ssh-agent, which sometimes has too many keys loaded
+**missing Ceph systemd targets:**
+- please consult your distribution's documentation in case documented Ceph systemd unit services or targets are missing
+- `cephadm install ceph-common ceph-base ceph-mon ceph-mgr ceph-mds radosgw` may help if supported
 
 **frozen state:**
 - if the rookify process freezes, check your connections. In the OSISM testbed especially check the vpn-connection (in testbed repository try `make vpn-*`)
 
+**ssh-issues:**
+- make sure the id-rsa keys are "clean" and do not contain unexpected strings like "\<\<EOF". E.g. call `ssh-keygen -p -N "" -f ssh.key` to convert and reformat the keyfile to the expected format.
+- allow direnv (`direnv allow`) to use `.envrc` or copy and execute the command from the file: this switches off the ssh-agent, which sometimes has too many keys loaded
+
 ## Support
 
 For issues, questions, or contributions, please open an issue or pull request in the GitHub repository. We welcome community feedback and contributions to enhance rookify.
-
 
 ## License
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
