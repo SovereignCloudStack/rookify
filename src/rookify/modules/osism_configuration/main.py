@@ -77,19 +77,11 @@ class OSISMConfigurationHandler(ModuleHandler):
             configuration_values["public_network"] = rook_config["ceph"][
                 "public_network"
             ]
-        else:
-            self.logger.warn(
-                "Rook Ceph cluster will be configured without a public network and determine it automatically during runtime"
-            )
 
         if len(rook_config["ceph"].get("cluster_network", "")) > 0:
             configuration_values["cluster_network"] = rook_config["ceph"][
                 "cluster_network"
             ]
-        else:
-            self.logger.info(
-                "Rook Ceph cluster will be configured without a cluster network"
-            )
 
         # Render cluster config from template
         configuration = self.load_template(
