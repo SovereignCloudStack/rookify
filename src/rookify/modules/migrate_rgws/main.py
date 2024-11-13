@@ -14,7 +14,9 @@ class MigrateRgwsHandler(ModuleHandler):
         state_data = self.machine.get_preflight_state("AnalyzeCephHandler").data
 
         return self._get_rgw_daemon_hosts_of_map(
-            state_data["report"]["servicemap"]["services"]["rgw"]["daemons"]
+            state_data["report"]["servicemap"]["services"]
+            .get("rgw", {})
+            .get("daemons", {})
         )
 
     def _get_rgw_daemon_hosts_of_map(
@@ -101,7 +103,9 @@ class MigrateRgwsHandler(ModuleHandler):
                 ceph_status = self.ceph.mon_command("status")
 
                 rgw_daemon_hosts = self._get_rgw_daemon_hosts_of_map(
-                    ceph_status["servicemap"]["services"]["rgw"]["daemons"]
+                    ceph_status["servicemap"]["services"]
+                    .get("rgw", {})
+                    .get("daemons", {})
                 )
 
                 if rgw_host not in rgw_daemon_hosts:
@@ -140,7 +144,9 @@ class MigrateRgwsHandler(ModuleHandler):
                 ceph_status = self.ceph.mon_command("status")
 
                 rgw_daemon_hosts = self._get_rgw_daemon_hosts_of_map(
-                    ceph_status["servicemap"]["services"]["rgw"]["daemons"]
+                    ceph_status["servicemap"]["services"]
+                    .get("rgw", {})
+                    .get("daemons", {})
                 )
 
                 if rgw_host in rgw_daemon_hosts:
