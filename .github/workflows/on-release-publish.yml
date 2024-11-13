@@ -56,6 +56,9 @@ jobs:
     steps:
     - name: Checkout commit
       uses: actions/checkout@v3
+    - name: Get the Git tag name
+      id: get-tag-name
+      run: echo "tag-name=${GITHUB_REF/refs\/tags\/v/}" >> "$GITHUB_OUTPUT"
     - name: Set up Python
       id: setup-python
       uses: actions/setup-python@v3
@@ -64,6 +67,8 @@ jobs:
         pip install -r ./requirements.txt
         pip install build
     - name: Execute build
+      env:
+        ROOKIFY_VERSION: ${{ steps.get-tag-name.outputs.tag-name }}
       run: |-
         python -m build .
     - name: Publish package
