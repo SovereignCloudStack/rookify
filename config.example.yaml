@@ -40,6 +40,8 @@ rook:
     namespace: rook-ceph
   ceph:
     image: quay.io/ceph/ceph:v18.2.1
+  flags:
+    mds_support_metadata_name: False
 
 migration_modules:
 - example
@@ -48,5 +50,6 @@ migration_modules:
 - migrate_osd_pools
 - migrate_mds
 - migrate_mds_pools
+- migrate_mgrs
 - migrate_rgws
 - migrate_rgw_pools

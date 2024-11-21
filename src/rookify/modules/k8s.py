@@ -11,7 +11,9 @@ class K8s:
             config_file=config["kubernetes"]["config"]
         )
 
+        self._flags: Dict[str, bool] = config["kubernetes"].get("flags", {})
         self._rook_config = config["rook"]
+        self._rook_flags: Dict[str, bool] = config["rook"].get("flags", {})
 
         self.__client = kubernetes.client.ApiClient(k8s_config)
         self.__dynamic_client: Optional[kubernetes.dynamic.DynamicClient] = None
@@ -115,6 +117,17 @@ class K8s:
             )
         except kubernetes.dynamic.exceptions.NotFoundError:
             return crd_api.create(body=manifest, namespace=namespace)
+
+    def _get_flag(
+        self, flags: Dict[str, bool], name: str, default_value: bool = False
+    ) -> bool:
+        return flags.get(name, default_value)
+
+    def get_flag(self, name: str, default_value: bool = False) -> bool:
+        return self._get_flag(self._flags, name, default_value)
+
+    def get_rook_flag(self, name: str, default_value: bool = False) -> bool:
+        return self._get_flag(self._rook_flags, name, default_value)
 
     def watch_events(
         self,
