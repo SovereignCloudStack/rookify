@@ -20,29 +20,22 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             state_data["report"]["osdmap"]
         )
 
+        are_custom_metadata_pool_names_supported = self.k8s.get_rook_flag(
+            "mds_support_metadata_name", True
+        )
+
         for mds_fs_data in state_data["fs"]["ls"]:
-            if not mds_fs_data["metadata_pool"].endswith("-metadata"):
+            if not (
+                are_custom_metadata_pool_names_supported
+                and mds_fs_data["metadata_pool"].endswith("-metadata")
+            ):
                 self.logger.warn(
                     "ceph-mds filesystem '{0}' uses an incompatible pool metadata name '{1}' and can not be migrated to Rook automatically".format(
                         mds_fs_data["name"], mds_fs_data["metadata_pool"]
                     )
                 )
 
-                # Store pools for incompatible MDS filesystem as migrated ones
-                migrated_pools = self.machine.get_execution_state_data(
-                    "MigrateMdsPoolsHandler", "migrated_pools", default_value=[]
-                )
-
-                if mds_fs_data["metadata_pool"] not in migrated_pools:
-                    migrated_pools.append(mds_fs_data["metadata_pool"])
-
-                for pool_data_osd_name in mds_fs_data["data_pools"]:
-                    if pool_data_osd_name not in migrated_pools:
-                        migrated_pools.append(pool_data_osd_name)
-
-                state = self.machine.get_execution_state("MigrateMdsPoolsHandler")
-                if state is not None:
-                    state.migrated_pools = migrated_pools
+                self._handle_mds_metadata_pool_not_supported(mds_fs_data)
 
                 continue
 
@@ -92,6 +85,23 @@ class MigrateMdsPoolsHandler(ModuleHandler):
 
         return kv_state_data
 
+    def _handle_mds_metadata_pool_not_supported(self, mds_fs_data: Any) -> None:
+        # Store pools for incompatible MDS filesystem as migrated ones
+        migrated_pools = self.machine.get_execution_state_data(
+            "MigrateMdsPoolsHandler", "migrated_pools", default_value=[]
+        )
+
+        if mds_fs_data["metadata_pool"] not in migrated_pools:
+            migrated_pools.append(mds_fs_data["metadata_pool"])
+
+        for pool_data_osd_name in mds_fs_data["data_pools"]:
+            if pool_data_osd_name not in migrated_pools:
+                migrated_pools.append(pool_data_osd_name)
+
+        state = self.machine.get_execution_state("MigrateMdsPoolsHandler")
+        if state is not None:
+            state.migrated_pools = migrated_pools
+
     def _migrate_pool(self, pool: Dict[str, Any]) -> None:
         migrated_mds_pools = self.machine.get_execution_state_data(
             "MigrateMdsPoolsHandler", "migrated_mds_pools", default_value=[]
@@ -117,6 +127,11 @@ class MigrateMdsPoolsHandler(ModuleHandler):
             "mds_size": pool_metadata_osd_configuration["size"],
             "mds_placement_label": self.k8s.mds_placement_label,
         }
+
+        if self.k8s.get_rook_flag("mds_support_metadata_name", True):
+            filesystem_definition_values["mds_name"] = pool_metadata_osd_configuration[
+                "pool_name"
+            ]
 
         filesystem_definition_values["data_pools"] = []
 

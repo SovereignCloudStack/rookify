@@ -14,6 +14,9 @@ metadata:
 spec:
   # The metadata pool spec. Must use replication.
   metadataPool:
+    {% if mds_name %}
+    name: {{ mds_name }}
+    {% endif %}
     replicated:
       size: {{ mds_size }}
       requireSafeReplicaSize: true
