@@ -18,6 +18,7 @@ class Ceph:
 
         status_data = self.mon_command("status")
 
+        self._flags: Dict[str, bool] = config.get("flags", {})
         self._fsid = status_data["fsid"]
 
         self._systemd_file_name_templates = config.get(
@@ -39,6 +40,9 @@ class Ceph:
             assert isinstance(data, dict) or isinstance(data, list)
 
         return data
+
+    def get_flag(self, name: str, default_value: bool = False) -> bool:
+        return self._flags.get(name, default_value)
 
     def get_systemd_mds_file_name(self, host: str) -> str:
         return self._get_systemd_template_file_name(

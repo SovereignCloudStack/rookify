@@ -9,6 +9,7 @@ logging:
 
 ceph:
   config: str()
+  flags: map(key=str(), required=False) # @TODO: Replace with include once we support at least one Ceph flag
   keyring: str()
   systemd_file_name_templates: include("systemd_file_name_templates", required=False)
 
@@ -18,6 +19,7 @@ ssh:
 
 kubernetes:
   config: str()
+  flags: map(key=str(), required=False) # @TODO: Replace with include once we support at least one Kubernetes flag
 
 rook:
   cluster:
@@ -34,8 +36,12 @@ rook:
     image: str()
     public_network: regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(/(3[0-2]|2[0-9]|1[0-9]|[0-9]))?$", required=False)
     cluster_network: regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(/(3[0-2]|2[0-9]|1[0-9]|[0-9]))?$", required=False)
+  flags: include("rook_flags", required=False)
 
 migration_modules: list(str())
+---
+rook_flags:
+    mds_support_metadata_name: bool()
 ---
 ssh_host:
     address: ip()

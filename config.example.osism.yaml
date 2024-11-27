@@ -39,6 +39,8 @@ rook:
     rgw_placement_label: node-role.osism.tech/rook-rgw
   ceph:
     image: quay.io/ceph/ceph:v18.2.1
+  flags:
+    mds_support_metadata_name: False
 
 migration_modules:
 - example
