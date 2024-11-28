@@ -71,7 +71,7 @@ class Ceph:
 
     def get_systemd_rgw_file_name(self, host: str) -> str:
         return self._get_systemd_template_file_name(
-            self._systemd_file_name_templates.get("mon", "ceph-radosgw.target"),
+            self._systemd_file_name_templates.get("rgw", "ceph-radosgw.target"),
             host,
         )
 
