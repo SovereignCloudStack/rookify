@@ -27,7 +27,7 @@ class MigrateMdsPoolsHandler(ModuleHandler):
         for mds_fs_data in state_data["fs"]["ls"]:
             if not (
                 are_custom_metadata_pool_names_supported
-                and mds_fs_data["metadata_pool"].endswith("-metadata")
+                or mds_fs_data["metadata_pool"].endswith("-metadata")
             ):
                 self.logger.warn(
                     "ceph-mds filesystem '{0}' uses an incompatible pool metadata name '{1}' and can not be migrated to Rook automatically".format(
