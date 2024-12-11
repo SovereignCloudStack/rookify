@@ -80,6 +80,15 @@ spec:
                   operator: In
                   values:
                     - "true"
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: {{ rgw_placement_label }}
+                  operator: In
+                  values:
+                    - "true"
+            topologyKey: "kubernetes.io/hostname"
     # A key/value list of annotations
     annotations:
     #  key: value
